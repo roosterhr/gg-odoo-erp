@@ -38,7 +38,6 @@ class PrisonJail(models.Model):
         string='Jail Name',
         required=True,
         index=True,
-        tracking=True,
     )
     code = fields.Char(
         string='Jail Code',
@@ -51,7 +50,6 @@ class PrisonJail(models.Model):
         string='Jail Type',
         required=True,
         index=True,
-        tracking=True,
     )
 
     # ── Hierarchy ─────────────────────────────────────────────────────────────
@@ -61,14 +59,13 @@ class PrisonJail(models.Model):
         string='Parent Jail',
         index=True,
         ondelete='restrict',
-        tracking=True,
     )
     # Required by _parent_store; Odoo maintains this automatically.
-    parent_path = fields.Char(index=True, unaccent=False)
+    parent_path = fields.Char(index=True)
     child_ids = fields.One2many(
         comodel_name='prison.jail',
         inverse_name='parent_id',
-        string='Sub-units',
+        string='Child Jails',
     )
     child_count = fields.Integer(
         string='Sub-units',
@@ -95,7 +92,7 @@ class PrisonJail(models.Model):
 
     # ── Administration ────────────────────────────────────────────────────────
 
-    active = fields.Boolean(default=True, tracking=True)
+    active = fields.Boolean(default=True)
     sequence = fields.Integer(
         default=10,
         help='Lower sequence numbers appear first in lists.',
@@ -108,17 +105,15 @@ class PrisonJail(models.Model):
     )
     notes = fields.Text(string='Notes')
 
-    # ── SQL constraints ───────────────────────────────────────────────────────
+    # ── Constraints ───────────────────────────────────────────────────────────
 
-    _sql_constraints = [
-        (
-            'uniq_code',
-            'UNIQUE(code)',
+    _constraints = [
+        models.Constraint(
+            'UNIQUE (code)',
             'Jail code must be unique. Choose a different code.',
         ),
-        (
-            'uniq_name_type',
-            'UNIQUE(name, jail_type)',
+        models.Constraint(
+            'UNIQUE (name, jail_type)',
             'A jail with this name already exists for the selected type.',
         ),
     ]

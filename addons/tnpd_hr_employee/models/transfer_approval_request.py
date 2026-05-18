@@ -70,7 +70,6 @@ class TransferApprovalRequest(models.Model):
         required=True,
         index=True,
         ondelete='restrict',
-        tracking=True,
     )
     requested_district_jail = fields.Many2one(
         comodel_name='prison.jail',
@@ -81,7 +80,6 @@ class TransferApprovalRequest(models.Model):
         required=True,
         index=True,
         ondelete='restrict',
-        tracking=True,
     )
     requested_sub_jail = fields.Many2one(
         comodel_name='prison.jail',
@@ -90,7 +88,6 @@ class TransferApprovalRequest(models.Model):
         required=True,
         index=True,
         ondelete='restrict',
-        tracking=True,
     )
 
     # ── Workflow ──────────────────────────────────────────────────────────────
@@ -111,7 +108,6 @@ class TransferApprovalRequest(models.Model):
         default='pending',
         required=True,
         index=True,
-        tracking=True,
     )
     requested_by = fields.Many2one(
         comodel_name='res.users',
