@@ -105,18 +105,16 @@ class PrisonJail(models.Model):
     )
     notes = fields.Text(string='Notes')
 
-    # ── Constraints ───────────────────────────────────────────────────────────
+    # ── SQL uniqueness constraints ────────────────────────────────────────────
 
-    _constraints = [
-        models.Constraint(
-            'UNIQUE (code)',
-            'Jail code must be unique. Choose a different code.',
-        ),
-        models.Constraint(
-            'UNIQUE (name, jail_type)',
-            'A jail with this name already exists for the selected type.',
-        ),
-    ]
+    _uniq_code = models.Constraint(
+        'UNIQUE (code)',
+        'Jail code must be unique. Choose a different code.',
+    )
+    _uniq_name_type = models.Constraint(
+        'UNIQUE (name, jail_type)',
+        'A jail with this name already exists for the selected type.',
+    )
 
     # ── Computed ──────────────────────────────────────────────────────────────
 
