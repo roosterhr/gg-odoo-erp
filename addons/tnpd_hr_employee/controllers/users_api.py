@@ -11,19 +11,32 @@ Auth: all endpoints require a valid Odoo admin session (auth='none' + _require_a
 
 Endpoints
 ---------
-GET    /api/users                      — Paginated list with search / filter
-GET    /api/users/<int:id>             — Single user detail
-PUT    /api/users/<int:id>             — Update name / email / mobile / user_type
-DELETE /api/users/<int:id>             — Archive user (soft-delete, active=False)
-POST   /api/users/<int:id>/reactivate  — Restore archived user (active=True)
+GET    /api/users                          — Paginated list with search / filter
+GET    /api/users/<int:id>                 — Single user detail
+PUT    /api/users/<int:id>                 — Update name / email / mobile / user_type
+DELETE /api/users/<int:id>                 — Archive user (soft-delete, active=False)
+POST   /api/users/<int:id>/reactivate      — Restore archived user (active=True)
+POST   /api/users/invite                   — Generate invite token + send email
+GET    /api/admin/invitations              — List all invitations with status
+GET    /api/auth/verify-invite             — Validate invite token (public)
+POST   /api/auth/signup                    — Complete account activation (public)
 """
 
 import json
 import logging
+import os
 import re
+import secrets
+import smtplib
+import urllib.parse
+from datetime import datetime, timedelta
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 
 from odoo import http
 from odoo.http import request
+
+from .invite_email_template import INVITE_EMAIL_HTML, INVITE_EMAIL_SUBJECT
 
 _EMAIL_RE  = re.compile(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
 _MOBILE_RE = re.compile(r'^[+]?[\d\s\-()×]{7,20}$')
@@ -31,10 +44,108 @@ _MOBILE_RE = re.compile(r'^[+]?[\d\s\-()×]{7,20}$')
 _logger    = logging.getLogger(__name__)
 _MAX_LIMIT = 100
 
+# ── Email Service ──────────────────────────────────────────────────────────────
+
+def _send_invite_email(to_email, to_name, inviter_name, role, activation_link):
+    """
+    Send the invitation email via SMTP.
+    Reads config from environment variables:
+      SMTP_HOST, SMTP_PORT (default 587), SMTP_USERNAME, SMTP_PASSWORD,
+      SMTP_FROM_EMAIL, SMTP_FROM_NAME (default 'TNPD Prison HRMS')
+    Raises ValueError if SMTP_HOST is not set.
+    Raises smtplib.SMTPException on send failure.
+    """
+    smtp_host = os.environ.get('SMTP_HOST', '').strip()
+    if not smtp_host:
+        raise ValueError('SMTP_HOST environment variable is not configured.')
+
+    smtp_port      = int(os.environ.get('SMTP_PORT', 587))
+    smtp_user      = os.environ.get('SMTP_USERNAME', '').strip()
+    smtp_pass      = os.environ.get('SMTP_PASSWORD', '').strip()
+    from_email     = os.environ.get('SMTP_FROM_EMAIL', smtp_user).strip() or smtp_user
+    from_name      = os.environ.get('SMTP_FROM_NAME', 'TNPD Prison HRMS').strip()
+
+    html = INVITE_EMAIL_HTML
+    html = html.replace('{{recipient_name}}',  to_name or to_email)
+    html = html.replace('{{inviter_name}}',    inviter_name)
+    html = html.replace('{{role}}',            role)
+    html = html.replace('{{login_email}}',     to_email)
+    html = html.replace('{{activation_link}}', activation_link)
+
+    msg = MIMEMultipart('alternative')
+    msg['Subject'] = INVITE_EMAIL_SUBJECT
+    msg['From']    = f'{from_name} <{from_email}>'
+    msg['To']      = to_email
+    msg.attach(MIMEText(html, 'html', 'utf-8'))
+
+    try:
+        with smtplib.SMTP(smtp_host, smtp_port, timeout=15) as server:
+            server.ehlo()
+            if smtp_port in (587, 25):
+                server.starttls()
+                server.ehlo()
+            if smtp_user and smtp_pass:
+                server.login(smtp_user, smtp_pass)
+            server.sendmail(from_email or smtp_user, [to_email], msg.as_string())
+        _logger.info('Invite email sent to %s', to_email)
+    except smtplib.SMTPAuthenticationError:
+        _logger.error('SMTP auth failed for %s', smtp_user)
+        raise
+    except Exception as exc:
+        _logger.error('SMTP send failed: %s', exc)
+        raise
+
+
+# ── Helpers ────────────────────────────────────────────────────────────────────
+
+def _fe_base_url(fallback='http://localhost:5173'):
+    """Derive the frontend base URL from environment or Referer header."""
+    app_url = os.environ.get('APP_URL', '').strip().rstrip('/')
+    if app_url:
+        return app_url
+    referer = request.httprequest.headers.get('Referer', '')
+    if referer:
+        parsed = urllib.parse.urlparse(referer)
+        return f'{parsed.scheme}://{parsed.netloc}'
+    return fallback
+
+
+def _invitation_status(payload):
+    """Derive current status string from stored payload dict."""
+    if payload.get('used'):
+        return 'Accepted'
+    expires = payload.get('expires', '')
+    if expires:
+        try:
+            if datetime.utcnow() > datetime.fromisoformat(expires):
+                return 'Expired'
+        except Exception:
+            pass
+    return 'Pending'
+
+
+def _format_invitation(key, payload):
+    """Serialize a stored invitation payload to the API shape."""
+    return {
+        'token':       key.replace('tnpd.invite.', '', 1),
+        'email':       payload.get('email', ''),
+        'name':        payload.get('name', ''),
+        'role':        (payload.get('user_type', 'admin') or 'admin').title(),
+        'invited_by':  payload.get('invited_by_name', ''),
+        'status':      _invitation_status(payload),
+        'created_at':  payload.get('created_at', ''),
+        'expires_at':  payload.get('expires', ''),
+        'accepted_at': payload.get('accepted_at', ''),
+        'email_sent':  payload.get('email_sent', False),
+        'signup_url':  payload.get('signup_url', ''),
+    }
+
+
+# ── Controller ─────────────────────────────────────────────────────────────────
 
 class UsersApiController(http.Controller):
 
-    # ── Helpers ───────────────────────────────────────────────────────────────
+    # ── Internal helpers ──────────────────────────────────────────────────────
 
     def _json(self, data, status=200):
         return request.make_response(
@@ -77,7 +188,6 @@ class UsersApiController(http.Controller):
         return 'User'
 
     def _matches_user_type(self, user, user_type):
-        """Check if a user matches the requested type using has_group (reliable for superusers)."""
         utype = self._get_user_type(user)
         if user_type == 'super_admin':
             return utype == 'Super Admin'
@@ -88,10 +198,8 @@ class UsersApiController(http.Controller):
         return True
 
     def _format_user(self, user):
-        """Serialize res.users record to public API shape."""
         emp = user.employee_ids[:1] if user.employee_ids else None
 
-        # Institution: walk Sub > District > Central; then legacy text fields
         institution      = ''
         institution_type = ''
         central_jail_id   = None
@@ -139,7 +247,6 @@ class UsersApiController(http.Controller):
             'status':          'active' if user.active else 'inactive',
             'last_login':      str(user.login_date) if user.login_date else '',
             'create_date':     str(user.create_date) if user.create_date else '',
-            # Linked employee
             'employee_db_id':  emp.id if emp else None,
             'employee_id':     (emp.x_employee_code or '') if emp else '',
             'designation':     (emp.x_designation or '') if emp else '',
@@ -151,15 +258,8 @@ class UsersApiController(http.Controller):
 
     # ── GET /api/users ────────────────────────────────────────────────────────
 
-    @http.route(
-        '/api/users',
-        auth='none',
-        type='http',
-        methods=['GET'],
-        csrf=False,
-    )
+    @http.route('/api/users', auth='none', type='http', methods=['GET'], csrf=False)
     def list_users(self, **kwargs):
-        """Return paginated list of internal system users (admin-only)."""
         uid, err = self._require_auth()
         if err:
             return err
@@ -178,17 +278,13 @@ class UsersApiController(http.Controller):
             status          = (kwargs.get('status')          or 'active').strip().lower()
             central_jail_id = kwargs.get('central_jail_id')
 
-            # Base domain: internal (non-portal) users only
             domain = [('share', '=', False)]
 
-            # Status filter — explicit active condition; active_test=False lets us reach inactive users
             if status == 'inactive':
                 domain.append(('active', '=', False))
             elif status == 'active':
                 domain.append(('active', '=', True))
-            # status == 'all' → no active condition, active_test=False returns all
 
-            # Full-text search: name | login | employee code
             if q:
                 domain += [
                     '|', ('name', 'ilike', q),
@@ -196,25 +292,17 @@ class UsersApiController(http.Controller):
                          ('employee_ids.x_employee_code', 'ilike', q),
                 ]
 
-            # Prison filter (via linked employee's central jail)
             if central_jail_id:
                 try:
-                    domain.append(
-                        ('employee_ids.x_central_jail_id', '=', int(central_jail_id))
-                    )
+                    domain.append(('employee_ids.x_central_jail_id', '=', int(central_jail_id)))
                 except (ValueError, TypeError):
                     pass
 
-            # Fetch all records matching domain (active_test=False reaches inactive users)
             Users   = request.env['res.users'].sudo().with_context(active_test=False)
             records = Users.search(domain, order='name asc')
 
-            # Post-filter by user_type using has_group — more reliable than groups_id domain
-            # because Odoo's superuser (uid=1) bypasses group checks but has_group handles it.
             if user_type:
-                records = records.filtered(
-                    lambda u: self._matches_user_type(u, user_type)
-                )
+                records = records.filtered(lambda u: self._matches_user_type(u, user_type))
 
             total_count = len(records)
             paged       = records[offset: offset + limit]
@@ -233,15 +321,8 @@ class UsersApiController(http.Controller):
 
     # ── GET /api/users/<int:user_id> ──────────────────────────────────────────
 
-    @http.route(
-        '/api/users/<int:user_id>',
-        auth='none',
-        type='http',
-        methods=['GET'],
-        csrf=False,
-    )
+    @http.route('/api/users/<int:user_id>', auth='none', type='http', methods=['GET'], csrf=False)
     def get_user(self, user_id, **kwargs):
-        """Return full detail for a single user (admin-only)."""
         uid, err = self._require_auth()
         if err:
             return err
@@ -254,7 +335,6 @@ class UsersApiController(http.Controller):
             user = request.env['res.users'].sudo().with_context(active_test=False).browse(user_id)
             if not user.exists() or user.share:
                 return self._err('User not found.', status=404)
-
             return self._json({'success': True, 'user': self._format_user(user)})
 
         except Exception as exc:
@@ -263,15 +343,8 @@ class UsersApiController(http.Controller):
 
     # ── PUT /api/users/<int:user_id> ──────────────────────────────────────────
 
-    @http.route(
-        '/api/users/<int:user_id>',
-        auth='none',
-        type='http',
-        methods=['PUT'],
-        csrf=False,
-    )
+    @http.route('/api/users/<int:user_id>', auth='none', type='http', methods=['PUT'], csrf=False)
     def update_user(self, user_id, **kwargs):
-        """Update editable fields for a user: name, email, mobile, user_type."""
         uid, err = self._require_auth()
         if err:
             return err
@@ -291,13 +364,11 @@ class UsersApiController(http.Controller):
             if not user.exists() or user.share:
                 return self._err('User not found.', status=404)
 
-            # Super Admin can only be edited by another Super Admin
-            target_type = self._get_user_type(user)
+            target_type      = self._get_user_type(user)
             is_current_super = current_user.has_group('base.group_system')
             if target_type == 'Super Admin' and not is_current_super:
                 return self._err('Only a Super Admin can edit a Super Admin account.', status=403)
 
-            # ── Field validation ──────────────────────────────────────────────
             name      = (body.get('name')      or '').strip()
             email     = (body.get('email')     or '').strip()
             mobile    = (body.get('mobile')    or '').strip()
@@ -312,13 +383,11 @@ class UsersApiController(http.Controller):
             if user_type and user_type not in ('admin', 'user'):
                 return self._err('user_type must be "admin" or "user".')
 
-            # ── Apply updates ─────────────────────────────────────────────────
             user_vals = {'name': name}
             if email:
                 user_vals['email'] = email
             user.write(user_vals)
 
-            # Sync to linked employee if present
             emp = user.employee_ids[:1] if user.employee_ids else None
             if emp:
                 emp_vals = {}
@@ -329,7 +398,6 @@ class UsersApiController(http.Controller):
                 if emp_vals:
                     emp.write(emp_vals)
 
-            # ── User type change ──────────────────────────────────────────────
             if user_type and target_type != 'Super Admin':
                 group_erp = env.ref('base.group_erp_manager', raise_if_not_found=False)
                 if group_erp:
@@ -346,15 +414,8 @@ class UsersApiController(http.Controller):
 
     # ── DELETE /api/users/<int:user_id> ───────────────────────────────────────
 
-    @http.route(
-        '/api/users/<int:user_id>',
-        auth='none',
-        type='http',
-        methods=['DELETE'],
-        csrf=False,
-    )
+    @http.route('/api/users/<int:user_id>', auth='none', type='http', methods=['DELETE'], csrf=False)
     def delete_user(self, user_id, **kwargs):
-        """Archive (soft-delete) a user — sets active=False."""
         uid, err = self._require_auth()
         if err:
             return err
@@ -363,7 +424,6 @@ class UsersApiController(http.Controller):
         if not self._is_admin_user(current_user):
             return self._err('Access denied. Admin privileges required.', status=403)
 
-        # Prevent self-deletion
         if user_id == uid:
             return self._err('You cannot delete your own account.', status=400)
 
@@ -372,8 +432,7 @@ class UsersApiController(http.Controller):
             if not user.exists() or user.share:
                 return self._err('User not found.', status=404)
 
-            # Super Admin can only be deleted by another Super Admin
-            target_type = self._get_user_type(user)
+            target_type      = self._get_user_type(user)
             is_current_super = current_user.has_group('base.group_system')
             if target_type == 'Super Admin' and not is_current_super:
                 return self._err('Only a Super Admin can delete a Super Admin account.', status=403)
@@ -387,15 +446,8 @@ class UsersApiController(http.Controller):
 
     # ── POST /api/users/<int:user_id>/reactivate ──────────────────────────────
 
-    @http.route(
-        '/api/users/<int:user_id>/reactivate',
-        auth='none',
-        type='http',
-        methods=['POST'],
-        csrf=False,
-    )
+    @http.route('/api/users/<int:user_id>/reactivate', auth='none', type='http', methods=['POST'], csrf=False)
     def reactivate_user(self, user_id, **kwargs):
-        """Restore an archived user — sets active=True."""
         uid, err = self._require_auth()
         if err:
             return err
@@ -418,3 +470,294 @@ class UsersApiController(http.Controller):
         except Exception as exc:
             _logger.exception('POST /api/users/%s/reactivate failed: %s', user_id, exc)
             return self._err('Failed to reactivate user.', status=500)
+
+    # ── POST /api/users/invite ────────────────────────────────────────────────
+
+    @http.route('/api/users/invite', auth='none', type='http', methods=['POST'], csrf=False)
+    def invite_user(self, **kwargs):
+        """Admin generates an invite token, stores it, and emails the signup link."""
+        uid, err = self._require_auth()
+        if err:
+            return err
+
+        current_user = request.env['res.users'].sudo().browse(uid)
+        if not self._is_admin_user(current_user):
+            return self._err('Access denied. Admin privileges required.', status=403)
+
+        try:
+            body = json.loads(request.httprequest.get_data(as_text=True) or '{}')
+        except Exception:
+            return self._err('Invalid JSON body.')
+
+        email     = (body.get('email')     or '').strip().lower()
+        name      = (body.get('name')      or '').strip()
+        user_type = (body.get('user_type') or 'admin').strip().lower()
+
+        if not email:
+            return self._err('email is required.')
+        if not _EMAIL_RE.match(email):
+            return self._err('Invalid email address format.')
+        if user_type not in ('admin', 'user'):
+            return self._err('user_type must be "admin" or "user".')
+
+        # Block duplicate active invitations for same email
+        ICP = request.env['ir.config_parameter'].sudo()
+        existing_invites = ICP.search([('key', '=like', 'tnpd.invite.%')])
+        for inv in existing_invites:
+            try:
+                p = json.loads(inv.value or '{}')
+                if p.get('email', '').lower() == email and not p.get('used') and _invitation_status(p) == 'Pending':
+                    return self._err('An active invitation already exists for this email. Revoke it first or wait for it to expire.')
+            except Exception:
+                pass
+
+        # Check email not already a user
+        existing_user = request.env['res.users'].sudo().search([('login', '=ilike', email)], limit=1)
+        if existing_user:
+            return self._err('A user with this email already exists.')
+
+        token   = secrets.token_urlsafe(32)
+        now     = datetime.utcnow()
+        expires = (now + timedelta(days=7)).isoformat()
+
+        fe_base    = _fe_base_url()
+        signup_url = f'{fe_base}/activate-account?token={token}'
+        role_label = 'Admin' if user_type == 'admin' else 'User'
+
+        payload = {
+            'email':           email,
+            'name':            name,
+            'user_type':       user_type,
+            'expires':         expires,
+            'created_at':      now.isoformat(),
+            'used':            False,
+            'accepted_at':     '',
+            'invited_by':      uid,
+            'invited_by_name': current_user.name or '',
+            'signup_url':      signup_url,
+            'email_sent':      False,
+        }
+
+        ICP.set_param(f'tnpd.invite.{token}', json.dumps(payload))
+
+        # Attempt to send email
+        email_sent  = False
+        email_error = ''
+        try:
+            _send_invite_email(
+                to_email        = email,
+                to_name         = name or email,
+                inviter_name    = current_user.name or 'TNPD Admin',
+                role            = role_label,
+                activation_link = signup_url,
+            )
+            email_sent = True
+            payload['email_sent'] = True
+            ICP.set_param(f'tnpd.invite.{token}', json.dumps(payload))
+        except ValueError as ve:
+            email_error = str(ve)
+            _logger.warning('Invite email skipped (SMTP not configured): %s', ve)
+        except Exception as exc:
+            email_error = 'Email delivery failed. Share the link manually.'
+            _logger.error('Invite email send failed for %s: %s', email, exc)
+
+        return self._ok(
+            token      = token,
+            signup_url = signup_url,
+            expires    = expires,
+            email      = email,
+            email_sent = email_sent,
+            email_error= email_error,
+        )
+
+    # ── GET /api/admin/invitations ────────────────────────────────────────────
+
+    @http.route('/api/admin/invitations', auth='none', type='http', methods=['GET'], csrf=False)
+    def list_invitations(self, **kwargs):
+        """Return all invitations with their current status."""
+        uid, err = self._require_auth()
+        if err:
+            return err
+
+        current_user = request.env['res.users'].sudo().browse(uid)
+        if not self._is_admin_user(current_user):
+            return self._err('Access denied. Admin privileges required.', status=403)
+
+        try:
+            ICP    = request.env['ir.config_parameter'].sudo()
+            params = ICP.search([('key', '=like', 'tnpd.invite.%')], order='create_date desc')
+
+            invitations = []
+            for p in params:
+                try:
+                    payload = json.loads(p.value or '{}')
+                    invitations.append(_format_invitation(p.key, payload))
+                except Exception:
+                    pass
+
+            # Sort: Pending first, then by created_at desc
+            order = {'Pending': 0, 'Accepted': 1, 'Expired': 2}
+            invitations.sort(key=lambda x: (order.get(x['status'], 3), x.get('created_at', '').__class__.__name__))
+
+            return self._ok(invitations=invitations, total=len(invitations))
+
+        except Exception as exc:
+            _logger.exception('GET /api/admin/invitations failed: %s', exc)
+            return self._err('Failed to load invitations.', status=500)
+
+    # ── DELETE /api/admin/invitations/<token> — revoke ────────────────────────
+
+    @http.route('/api/admin/invitations/<string:token>', auth='none', type='http', methods=['DELETE'], csrf=False)
+    def revoke_invitation(self, token, **kwargs):
+        """Revoke (delete) a pending invitation."""
+        uid, err = self._require_auth()
+        if err:
+            return err
+
+        current_user = request.env['res.users'].sudo().browse(uid)
+        if not self._is_admin_user(current_user):
+            return self._err('Access denied. Admin privileges required.', status=403)
+
+        ICP = request.env['ir.config_parameter'].sudo()
+        key = f'tnpd.invite.{token}'
+        rec = ICP.search([('key', '=', key)], limit=1)
+        if not rec:
+            return self._err('Invitation not found.', status=404)
+
+        try:
+            payload = json.loads(rec.value or '{}')
+        except Exception:
+            payload = {}
+
+        if payload.get('used'):
+            return self._err('Cannot revoke an already accepted invitation.', status=400)
+
+        rec.unlink()
+        return self._ok(message='Invitation revoked successfully.')
+
+    # ── GET /api/auth/verify-invite ───────────────────────────────────────────
+
+    @http.route('/api/auth/verify-invite', auth='none', type='http', methods=['GET'], csrf=False)
+    def verify_invite(self, **kwargs):
+        """Public — validate invite token and return pre-filled fields."""
+        token = (kwargs.get('token') or '').strip()
+        if not token:
+            return self._err('token is required.', status=400)
+
+        ICP = request.env['ir.config_parameter'].sudo()
+        raw = ICP.get_param(f'tnpd.invite.{token}', default=None)
+        if not raw:
+            return self._err('Invalid or expired invite link.', status=404)
+
+        try:
+            payload = json.loads(raw)
+        except Exception:
+            return self._err('Invalid invite data.', status=400)
+
+        if payload.get('used'):
+            return self._err('This invite link has already been used.', status=410)
+
+        expires = payload.get('expires', '')
+        if expires:
+            try:
+                if datetime.utcnow() > datetime.fromisoformat(expires):
+                    return self._err('This invite link has expired.', status=410)
+            except Exception:
+                pass
+
+        return self._ok(
+            valid     = True,
+            email     = payload.get('email', ''),
+            name      = payload.get('name', ''),
+            user_type = payload.get('user_type', 'admin'),
+        )
+
+    # ── POST /api/auth/signup ─────────────────────────────────────────────────
+
+    @http.route('/api/auth/signup', auth='none', type='http', methods=['POST'], csrf=False)
+    def signup(self, **kwargs):
+        """Public — complete account activation using a valid invite token."""
+        try:
+            body = json.loads(request.httprequest.get_data(as_text=True) or '{}')
+        except Exception:
+            return self._err('Invalid JSON body.')
+
+        token    = (body.get('token')    or '').strip()
+        name     = (body.get('name')     or '').strip()
+        password = (body.get('password') or '').strip()
+
+        if not token:
+            return self._err('token is required.')
+        if not name:
+            return self._err('Name is required.')
+        if not password or len(password) < 8:
+            return self._err('Password must be at least 8 characters.')
+
+        ICP = request.env['ir.config_parameter'].sudo()
+        raw = ICP.get_param(f'tnpd.invite.{token}', default=None)
+        if not raw:
+            return self._err('Invalid or expired invite link.', status=404)
+
+        try:
+            payload = json.loads(raw)
+        except Exception:
+            return self._err('Invalid invite data.', status=400)
+
+        if payload.get('used'):
+            return self._err('This invite link has already been used.', status=410)
+
+        expires = payload.get('expires', '')
+        if expires:
+            try:
+                if datetime.utcnow() > datetime.fromisoformat(expires):
+                    return self._err('This invite link has expired.', status=410)
+            except Exception:
+                pass
+
+        email     = payload.get('email', '')
+        user_type = payload.get('user_type', 'admin')
+
+        existing = request.env['res.users'].sudo().search([('login', '=ilike', email)], limit=1)
+        if existing:
+            return self._err('A user with this email already exists.')
+
+        try:
+            env = request.env
+
+            group_user = env.ref('base.group_user', raise_if_not_found=False)
+            group_erp  = env.ref('base.group_erp_manager', raise_if_not_found=False)
+
+            groups = []
+            if group_user:
+                groups.append((4, group_user.id))
+            if user_type == 'admin' and group_erp:
+                groups.append((4, group_erp.id))
+
+            user_vals = {
+                'name':     name,
+                'login':    email,
+                'email':    email,
+                'password': password,
+                'active':   True,
+                'share':    False,
+            }
+            if groups:
+                user_vals['groups_id'] = groups
+
+            new_user = env['res.users'].sudo().create(user_vals)
+
+            # Mark token used
+            payload['used']        = True
+            payload['accepted_at'] = datetime.utcnow().isoformat()
+            ICP.set_param(f'tnpd.invite.{token}', json.dumps(payload))
+
+            return self._ok(
+                message  = 'Account created successfully. You can now log in.',
+                user_id  = new_user.id,
+                name     = new_user.name,
+                email    = new_user.email,
+            )
+
+        except Exception as exc:
+            _logger.exception('POST /api/auth/signup failed: %s', exc)
+            return self._err('Failed to create account. Please try again.', status=500)
