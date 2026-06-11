@@ -54,16 +54,17 @@ services:
       USER: odoo
       PASSWORD: odoo
       # ── SMTP for invitation emails ─────────────────────────────────────
-      # Fill these in to enable automatic email sending on user invites.
-      # Leave SMTP_HOST blank to disable email (link will still be shown).
-      SMTP_HOST: "smtp.gmail.com"
-      SMTP_PORT: "587"
-      SMTP_USERNAME: "arya.stark.gig@gmail.com"
-      SMTP_PASSWORD: "qdnw ueor wpgz gwuw"
-      SMTP_FROM_EMAIL: "arya.stark.gig@gmail.com"
-      SMTP_FROM_NAME: "TNPD Prison HRMS"
+      # Set these via GitHub Actions secrets or server environment variables.
+      # Leave SMTP_HOST blank/unset to disable email (link will still show).
+      SMTP_HOST: ${SMTP_HOST:-smtp.gmail.com}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USERNAME: ${SMTP_USERNAME:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM_EMAIL: ${SMTP_FROM_EMAIL:-}
+      SMTP_FROM_NAME: ${SMTP_FROM_NAME:-TNPD Prison HRMS}
       # ── Frontend URL (used in activation links) ────────────────────────
-      APP_URL: "http://localhost:5174"
+      # Set APP_URL to your production domain in GitHub Actions secrets.
+      APP_URL: ${APP_URL:-http://localhost:5174}
 
 # ── Named Volumes ────────────────────────────────────────────────────────
 volumes:
