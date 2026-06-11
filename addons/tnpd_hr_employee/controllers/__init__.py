@@ -7,3 +7,4 @@ from . import settings_api
 from . import employee_portal_api
 from . import cors_middleware
 from . import users_api
+from . import analytics_api
