@@ -725,31 +725,32 @@ class UsersApiController(http.Controller):
             return self._err('A user with this email already exists.')
 
         try:
-            sudo_env = request.env.sudo()
-
-            group_user = sudo_env.ref('base.group_user', raise_if_not_found=False)
-            group_erp  = sudo_env.ref('base.group_erp_manager', raise_if_not_found=False)
-
-            groups = []
-            if group_user:
-                groups.append((4, group_user.id))
-            if user_type == 'admin' and group_erp:
-                groups.append((4, group_erp.id))
+            group_erp    = request.env.ref('base.group_erp_manager', raise_if_not_found=False)
+            main_company = request.env['res.company'].sudo().search([], limit=1, order='id asc')
 
             user_vals = {
-                'name':   name,
-                'login':  email,
-                'email':  email,
-                'active': True,
-                'share':  False,
+                'name':        name,
+                'login':       email,
+                'email':       email,
+                'active':      True,
+                'share':       False,
+                'company_id':  main_company.id,
+                'company_ids': [(4, main_company.id)],
             }
-            if groups:
-                user_vals['groups_id'] = groups
+            if user_type == 'admin' and group_erp:
+                user_vals['group_ids'] = [(4, group_erp.id)]
 
-            new_user = sudo_env['res.users'].create(user_vals)
-
-            # Set password explicitly after creation for reliability
-            new_user.write({'password': password})
+            # flush_all() runs on request.env (uid=None in auth='none').  When the
+            # user's avatar SVG is written via a related field, ir_attachment._check_contents
+            # calls sudo(False).has_access() which fails on an empty user.
+            # Setting attachments_mime_plainxml on request.env propagates the flag
+            # through flush_all() so the failing has_access() branch is skipped.
+            # no_reset_password suppresses auth_signup's welcome email during create.
+            # no_reset_password: suppresses auth_signup's welcome email during create.
+            # The ir_attachment._check_contents crash (uid=None → sudo(False).has_access fails)
+            # is handled by the IrAttachment override in models/ir_attachment.py.
+            new_user = request.env['res.users'].sudo().with_context(no_reset_password=True).create(user_vals)
+            new_user.sudo().write({'password': password})
 
             # Mark token consumed
             payload['used']        = True
