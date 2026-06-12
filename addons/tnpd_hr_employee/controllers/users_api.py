@@ -714,18 +714,21 @@ class UsersApiController(http.Controller):
             except Exception:
                 pass
 
-        email     = payload.get('email', '')
+        email     = (payload.get('email') or '').strip().lower()
         user_type = payload.get('user_type', 'admin')
+
+        if not email:
+            return self._err('Invite token is missing email.', status=400)
 
         existing = request.env['res.users'].sudo().search([('login', '=ilike', email)], limit=1)
         if existing:
             return self._err('A user with this email already exists.')
 
         try:
-            env = request.env
+            sudo_env = request.env.sudo()
 
-            group_user = env.ref('base.group_user', raise_if_not_found=False)
-            group_erp  = env.ref('base.group_erp_manager', raise_if_not_found=False)
+            group_user = sudo_env.ref('base.group_user', raise_if_not_found=False)
+            group_erp  = sudo_env.ref('base.group_erp_manager', raise_if_not_found=False)
 
             groups = []
             if group_user:
@@ -734,28 +737,36 @@ class UsersApiController(http.Controller):
                 groups.append((4, group_erp.id))
 
             user_vals = {
-                'name':     name,
-                'login':    email,
-                'email':    email,
-                'password': password,
-                'active':   True,
-                'share':    False,
+                'name':   name,
+                'login':  email,
+                'email':  email,
+                'active': True,
+                'share':  False,
             }
             if groups:
                 user_vals['groups_id'] = groups
 
-            new_user = env['res.users'].sudo().create(user_vals)
+            new_user = sudo_env['res.users'].create(user_vals)
 
-            # Mark token used
+            # Set password explicitly after creation for reliability
+            new_user.write({'password': password})
+
+            # Mark token consumed
             payload['used']        = True
             payload['accepted_at'] = datetime.utcnow().isoformat()
             ICP.set_param(f'tnpd.invite.{token}', json.dumps(payload))
 
+            _logger.info(
+                'Signup complete: user %s (id=%s, type=%s) created via invite token',
+                email, new_user.id, user_type,
+            )
+
             return self._ok(
-                message  = 'Account created successfully. You can now log in.',
-                user_id  = new_user.id,
-                name     = new_user.name,
-                email    = new_user.email,
+                message   = 'Account created successfully. You can now log in.',
+                user_id   = new_user.id,
+                name      = new_user.name,
+                email     = new_user.email,
+                user_type = user_type,
             )
 
         except Exception as exc:
