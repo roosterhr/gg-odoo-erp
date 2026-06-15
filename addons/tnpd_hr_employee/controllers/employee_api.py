@@ -394,6 +394,19 @@ class EmployeeAPI(http.Controller):
         if kwargs.get('native_district'):
             domain.append(('x_native_district', 'ilike', kwargs['native_district']))
 
+        if kwargs.get('eligible') in ('1', 'true', True):
+            from datetime import date, timedelta
+            cutoff = date.today() - timedelta(days=3 * 365)
+            domain.append(('x_date_present_station', '<=', str(cutoff)))
+            domain.append(('x_date_present_station', '!=', False))
+
+        if kwargs.get('retiring_soon') in ('1', 'true', True):
+            from datetime import date, timedelta
+            today = date.today()
+            cutoff = today + timedelta(days=30)
+            domain.append(('x_date_of_retirement', '>=', str(today)))
+            domain.append(('x_date_of_retirement', '<=', str(cutoff)))
+
         search_domain = self._build_search_or_domain(
             q=kwargs.get('q'),
             name=kwargs.get('name'),

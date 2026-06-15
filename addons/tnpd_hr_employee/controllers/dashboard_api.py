@@ -232,9 +232,10 @@ class DashboardApiController(http.Controller):
             recent_audit = []
 
         # Alert counts
-        retirement_cutoff = date.today() + timedelta(days=30)
+        today = date.today()
+        retirement_cutoff = today + timedelta(days=30)
         retiring_soon = len(all_employees.filtered(
-            lambda e: e.x_date_of_retirement and e.x_date_of_retirement <= retirement_cutoff
+            lambda e: e.x_date_of_retirement and today <= e.x_date_of_retirement <= retirement_cutoff
         ))
 
         return self._json({
@@ -335,18 +336,40 @@ class DashboardApiController(http.Controller):
         Jail = env['prison.jail'].sudo()
 
         all_jails = Jail.search([('active', '=', True)], order='name')
-        counts = {}
+        jail_name_map = {j.name.strip().lower(): j for j in all_jails if j.name}
+
+        counts = {}       # jail.id → count
+        text_counts = {}  # jail name (text) → count for unmatched text-field employees
+
         for emp in Employee.search([('active', '=', True)]):
-            # Leaf jail: sub > district > central
             jail = emp.x_sub_jail_id or emp.x_district_jail_id or emp.x_central_jail_id
             if jail:
                 counts[jail.id] = counts.get(jail.id, 0) + 1
+            else:
+                # Fall back to text fields
+                jail_text = None
+                if emp.x_sub_jail and emp.x_sub_jail.strip().lower() not in ('', 'nil'):
+                    jail_text = emp.x_sub_jail.strip()
+                elif emp.x_district_jail and emp.x_district_jail.strip().lower() not in ('', 'nil'):
+                    jail_text = emp.x_district_jail.strip()
+                elif emp.x_central_prison and emp.x_central_prison.strip().lower() not in ('', 'nil'):
+                    jail_text = emp.x_central_prison.strip()
+                if jail_text:
+                    matched = jail_name_map.get(jail_text.lower())
+                    if matched:
+                        counts[matched.id] = counts.get(matched.id, 0) + 1
+                    else:
+                        text_counts[jail_text] = text_counts.get(jail_text, 0) + 1
 
         jails = []
         for jail in all_jails:
             c = counts.get(jail.id, 0)
             if c:
                 jails.append({'id': jail.id, 'name': jail.name, 'count': c})
+
+        # Include text-only entries that didn't match a prison.jail record
+        for name, c in text_counts.items():
+            jails.append({'id': None, 'name': name, 'count': c})
 
         jails.sort(key=lambda x: x['count'], reverse=True)
         return self._json({'jails': jails[:20]})
@@ -454,6 +477,7 @@ class DashboardApiController(http.Controller):
                 pass
 
         for emp in all_employees:
+            jail_id = None
             if emp.x_sub_jail_id:
                 jtype   = 'sub_jail'
                 jail_id = emp.x_sub_jail_id.id
@@ -463,7 +487,14 @@ class DashboardApiController(http.Controller):
             elif emp.x_central_jail_id:
                 jail_id = emp.x_central_jail_id.id
                 jail_name = (emp.x_central_jail_id.name or '').lower()
-                # Detect Special Women Prisons by name convention (same logic as prison_jail_api)
+                jtype = 'women_prison' if 'special' in jail_name else 'central_prison'
+            # Fall back to text fields when ID fields are not populated
+            elif emp.x_sub_jail and emp.x_sub_jail.strip() and emp.x_sub_jail.strip().lower() != 'nil':
+                jtype = 'sub_jail'
+            elif emp.x_district_jail and emp.x_district_jail.strip() and emp.x_district_jail.strip().lower() != 'nil':
+                jtype = 'district_jail'
+            elif emp.x_central_prison and emp.x_central_prison.strip() and emp.x_central_prison.strip().lower() != 'nil':
+                jail_name = emp.x_central_prison.strip().lower()
                 jtype = 'women_prison' if 'special' in jail_name else 'central_prison'
             else:
                 continue  # no jail assigned — skip
