@@ -51,3 +51,7 @@ package.json
 /man/
 /share/
 /src/
+# Raven Enterprise -- never commit these
+.raven/manifest.secrets.json
+.raven/.cache/
+.model.env
