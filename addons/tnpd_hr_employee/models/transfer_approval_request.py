@@ -139,7 +139,6 @@ class TransferApprovalRequest(models.Model):
         comodel_name='prison.jail',
         string='Requested Sub Jail',
         domain=[('jail_type', '=', 'sub_jail'), ('active', '=', True)],
-        required=True,
         index=True,
         ondelete='restrict',
     )
