@@ -382,17 +382,37 @@ class TransferApprovalController(http.Controller):
                         f'"{parent.name}".'
                     )
 
-            # --- Prevent duplicate pending requests -----------------------
+            # --- Resolve transfer_type ------------------------------------
+            transfer_type = data.get('transfer_type', 'tenure')
+
+            # --- Prevent duplicate pending requests (same type) -----------
             existing = env['transfer.approval.request'].sudo().search([
                 ('employee_id', '=', employee.id),
+                ('transfer_type', '=', transfer_type),
                 ('state', '=', 'pending'),
                 ('active', '=', True),
             ], limit=1)
             if existing:
                 return self._err(
-                    f'Employee already has a pending transfer request '
+                    f'Employee already has a pending {transfer_type} transfer request '
                     f'(id={existing.id})'
                 )
+
+            # --- Resolve preference 2 & 3 ---------------------------------
+            def _resolve_pref(pref_data):
+                if not pref_data or not pref_data.get('central_id'):
+                    return {}
+                p_central = Jail.browse(int(pref_data['central_id']))
+                p_district = Jail.browse(int(pref_data['district_id'])) if pref_data.get('district_id') else False
+                p_sub = Jail.browse(int(pref_data['sub_id'])) if pref_data.get('sub_id') else False
+                return {
+                    'central': p_central if p_central.exists() else False,
+                    'district': p_district if p_district and p_district.exists() else False,
+                    'sub': p_sub if p_sub and p_sub.exists() else False,
+                }
+
+            pref2 = _resolve_pref(data.get('preference_2'))
+            pref3 = _resolve_pref(data.get('preference_3'))
 
             # --- Auto-populate current posting snapshot -------------------
             TransferRequest = env['transfer.approval.request']
@@ -403,9 +423,16 @@ class TransferApprovalController(http.Controller):
                 mail_notrack=True
             ).create({
                 'employee_id':              employee.id,
+                'transfer_type':            transfer_type,
                 'requested_central_prison': central.id,
                 'requested_district_jail':  district.id if district else False,
-                'requested_sub_jail':       sub.id if sub else (district.id if district else central.id),
+                'requested_sub_jail':       sub.id if sub else False,
+                'preference_2_central_prison': pref2.get('central') and pref2['central'].id or False,
+                'preference_2_district_jail':  pref2.get('district') and pref2['district'].id or False,
+                'preference_2_sub_jail':       pref2.get('sub') and pref2['sub'].id or False,
+                'preference_3_central_prison': pref3.get('central') and pref3['central'].id or False,
+                'preference_3_district_jail':  pref3.get('district') and pref3['district'].id or False,
+                'preference_3_sub_jail':       pref3.get('sub') and pref3['sub'].id or False,
                 'approval_user_id':         approval_user.id,
                 'requested_by':             uid,
                 'state':                    'pending',
@@ -1372,6 +1399,14 @@ class TransferApprovalController(http.Controller):
             district_name = (emp.x_district_jail_id.name if emp.x_district_jail_id else '') or emp.x_district_jail   or ''
             sub_name      = (emp.x_sub_jail_id.name      if emp.x_sub_jail_id      else '') or emp.x_sub_jail         or ''
 
+            # Determine the level of the employee's current posting
+            if emp.x_sub_jail_id or sub_name:
+                current_jail_level = 'sub'
+            elif emp.x_district_jail_id or district_name:
+                current_jail_level = 'district'
+            else:
+                current_jail_level = 'central'
+
             data.append({
                 'employee_id':      emp.id,
                 'employee_name':    emp.name or '',
@@ -1391,6 +1426,7 @@ class TransferApprovalController(http.Controller):
                     'id':   emp.x_sub_jail_id.id if emp.x_sub_jail_id else None,
                     'name': sub_name,
                 },
+                'current_jail_level':      current_jail_level,
                 'date_present_station':   str(emp.x_date_present_station),
                 'tenure_years':           tenure_years,
                 'is_eligible':            True,
