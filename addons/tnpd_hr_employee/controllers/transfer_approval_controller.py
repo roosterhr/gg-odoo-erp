@@ -326,13 +326,7 @@ class TransferApprovalController(http.Controller):
                 return err
 
             # --- Required field presence -----------------------------------
-            required = [
-                'employee_id',
-                'requested_central_prison',
-                'requested_district_jail',
-                'requested_sub_jail',
-                'approval_user_id',
-            ]
+            required = ['employee_id', 'requested_central_prison', 'approval_user_id']
             missing = [f for f in required if not data.get(f)]
             if missing:
                 return self._err(f'Missing required fields: {", ".join(missing)}')
@@ -359,29 +353,34 @@ class TransferApprovalController(http.Controller):
                     'with jail_type=central_jail'
                 )
 
-            district = Jail.browse(int(data['requested_district_jail']))
-            if not district.exists() or district.jail_type != 'district_jail':
-                return self._err(
-                    'Invalid requested_district_jail: must be a prison.jail record '
-                    'with jail_type=district_jail'
-                )
-            if district.parent_id != central:
-                return self._err(
-                    f'District Jail "{district.name}" does not belong to '
-                    f'Central Jail "{central.name}".'
-                )
+            district = False
+            if data.get('requested_district_jail'):
+                district = Jail.browse(int(data['requested_district_jail']))
+                if not district.exists() or district.jail_type != 'district_jail':
+                    return self._err(
+                        'Invalid requested_district_jail: must be a prison.jail record '
+                        'with jail_type=district_jail'
+                    )
+                if district.parent_id != central:
+                    return self._err(
+                        f'District Jail "{district.name}" does not belong to '
+                        f'Central Jail "{central.name}".'
+                    )
 
-            sub = Jail.browse(int(data['requested_sub_jail']))
-            if not sub.exists() or sub.jail_type != 'sub_jail':
-                return self._err(
-                    'Invalid requested_sub_jail: must be a prison.jail record '
-                    'with jail_type=sub_jail'
-                )
-            if sub.parent_id != district:
-                return self._err(
-                    f'Sub Jail "{sub.name}" does not belong to '
-                    f'District Jail "{district.name}".'
-                )
+            sub = False
+            if data.get('requested_sub_jail'):
+                sub = Jail.browse(int(data['requested_sub_jail']))
+                if not sub.exists() or sub.jail_type != 'sub_jail':
+                    return self._err(
+                        'Invalid requested_sub_jail: must be a prison.jail record '
+                        'with jail_type=sub_jail'
+                    )
+                parent = district if district else central
+                if sub.parent_id != parent:
+                    return self._err(
+                        f'Sub Jail "{sub.name}" does not belong to '
+                        f'"{parent.name}".'
+                    )
 
             # --- Prevent duplicate pending requests -----------------------
             existing = env['transfer.approval.request'].sudo().search([
@@ -403,14 +402,14 @@ class TransferApprovalController(http.Controller):
             new_request = TransferRequest.sudo().with_context(
                 mail_notrack=True
             ).create({
-                'employee_id':             employee.id,
+                'employee_id':              employee.id,
                 'requested_central_prison': central.id,
-                'requested_district_jail': district.id,
-                'requested_sub_jail':      sub.id,
-                'approval_user_id':        approval_user.id,
-                'requested_by':            uid,
-                'state':                   'pending',
-                'remarks':                 data.get('remarks', ''),
+                'requested_district_jail':  district.id if district else False,
+                'requested_sub_jail':       sub.id if sub else (district.id if district else central.id),
+                'approval_user_id':         approval_user.id,
+                'requested_by':             uid,
+                'state':                    'pending',
+                'remarks':                  data.get('remarks', ''),
                 **current_vals,
             })
 
