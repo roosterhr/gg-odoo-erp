@@ -192,7 +192,7 @@ class UsersApiController(http.Controller):
         if user_type == 'super_admin':
             return utype == 'Super Admin'
         if user_type == 'admin':
-            return utype == 'Admin'
+            return utype in ('Admin', 'Super Admin')
         if user_type == 'user':
             return utype == 'User'
         return True
