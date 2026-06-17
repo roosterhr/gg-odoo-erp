@@ -380,12 +380,25 @@ class EmployeeAPI(http.Controller):
         ]
 
         if kwargs.get('designation'):
-            domain.append(('x_designation', 'ilike', kwargs['designation']))
+            domain.append(('x_designation', '=', kwargs['designation']))
 
         if kwargs.get('status') and kwargs['status'] != 'all':
             domain.append(('x_status', '=', kwargs['status']))
 
-        if kwargs.get('central_jail_id'):
+        if kwargs.get('jail_id'):
+            try:
+                jail_id = int(kwargs['jail_id'])
+                jail = request.env['prison.jail'].sudo().browse(jail_id)
+                if jail.exists():
+                    if jail.jail_type == 'central_jail':
+                        domain.append(('x_central_jail_id', '=', jail_id))
+                    elif jail.jail_type == 'district_jail':
+                        domain.append(('x_district_jail_id', '=', jail_id))
+                    elif jail.jail_type == 'sub_jail':
+                        domain.append(('x_sub_jail_id', '=', jail_id))
+            except (ValueError, TypeError):
+                pass
+        elif kwargs.get('central_jail_id'):
             try:
                 domain.append(('x_central_jail_id', '=', int(kwargs['central_jail_id'])))
             except ValueError:
@@ -471,6 +484,32 @@ class EmployeeAPI(http.Controller):
             'uid':      uid,
             'is_admin': user._is_admin(),
         })
+
+    # ── GET /api/employees/designations — distinct designation values ─────────
+
+    @http.route('/api/employees/designations', auth='none', type='http', methods=['GET'], csrf=False)
+    def get_designations(self, **_kwargs):
+        """Return sorted list of distinct designation values present in the DB."""
+        try:
+            uid, err = self._require_auth()
+            if err:
+                return err
+
+            request.env.cr.execute("""
+                SELECT DISTINCT x_designation
+                FROM hr_employee
+                WHERE active = true
+                  AND x_employee_code IS NOT NULL
+                  AND x_employee_code != ''
+                  AND x_designation IS NOT NULL
+                  AND x_designation != ''
+                ORDER BY x_designation ASC
+            """)
+            designations = [row[0] for row in request.env.cr.fetchall()]
+            return self._json_response({'success': True, 'designations': designations})
+        except Exception as exc:
+            _logger.exception('GET /api/employees/designations failed: %s', exc)
+            return self._json_response({'success': False, 'message': 'Internal server error'}, status=500)
 
     # ── GET /api/employees — paginated list with filters ──────────────────────
 

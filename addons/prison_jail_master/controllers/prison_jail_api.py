@@ -633,7 +633,79 @@ class PrisonJailApiController(http.Controller):
             },
         }, status=201)
 
-    # ── API 8: Export Hierarchy ───────────────────────────────────────────────
+    # ── API 8: Filter List (grouped, for Personnel filter dropdown) ──────────
+
+    @http.route(
+        '/api/jails/filter-list',
+        auth='none',
+        type='http',
+        methods=['GET'],
+        csrf=False,
+    )
+    def get_filter_list(self, **_kwargs):
+        """
+        Return all active jails grouped by category for the Personnel filter
+        dropdown.  Groups follow TNPD hierarchy order:
+
+            1. Women's Special Prisons  (central_jail where name contains 'special')
+            2. Central Prisons          (remaining central_jail records)
+            3. District Jails
+            4. Sub Jails
+
+        Response:
+        {
+          "success": true,
+          "groups": [
+            { "label": "Women's Special Prisons",
+              "jails": [{ "id": 5, "name": "...", "jail_type": "central_jail" }] },
+            { "label": "Central Prisons",
+              "jails": [...] },
+            { "label": "District Jails",
+              "jails": [...] },
+            { "label": "Sub Jails",
+              "jails": [...] }
+          ]
+        }
+        """
+        try:
+            Jail = request.env['prison.jail'].sudo()
+
+            all_jails = Jail.search([('active', '=', True)], order='sequence, name')
+
+            women_special = []
+            central = []
+            district = []
+            sub = []
+
+            for j in all_jails:
+                item = {'id': j.id, 'name': j.name, 'jail_type': j.jail_type}
+                if j.jail_type == 'central_jail':
+                    if self._is_special_women(j):
+                        women_special.append(item)
+                    else:
+                        central.append(item)
+                elif j.jail_type == 'district_jail':
+                    district.append(item)
+                elif j.jail_type == 'sub_jail':
+                    sub.append(item)
+
+            groups = []
+            if women_special:
+                groups.append({'label': "Women's Special Prisons", 'jails': women_special})
+            if central:
+                groups.append({'label': 'Central Prisons', 'jails': central})
+            if district:
+                groups.append({'label': 'District Jails', 'jails': district})
+            if sub:
+                groups.append({'label': 'Sub Jails', 'jails': sub})
+
+            return self._json_response({'success': True, 'groups': groups})
+
+        except Exception as exc:
+            _logger.exception('GET /api/jails/filter-list failed: %s', exc)
+            return self._err('Internal server error', status=500)
+
+    # ── API 9: Export Hierarchy ───────────────────────────────────────────────
 
     @http.route(
         '/api/jails/export',
