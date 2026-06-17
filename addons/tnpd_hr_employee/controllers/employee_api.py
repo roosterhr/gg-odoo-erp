@@ -390,18 +390,36 @@ class EmployeeAPI(http.Controller):
                 jail_id = int(kwargs['jail_id'])
                 jail = request.env['prison.jail'].sudo().browse(jail_id)
                 if jail.exists():
+                    # Match both M2O (properly linked) and legacy text fields so that
+                    # employees imported before the Prison Master linkage still appear.
+                    name = jail.name
                     if jail.jail_type == 'central_jail':
-                        domain.append(('x_central_jail_id', '=', jail_id))
+                        domain += ['|',
+                            ('x_central_jail_id', '=', jail_id),
+                            ('x_central_prison', 'ilike', name),
+                        ]
                     elif jail.jail_type == 'district_jail':
-                        domain.append(('x_district_jail_id', '=', jail_id))
+                        domain += ['|',
+                            ('x_district_jail_id', '=', jail_id),
+                            ('x_district_jail', 'ilike', name),
+                        ]
                     elif jail.jail_type == 'sub_jail':
-                        domain.append(('x_sub_jail_id', '=', jail_id))
+                        domain += ['|',
+                            ('x_sub_jail_id', '=', jail_id),
+                            ('x_sub_jail', 'ilike', name),
+                        ]
             except (ValueError, TypeError):
                 pass
         elif kwargs.get('central_jail_id'):
             try:
-                domain.append(('x_central_jail_id', '=', int(kwargs['central_jail_id'])))
-            except ValueError:
+                cid = int(kwargs['central_jail_id'])
+                jail = request.env['prison.jail'].sudo().browse(cid)
+                name = jail.name if jail.exists() else ''
+                domain += ['|',
+                    ('x_central_jail_id', '=', cid),
+                    ('x_central_prison', 'ilike', name),
+                ]
+            except (ValueError, TypeError):
                 pass
 
         if kwargs.get('native_district'):
