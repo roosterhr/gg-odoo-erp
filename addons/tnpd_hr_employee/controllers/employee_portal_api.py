@@ -270,15 +270,25 @@ class EmployeePortalAPI(http.Controller):
         from_prison   = from_sub or from_district or from_central
         if not from_prison:
             from_prison = (
-                (emp.x_sub_jail_id.name      if emp.x_sub_jail_id      else '')
-                or (emp.x_district_jail_id.name if emp.x_district_jail_id else '')
-                or (emp.x_central_jail_id.name  if emp.x_central_jail_id  else '')
-                or ''
+                (emp.x_sub_jail_id.name      if emp.x_sub_jail_id      else '') or emp.x_sub_jail      or
+                (emp.x_district_jail_id.name if emp.x_district_jail_id else '') or emp.x_district_jail  or
+                (emp.x_central_jail_id.name  if emp.x_central_jail_id  else '') or emp.x_central_prison or
+                ''
             )
         to_sub      = rec.requested_sub_jail.name       if rec.requested_sub_jail       else ''
         to_district = rec.requested_district_jail.name  if rec.requested_district_jail  else ''
         to_central  = rec.requested_central_prison.name if rec.requested_central_prison else ''
         to_prison   = to_sub or to_district or to_central or ''
+
+        def _pref(central_f, district_f, sub_f):
+            c = central_f.name  if central_f  else ''
+            d = district_f.name if district_f else ''
+            s = sub_f.name      if sub_f      else ''
+            if not c:
+                return None
+            return {'central': c, 'district': d, 'sub': s,
+                    'display': s or d or c}
+
         return {
             'request_id':       rec.id,
             'transfer_type':    rec.transfer_type or 'request',
@@ -290,6 +300,10 @@ class EmployeePortalAPI(http.Controller):
             'to_central_name':  to_central,
             'to_district_name': to_district,
             'to_sub_name':      to_sub,
+            'preference_1':     _pref(rec.requested_central_prison, rec.requested_district_jail, rec.requested_sub_jail),
+            'preference_2':     _pref(rec.preference_2_central_prison, rec.preference_2_district_jail, rec.preference_2_sub_jail),
+            'preference_3':     _pref(rec.preference_3_central_prison, rec.preference_3_district_jail, rec.preference_3_sub_jail),
+            'approved_by':      rec.approved_by.name if rec.approved_by else '',
             'remarks':          rec.remarks or '',
             'request_date':     str(rec.create_date)   if rec.create_date   else '',
             'approved_date':    str(rec.approved_date) if rec.approved_date else '',
@@ -623,7 +637,7 @@ class EmployeePortalAPI(http.Controller):
             page, limit = 1, 20
 
         offset  = (page - 1) * limit
-        TAR     = request.env['transfer.approval.request'].sudo()
+        TAR     = request.env['transfer.approval.request'].sudo().with_context(active_test=False)
         domain  = [('employee_id', '=', emp.id)]
         total   = TAR.search_count(domain)
         records = TAR.search(domain, limit=limit, offset=offset, order='create_date desc')

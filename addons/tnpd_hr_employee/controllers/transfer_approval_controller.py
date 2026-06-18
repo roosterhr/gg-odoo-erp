@@ -13,8 +13,10 @@ _logger = logging.getLogger(__name__)
 # Hard cap on records returned per page.
 _MAX_LIMIT = 100
 
-# Tenure threshold in days (3 years).
-_TENURE_DAYS = 1095
+# Tenure thresholds in days.
+_TENURE_DAYS_STANDARD    = 1095  # 36 months — standard posting
+_TENURE_DAYS_HILL        = 547   # 18 months — hill station posting
+_TENURE_DAYS = _TENURE_DAYS_STANDARD  # legacy alias
 
 
 class TransferApprovalController(http.Controller):
@@ -1320,13 +1322,19 @@ class TransferApprovalController(http.Controller):
 
         all_employees = env['hr.employee'].sudo().search(emp_domain)
 
-        # Filter by tenure threshold
+        # Filter by tenure threshold (hill stations: 18 months, standard: 36 months)
         eligible = []
         for emp in all_employees:
             if not emp.x_date_present_station:
                 continue
+            is_hill = (
+                (emp.x_sub_jail_id and emp.x_sub_jail_id.is_hill_station) or
+                (emp.x_district_jail_id and emp.x_district_jail_id.is_hill_station) or
+                (emp.x_central_jail_id and emp.x_central_jail_id.is_hill_station)
+            )
+            threshold = _TENURE_DAYS_HILL if is_hill else _TENURE_DAYS_STANDARD
             delta = today - emp.x_date_present_station
-            if delta.days < _TENURE_DAYS:
+            if delta.days < threshold:
                 continue
             eligible.append((emp, delta.days))
 
@@ -1407,6 +1415,15 @@ class TransferApprovalController(http.Controller):
             else:
                 current_jail_level = 'central'
 
+            is_hill = (
+                (emp.x_sub_jail_id and emp.x_sub_jail_id.is_hill_station) or
+                (emp.x_district_jail_id and emp.x_district_jail_id.is_hill_station) or
+                (emp.x_central_jail_id and emp.x_central_jail_id.is_hill_station)
+            )
+            threshold_days = _TENURE_DAYS_HILL if is_hill else _TENURE_DAYS_STANDARD
+            from datetime import timedelta
+            eligible_since_date = emp.x_date_present_station + timedelta(days=threshold_days)
+
             data.append({
                 'employee_id':      emp.id,
                 'employee_name':    emp.name or '',
@@ -1427,7 +1444,9 @@ class TransferApprovalController(http.Controller):
                     'name': sub_name,
                 },
                 'current_jail_level':      current_jail_level,
+                'is_hill_station':         bool(is_hill),
                 'date_present_station':   str(emp.x_date_present_station),
+                'eligible_since':         str(eligible_since_date),
                 'tenure_years':           tenure_years,
                 'is_eligible':            True,
                 'has_vacancy_elsewhere':  emp_vacancy,
