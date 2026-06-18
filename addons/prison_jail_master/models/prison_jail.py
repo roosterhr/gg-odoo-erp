@@ -92,8 +92,20 @@ class PrisonJail(models.Model):
         string='State',
         domain=[('country_id.code', '=', 'IN')],
     )
+    latitude  = fields.Float(string='Latitude',  digits=(10, 6))
+    longitude = fields.Float(string='Longitude', digits=(10, 6))
+
+    # ── Hill Station ──────────────────────────────────────────────────────────
+
+    is_hill_station = fields.Boolean(
+        string='Hill Station',
+        default=False,
+        help='Officers posted here are eligible for transfer after 18 months instead of 36.',
+    )
 
     # ── Administration ────────────────────────────────────────────────────────
+
+    superintendent_email = fields.Char(string='Superintendent Email')
 
     active = fields.Boolean(default=True)
     sequence = fields.Integer(
