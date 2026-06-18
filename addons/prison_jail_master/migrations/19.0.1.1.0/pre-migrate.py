@@ -1,6 +1,3 @@
-from odoo.upgrade import util
-
-
 def migrate(cr, version):
     # Add geo / hill-station fields to prison_jail
     cr.execute("""
