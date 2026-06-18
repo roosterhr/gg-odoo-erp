@@ -1243,6 +1243,13 @@ class TransferApprovalController(http.Controller):
             except (TypeError, ValueError) as exc:
                 return self._err(f'Invalid pagination parameter: {exc}')
 
+            hill_param = kwargs.get('is_hill_station', None)
+            is_hill_filter = None
+            if hill_param == 'true':
+                is_hill_filter = True
+            elif hill_param == 'false':
+                is_hill_filter = False
+
             return self._json_response(
                 self._get_eligible_employees(
                     uid=uid,
@@ -1250,6 +1257,7 @@ class TransferApprovalController(http.Controller):
                     limit=limit,
                     search=kwargs.get('search', ''),
                     exclude_applied=False,
+                    is_hill_filter=is_hill_filter,
                 )
             )
 
@@ -1305,7 +1313,7 @@ class TransferApprovalController(http.Controller):
             _logger.exception('GET /api/transfer/eligible-admin failed: %s', exc)
             return self._err('Internal server error', status=500)
 
-    def _get_eligible_employees(self, uid, page, limit, search, exclude_applied):
+    def _get_eligible_employees(self, uid, page, limit, search, exclude_applied, is_hill_filter=None):
         """
         Shared logic for eligible-tenure and eligible-admin endpoints.
 
@@ -1336,7 +1344,13 @@ class TransferApprovalController(http.Controller):
             delta = today - emp.x_date_present_station
             if delta.days < threshold:
                 continue
-            eligible.append((emp, delta.days))
+            eligible.append((emp, delta.days, bool(is_hill)))
+
+        # Filter by hill station if requested
+        if is_hill_filter is True:
+            eligible = [(emp, days, hill) for emp, days, hill in eligible if hill]
+        elif is_hill_filter is False:
+            eligible = [(emp, days, hill) for emp, days, hill in eligible if not hill]
 
         # Find employees with existing tenure transfers to exclude
         if exclude_applied:
@@ -1355,7 +1369,7 @@ class TransferApprovalController(http.Controller):
         blocked_emp_ids  = set(blocked_requests.mapped('employee_id').ids)
 
         # Filter out blocked employees
-        eligible = [(emp, days) for emp, days in eligible if emp.id not in blocked_emp_ids]
+        eligible = [(emp, days, hill) for emp, days, hill in eligible if emp.id not in blocked_emp_ids]
 
         # Determine if any other prison has vacancy
         has_any_vacancy = False
@@ -1371,7 +1385,7 @@ class TransferApprovalController(http.Controller):
         page_slice = eligible[offset: offset + limit]
 
         data = []
-        for emp, days in page_slice:
+        for emp, days, _ in page_slice:
             tenure_years = round(days / 365.25, 1)
 
             # Check vacancy at OTHER prisons (not current sub jail) and collect details
