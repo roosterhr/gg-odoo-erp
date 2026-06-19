@@ -156,6 +156,34 @@ class EmployeeAPI(http.Controller):
             )
         return uid, None
 
+    def _get_assigned_jail_id(self, emp):
+        """Return the most-specific jail ID assigned to an employee (sub > district > central)."""
+        if emp.x_sub_jail_id:
+            return emp.x_sub_jail_id.id
+        if emp.x_district_jail_id:
+            return emp.x_district_jail_id.id
+        if emp.x_central_jail_id:
+            return emp.x_central_jail_id.id
+        return None
+
+    def _update_vacancy(self, old_jail_id, new_jail_id):
+        """Adjust occupied_count and vacancy_count on prison.vacancy when employee's jail changes."""
+        Vacancy = request.env['prison.vacancy'].sudo()
+        if old_jail_id and old_jail_id != new_jail_id:
+            rec = Vacancy.search([('prison_id', '=', old_jail_id)], limit=1)
+            if rec and rec.occupied_count > 0:
+                rec.write({
+                    'occupied_count': rec.occupied_count - 1,
+                    'vacancy_count': rec.vacancy_count + 1,
+                })
+        if new_jail_id and new_jail_id != old_jail_id:
+            rec = Vacancy.search([('prison_id', '=', new_jail_id)], limit=1)
+            if rec:
+                rec.write({
+                    'occupied_count': rec.occupied_count + 1,
+                    'vacancy_count': max(0, rec.vacancy_count - 1),
+                })
+
     def _format_employee(self, emp):
         """
         Serialise an hr.employee ORM record to the public API shape.
@@ -927,6 +955,7 @@ class EmployeeAPI(http.Controller):
                 return self._json_response({'success': False, 'message': err}, status=400)
 
             emp = request.env['hr.employee'].sudo().create(vals)
+            self._update_vacancy(None, self._get_assigned_jail_id(emp))
             return self._json_response(
                 {'success': True, 'message': 'Employee created', 'employee': self._format_employee(emp)},
                 status=201,
@@ -992,7 +1021,11 @@ class EmployeeAPI(http.Controller):
             if not ok:
                 return self._json_response({'success': False, 'message': err}, status=400)
 
+            old_jail_id = self._get_assigned_jail_id(emp)
             emp.write(vals)
+            new_jail_id = self._get_assigned_jail_id(emp)
+            if old_jail_id != new_jail_id:
+                self._update_vacancy(old_jail_id, new_jail_id)
             return self._json_response(
                 {'success': True, 'message': 'Employee updated', 'employee': self._format_employee(emp)},
             )
