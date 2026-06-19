@@ -99,7 +99,7 @@ class DashboardApiController(http.Controller):
         # Institutions — distinct jails from prison.jail master
         try:
             Jail = env['prison.jail'].sudo()
-            central_jails  = Jail.search([('jail_type', '=', 'central_prison'), ('active', '=', True)])
+            central_jails  = Jail.search([('jail_type', '=', 'central_jail'), ('active', '=', True)])
             district_jails = Jail.search([('jail_type', '=', 'district_jail'),  ('active', '=', True)])
             sub_jails      = Jail.search([('jail_type', '=', 'sub_jail'),        ('active', '=', True)])
             total_institutions = len(central_jails) + len(district_jails) + len(sub_jails)
