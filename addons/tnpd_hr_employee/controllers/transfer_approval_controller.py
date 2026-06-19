@@ -1299,6 +1299,13 @@ class TransferApprovalController(http.Controller):
             except (TypeError, ValueError) as exc:
                 return self._err(f'Invalid pagination parameter: {exc}')
 
+            hill_param = kwargs.get('is_hill_station', None)
+            is_hill_filter = None
+            if hill_param == 'true':
+                is_hill_filter = True
+            elif hill_param == 'false':
+                is_hill_filter = False
+
             return self._json_response(
                 self._get_eligible_employees(
                     uid=uid,
@@ -1306,6 +1313,7 @@ class TransferApprovalController(http.Controller):
                     limit=limit,
                     search=kwargs.get('search', ''),
                     exclude_applied=True,
+                    is_hill_filter=is_hill_filter,
                 )
             )
 
