@@ -804,10 +804,9 @@ class UsersApiController(http.Controller):
             recipient_name  = None
 
             if login_type == 'employee':
-                # Find hr.employee by employee code, email, or mobile number
+                # Find hr.employee by email or mobile number only
                 emp = env['hr.employee'].sudo().search([
-                    '|', '|', '|',
-                    ('x_employee_code', '=', identifier),
+                    '|', '|',
                     ('work_email', '=ilike', identifier),
                     ('x_mobile_no', '=', identifier),
                     ('x_cug_mobile', '=', identifier),
@@ -823,10 +822,9 @@ class UsersApiController(http.Controller):
                         recipient_email = emp.work_email
                         recipient_name  = emp.name
             else:
-                # Admin: find by login (username), email, or mobile
+                # Admin: find by email or mobile only
                 user = env['res.users'].sudo().search([
-                    '|', '|',
-                    ('login', '=ilike', identifier),
+                    '|',
                     ('email', '=ilike', identifier),
                     ('partner_id.mobile', '=', identifier),
                     ('active', 'in', [True, False]),
