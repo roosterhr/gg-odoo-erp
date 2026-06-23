@@ -35,7 +35,10 @@ services:
 
   # ── Odoo 19 Backend ──────────────────────────────────────────────────────
   tnpd-prison-be:
-    image: odoo:19.0
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: tnpd-prison-be:latest
     container_name: tnpd-prison-be
     restart: unless-stopped
     depends_on:
