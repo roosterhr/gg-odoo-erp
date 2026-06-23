@@ -81,15 +81,6 @@ class PrisonVacancy(models.Model):
 
     active = fields.Boolean(default=True)
 
-    # ── Designation vacancy (per-role breakdown) ──────────────────────────────
-
-    designation_vacancy_ids = fields.One2many(
-        comodel_name='prison.designation.vacancy',
-        inverse_name='prison_id',
-        string='Designation Vacancies',
-        readonly=True,
-    )
-
     # ── SQL uniqueness constraint ─────────────────────────────────────────────
 
     _prison_id_uniq = models.Constraint(
