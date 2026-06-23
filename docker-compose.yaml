@@ -53,6 +53,10 @@ services:
       PORT: 5432
       USER: odoo
       PASSWORD: odoo
+      # ── Auto-upgrade on startup ────────────────────────────────────────────
+      # Odoo runs migration scripts only when the module version changes —
+      # so this adds < 5s on subsequent restarts when nothing has changed.
+      UPGRADE_MODULES: prison_jail_master,tnpd_prison_vacancy,tnpd_hr_employee
       # ── SMTP for invitation emails ─────────────────────────────────────
       # Set these via GitHub Actions secrets or server environment variables.
       # Leave SMTP_HOST blank/unset to disable email (link will still show).
