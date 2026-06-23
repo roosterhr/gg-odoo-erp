@@ -43,6 +43,9 @@ class PrisonJail(models.Model):
     ]
 
     PARENT_TYPES = ('central_jail', 'spw')
+    # district_jail allowed as parent during data migration — post-migrate.py
+    # re-parents sub-jails directly under Central Prisons/SPW after XML loads.
+    ALLOWED_PARENT_TYPES = ('central_jail', 'spw', 'district_jail')
     CHILD_TYPES  = (
         'district_jail', 'sub_jail', 'women_sub_jail', 'special_sub_jail',
         'open_air_jail', 'farm_jail', 'transit_yard',
@@ -200,10 +203,10 @@ class PrisonJail(models.Model):
                         f'"{rec.name}" must be linked to a Central Prison or '
                         'Special Prison for Women via the Parent Institution field.'
                     )
-                if rec.parent_id.jail_type not in self.PARENT_TYPES:
+                if rec.parent_id.jail_type not in self.ALLOWED_PARENT_TYPES:
                     raise ValidationError(
-                        f'The parent of "{rec.name}" must be a Central Prison or '
-                        f'Special Prison for Women, but '
+                        f'The parent of "{rec.name}" must be a Central Prison, '
+                        f'Special Prison for Women, or District Jail, but '
                         f'"{rec.parent_id.name}" is a '
                         f'{dict(self.JAIL_TYPE).get(rec.parent_id.jail_type, "unknown")}.'
                     )

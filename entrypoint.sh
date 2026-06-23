@@ -34,15 +34,15 @@ check_config "db_port" "$PORT"
 check_config "db_user" "$USER"
 check_config "db_password" "$PASSWORD"
 
-# ── Auto-upgrade modules before starting ─────────────────────────────────────
-# When UPGRADE_MODULES is set, run odoo -u <modules> --stop-after-init first.
-# Odoo only executes migration scripts when the module version has changed —
-# so this is fast on subsequent restarts (no new version = nothing to do).
+# ── Auto-install/upgrade modules before starting ─────────────────────────────
+# -i installs modules not yet in the DB; -u upgrades already-installed ones.
+# Using both ensures first-deploy (new module tables created) and re-deploy
+# (migration scripts run) both work without manual steps.
 if [ -n "${UPGRADE_MODULES}" ]; then
-    echo "[entrypoint] Upgrading modules: ${UPGRADE_MODULES}"
+    echo "[entrypoint] Installing/upgrading modules: ${UPGRADE_MODULES}"
     wait-for-psql.py ${DB_ARGS[@]} --timeout=60
-    odoo -u "${UPGRADE_MODULES}" --stop-after-init "${DB_ARGS[@]}"
-    echo "[entrypoint] Module upgrade complete"
+    odoo -i "${UPGRADE_MODULES}" -u "${UPGRADE_MODULES}" --stop-after-init "${DB_ARGS[@]}"
+    echo "[entrypoint] Module install/upgrade complete"
 fi
 
 # ── Start Odoo normally ───────────────────────────────────────────────────────
