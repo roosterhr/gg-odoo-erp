@@ -91,6 +91,18 @@ def _mark_closed_jails(cr):
 # ── Step 4: flag pending transfers to now-closed prisons ─────────────────────
 
 def _flag_closed_destination_transfers(cr):
+    # tnpd_hr_employee may not be installed yet (no hard dependency from this module).
+    # Skip gracefully if the table doesn't exist.
+    cr.execute("""
+        SELECT EXISTS (
+            SELECT 1 FROM information_schema.tables
+             WHERE table_name = 'x_transfer_approval_request'
+        )
+    """)
+    if not cr.fetchone()[0]:
+        _logger.info('[prison_jail_master] x_transfer_approval_request not found — skipping transfer flag step')
+        return
+
     cr.execute("""
         UPDATE x_transfer_approval_request tar
            SET x_admin_remarks = COALESCE(x_admin_remarks, '') ||
