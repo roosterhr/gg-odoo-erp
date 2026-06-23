@@ -3,23 +3,25 @@
 
 {
     'name': 'Prison Jail Master',
-    'version': '19.0.1.1.0',
+    'version': '19.0.2.0.0',
     'category': 'Prison Management',
-    'summary': 'Hierarchical master data for Tamil Nadu prison jails',
+    'summary': 'Hierarchical master data for Tamil Nadu prison jails (v2 — flat 2-level)',
     'description': """
-Prison Jail Master
-==================
-Three-tier hierarchy enforced at the ORM level:
+Prison Jail Master v2
+=====================
+Flat 2-level hierarchy: Central Prison / SPW  →  all child institutions
 
-    Central Jail  →  District Jail  →  Sub Jail
+Supports two independent hierarchies:
+    General (Men):  Central Prison  →  District Jail / Sub-Jail / Open Air / Farm / Transit
+    Women:          SPW             →  Women Sub-Jail / Special Sub-Jail
 
 Features
 --------
-* ``prison.jail`` model with parent-child hierarchy and SQL constraints
-* Stored computed ``central_jail_id`` for fast cross-level filtering
-* Tree, Form, and Search views with per-type filters and group-by
-* REST APIs: list central jails, filter districts by central, filter sub-jails by district
-* Integration base for the Employee and Transfer modules
+* ``prison.jail`` model with hierarchy_type, is_closed, closed_remarks fields
+* Stored computed ``central_jail_id`` for fast single-hop filtering
+* Closed sub-jail management (excluded from transfer destinations)
+* REST APIs: flat children endpoint, closed jails endpoint, backward-compat district/sub endpoints
+* Migration script: scripts/migrate_hierarchy_v2.py
     """,
     'author': 'TNPD',
     'website': '',

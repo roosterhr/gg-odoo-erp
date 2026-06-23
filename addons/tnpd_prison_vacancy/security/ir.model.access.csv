@@ -2,3 +2,9 @@ id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_prison_vacancy_user,prison.vacancy user read,model_prison_vacancy,base.group_user,1,0,0,0
 access_prison_vacancy_hr_manager,prison.vacancy hr manager full,model_prison_vacancy,hr.group_hr_manager,1,1,1,1
 access_prison_vacancy_system,prison.vacancy system admin full,model_prison_vacancy,base.group_system,1,1,1,1
+access_prison_role_user,prison.role user read,model_prison_role,base.group_user,1,0,0,0
+access_prison_role_hr_manager,prison.role hr manager full,model_prison_role,hr.group_hr_manager,1,1,1,1
+access_prison_role_system,prison.role system admin full,model_prison_role,base.group_system,1,1,1,1
+access_prison_desig_vacancy_user,prison.designation.vacancy user read,model_prison_designation_vacancy,base.group_user,1,0,0,0
+access_prison_desig_vacancy_hr_manager,prison.designation.vacancy hr manager full,model_prison_designation_vacancy,hr.group_hr_manager,1,1,1,1
+access_prison_desig_vacancy_system,prison.designation.vacancy system admin full,model_prison_designation_vacancy,base.group_system,1,1,1,1

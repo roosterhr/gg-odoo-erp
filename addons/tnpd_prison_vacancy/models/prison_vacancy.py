@@ -21,10 +21,15 @@ class PrisonVacancy(models.Model):
     _order = 'prison_type, prison_name'
 
     PRISON_TYPE = [
-        ('central_prison', 'Central Prison'),
-        ('district_jail', 'District Jail'),
-        ('sub_jail', 'Sub Jail'),
-        ('special_prison_women', 'Special Prison for Women'),
+        ('central_prison',   'Central Prison'),
+        ('spw',              'Special Prison for Women'),
+        ('district_jail',    'District Jail'),
+        ('sub_jail',         'Sub-Jail'),
+        ('women_sub_jail',   'Women Sub-Jail'),
+        ('special_sub_jail', 'Special Sub-Jail'),
+        ('open_air_jail',    'Open Air Jail'),
+        ('farm_jail',        'Farm Jail'),
+        ('transit_yard',     'Transit Yard'),
     ]
 
     # ── Identity ──────────────────────────────────────────────────────────────
@@ -76,6 +81,15 @@ class PrisonVacancy(models.Model):
 
     active = fields.Boolean(default=True)
 
+    # ── Designation vacancy (per-role breakdown) ──────────────────────────────
+
+    designation_vacancy_ids = fields.One2many(
+        comodel_name='prison.designation.vacancy',
+        inverse_name='prison_id',
+        string='Designation Vacancies',
+        readonly=True,
+    )
+
     # ── SQL uniqueness constraint ─────────────────────────────────────────────
 
     _prison_id_uniq = models.Constraint(
@@ -107,6 +121,18 @@ class PrisonVacancy(models.Model):
     def is_vacancy_available(self):
         self.ensure_one()
         return self.vacancy_count > 0
+
+    def recompute_from_designations(self):
+        """Recompute prison-level totals from designation vacancy records."""
+        self.ensure_one()
+        desig = self.env['prison.designation.vacancy'].search(
+            [('prison_id', '=', self.prison_id.id)]
+        )
+        self.write({
+            'sanctioned_strength': sum(desig.mapped('sanctioned_strength')),
+            'occupied_count':      sum(desig.mapped('filled_strength')),
+            'vacancy_count':       sum(desig.mapped('vacancy_count')),
+        })
 
     def as_api_dict(self):
         self.ensure_one()

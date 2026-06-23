@@ -349,40 +349,23 @@ class TransferApprovalController(http.Controller):
             Jail = env['prison.jail'].sudo()
 
             central = Jail.browse(int(data['requested_central_prison']))
-            if not central.exists() or central.jail_type != 'central_jail':
+            if not central.exists() or central.jail_type not in ('central_jail', 'spw'):
                 return self._err(
                     'Invalid requested_central_prison: must be a prison.jail record '
-                    'with jail_type=central_jail'
+                    'with jail_type=central_jail or spw'
                 )
 
             district = False
             if data.get('requested_district_jail'):
                 district = Jail.browse(int(data['requested_district_jail']))
-                if not district.exists() or district.jail_type != 'district_jail':
-                    return self._err(
-                        'Invalid requested_district_jail: must be a prison.jail record '
-                        'with jail_type=district_jail'
-                    )
-                if district.parent_id != central:
-                    return self._err(
-                        f'District Jail "{district.name}" does not belong to '
-                        f'Central Jail "{central.name}".'
-                    )
+                if not district.exists():
+                    return self._err('Invalid requested_district_jail: record not found')
 
             sub = False
             if data.get('requested_sub_jail'):
                 sub = Jail.browse(int(data['requested_sub_jail']))
-                if not sub.exists() or sub.jail_type != 'sub_jail':
-                    return self._err(
-                        'Invalid requested_sub_jail: must be a prison.jail record '
-                        'with jail_type=sub_jail'
-                    )
-                parent = district if district else central
-                if sub.parent_id != parent:
-                    return self._err(
-                        f'Sub Jail "{sub.name}" does not belong to '
-                        f'"{parent.name}".'
-                    )
+                if not sub.exists():
+                    return self._err('Invalid requested_sub_jail: record not found')
 
             # --- Resolve transfer_type ------------------------------------
             transfer_type = data.get('transfer_type', 'tenure')
@@ -1028,22 +1011,18 @@ class TransferApprovalController(http.Controller):
             Jail = env['prison.jail'].sudo()
 
             central = Jail.browse(int(data['requested_central_prison']))
-            if not central.exists() or central.jail_type != 'central_jail':
+            if not central.exists() or central.jail_type not in ('central_jail', 'spw'):
                 return self._err('Invalid requested_central_prison')
 
             district_id = None
             if data.get('requested_district_jail'):
                 district = Jail.browse(int(data['requested_district_jail']))
-                if not district.exists() or district.jail_type != 'district_jail':
+                if not district.exists():
                     return self._err('Invalid requested_district_jail')
-                if district.parent_id != central:
-                    return self._err(
-                        f'District Jail "{district.name}" does not belong to Central Jail "{central.name}".'
-                    )
                 district_id = district.id
 
             sub = Jail.browse(int(data['requested_sub_jail']))
-            if not sub.exists() or sub.jail_type != 'sub_jail':
+            if not sub.exists():
                 return self._err('Invalid requested_sub_jail')
 
             # --- Check no existing draft/pending request ---
@@ -1446,11 +1425,29 @@ class TransferApprovalController(http.Controller):
             from datetime import timedelta
             eligible_since_date = emp.x_date_present_station + timedelta(days=threshold_days)
 
+            # Resolve role_id by matching designation name to prison.role
+            # Designations may have a gender suffix like " (Men)" or " (Women)" —
+            # strip it before matching since prison.role names have no suffix.
+            role_id = None
+            try:
+                if emp.x_designation:
+                    import re as _re
+                    clean_desig = _re.sub(r'\s*\((Men|Women|Male|Female)\)\s*$', '', emp.x_designation, flags=_re.IGNORECASE).strip()
+                    Role = env['prison.role'].sudo()
+                    role = Role.search([('name', '=', clean_desig)], limit=1)
+                    if not role:
+                        role = Role.search([('name', 'ilike', clean_desig)], limit=1)
+                    if role:
+                        role_id = role.id
+            except Exception:
+                pass
+
             data.append({
                 'employee_id':      emp.id,
                 'employee_name':    emp.name or '',
                 'employee_code':    emp.x_employee_code or '',
                 'designation':      emp.x_designation or '',
+                'role_id':          role_id,
                 'rank':             emp.job_id.name if emp.job_id else '',
                 # Prison fields with legacy fallback — same priority as Personnel module
                 'current_central_prison': {
@@ -1536,18 +1533,18 @@ class TransferApprovalController(http.Controller):
             Jail = env['prison.jail'].sudo()
 
             central = Jail.browse(int(data['requested_central_prison']))
-            if not central.exists() or central.jail_type != 'central_jail':
+            if not central.exists() or central.jail_type not in ('central_jail', 'spw'):
                 return self._err('Invalid requested_central_prison')
 
             district_id = None
             if data.get('requested_district_jail'):
                 district = Jail.browse(int(data['requested_district_jail']))
-                if not district.exists() or district.jail_type != 'district_jail':
+                if not district.exists():
                     return self._err('Invalid requested_district_jail')
                 district_id = district.id
 
             sub = Jail.browse(int(data['requested_sub_jail']))
-            if not sub.exists() or sub.jail_type != 'sub_jail':
+            if not sub.exists():
                 return self._err('Invalid requested_sub_jail')
 
             approved_date_now = fields.Datetime.now()
@@ -1757,21 +1754,44 @@ class TransferApprovalController(http.Controller):
             if not jail.exists():
                 return self._err(f'Prison not found: prison_id={prison_id}', status=404)
 
+            # Prefer prison.designation.vacancy aggregates (most accurate source)
+            try:
+                Desig = env['prison.designation.vacancy'].sudo()
+                desig_recs = Desig.search([('prison_id', '=', prison_id)])
+                if desig_recs:
+                    sanctioned = sum(desig_recs.mapped('sanctioned_strength'))
+                    filled     = sum(desig_recs.mapped('filled_strength'))
+                    vacant     = sum(desig_recs.mapped('vacancy_count'))
+                    return self._json_response({
+                        'success':             True,
+                        'prison_id':           prison_id,
+                        'prison_name':         jail.name or '',
+                        'prison_type':         jail.jail_type or '',
+                        'sanctioned_strength': sanctioned,
+                        'filled_positions':    filled,
+                        'vacant_positions':    vacant,
+                        'occupied_count':      filled,
+                        'vacancy_count':       vacant,
+                        'vacancy_available':   vacant > 0,
+                    })
+            except Exception as desig_exc:
+                _logger.warning('prison.designation.vacancy lookup failed for prison_id=%d: %s', prison_id, desig_exc)
+
+            # Fallback: prison.vacancy aggregate model
             vacancy_rec = self._get_vacancy_record(env, prison_id)
             if vacancy_rec is None or not vacancy_rec.exists():
-                # No vacancy record — return unknown status, not an error
                 return self._json_response({
-                    'success':           True,
-                    'prison_id':         prison_id,
-                    'prison_name':       jail.name or '',
-                    'prison_type':       jail.jail_type or '',
+                    'success':             True,
+                    'prison_id':           prison_id,
+                    'prison_name':         jail.name or '',
+                    'prison_type':         jail.jail_type or '',
                     'sanctioned_strength': 0,
-                    'filled_positions':  0,
-                    'vacant_positions':  0,
-                    'occupied_count':    0,
-                    'vacancy_count':     0,
-                    'vacancy_available': False,
-                    'note':              'No vacancy record found for this prison.',
+                    'filled_positions':    0,
+                    'vacant_positions':    0,
+                    'occupied_count':      0,
+                    'vacancy_count':       0,
+                    'vacancy_available':   False,
+                    'note':                'No vacancy record found for this prison.',
                 })
 
             formatted = self._format_vacancy(vacancy_rec)

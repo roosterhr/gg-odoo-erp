@@ -375,6 +375,109 @@ class TransferApprovalRequest(models.Model):
         except Exception:
             pass  # Never let notification failure block the approval flow
 
+    def _get_destination_prison(self):
+        """Return the most-specific non-null destination prison record."""
+        return (
+            self.requested_sub_jail
+            or self.requested_district_jail
+            or self.requested_central_prison
+            or False
+        )
+
+    def _validate_vacancy_and_gender(self):
+        """
+        Pre-approval guard:
+        1. Destination prison must not be closed.
+        2. If employee has a role (x_role_id), destination must have vacancy
+           for that role.
+        3. Women roles must go to Women hierarchy prisons; Men roles to General.
+        """
+        dest = self._get_destination_prison()
+        if not dest:
+            raise UserError('No destination prison selected.')
+
+        if dest.is_closed:
+            raise UserError(
+                f'"{dest.name}" is marked as Closed and cannot be a transfer destination.'
+            )
+
+        role = self.employee_id.x_role_id
+        if not role:
+            return  # No role set — skip vacancy and gender checks
+
+        # ── Gender / hierarchy check ──────────────────────────────────────────
+        if role.gender_type == 'women' and dest.hierarchy_type != 'women':
+            raise UserError(
+                f'Role "{role.name}" is a Women role and can only be transferred to '
+                f'a Women institution (SPW). "{dest.name}" is a General institution.'
+            )
+        if role.gender_type == 'men' and dest.hierarchy_type != 'general':
+            raise UserError(
+                f'Role "{role.name}" is a Men role and can only be transferred to '
+                f'a General institution. "{dest.name}" is a Women institution.'
+            )
+
+        # ── Designation vacancy check ─────────────────────────────────────────
+        desig = self.env['prison.designation.vacancy'].sudo().search([
+            ('prison_id', '=', dest.id),
+            ('role_id', '=', role.id),
+        ], limit=1)
+
+        if desig and not desig.is_vacancy_available():
+            raise UserError(
+                f'No vacancy available for "{role.name}" in "{dest.name}".\n'
+                f'Sanctioned: {desig.sanctioned_strength}  '
+                f'Filled: {desig.filled_strength}  '
+                f'Vacancy: {desig.vacancy_count}.\n'
+                'Transfer cannot be approved.'
+            )
+
+    def _adjust_vacancy_on_approve(self):
+        """
+        Update designation vacancy when transfer is approved:
+            Source prison:      filled_strength -= 1
+            Destination prison: filled_strength += 1
+        """
+        role = self.employee_id.x_role_id
+        if not role:
+            return
+
+        dest = self._get_destination_prison()
+        Desig = self.env['prison.designation.vacancy'].sudo()
+
+        # Destination: +1 filled
+        dest_desig = Desig.search([
+            ('prison_id', '=', dest.id),
+            ('role_id', '=', role.id),
+        ], limit=1)
+        if dest_desig:
+            dest_desig.filled_strength = min(
+                dest_desig.filled_strength + 1,
+                dest_desig.sanctioned_strength,
+            )
+
+        # Source prison (most specific current posting)
+        source = (
+            self.employee_id.x_sub_jail_id
+            or self.employee_id.x_district_jail_id
+            or self.employee_id.x_central_jail_id
+            or False
+        )
+        if source:
+            src_desig = Desig.search([
+                ('prison_id', '=', source.id),
+                ('role_id', '=', role.id),
+            ], limit=1)
+            if src_desig and src_desig.filled_strength > 0:
+                src_desig.filled_strength -= 1
+
+        # Recompute prison-level aggregates
+        Vacancy = self.env['prison.vacancy'].sudo()
+        for pid in {dest.id, source.id if source else None} - {None}:
+            pv = Vacancy.search([('prison_id', '=', pid)], limit=1)
+            if pv:
+                pv.recompute_from_designations()
+
     def action_approve(self):
         self.ensure_one()
         if self.approval_user_id != self.env.user:
@@ -384,11 +487,15 @@ class TransferApprovalRequest(models.Model):
             )
         if self.state != 'pending':
             raise UserError('Only pending requests can be approved.')
+
+        self._validate_vacancy_and_gender()
+
         self.employee_id.write({
-            'x_central_jail_id': self.requested_central_prison.id or False,
+            'x_central_jail_id':  self.requested_central_prison.id or False,
             'x_district_jail_id': self.requested_district_jail.id or False,
-            'x_sub_jail_id': self.requested_sub_jail.id or False,
+            'x_sub_jail_id':      self.requested_sub_jail.id or False,
         })
+        self._adjust_vacancy_on_approve()
         self.write({
             'state': 'approved',
             'approved_by': self.env.user.id,

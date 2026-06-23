@@ -20,7 +20,7 @@ No core Odoo files are modified.
     'website': '',
     'license': 'LGPL-3',
 
-    'depends': ['hr', 'prison_jail_master'],
+    'depends': ['hr', 'prison_jail_master', 'tnpd_prison_vacancy'],
 
     'data': [
         'security/ir.model.access.csv',
