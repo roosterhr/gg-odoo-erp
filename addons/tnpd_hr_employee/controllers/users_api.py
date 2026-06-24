@@ -725,8 +725,10 @@ class UsersApiController(http.Controller):
             return self._err('A user with this email already exists.')
 
         try:
-            group_erp    = request.env.ref('base.group_erp_manager', raise_if_not_found=False)
-            main_company = request.env['res.company'].sudo().search([], limit=1, order='id asc')
+            from odoo import SUPERUSER_ID
+            su_env    = request.env(user=SUPERUSER_ID)
+            group_erp = su_env.ref('base.group_erp_manager', raise_if_not_found=False)
+            main_company = su_env['res.company'].search([], limit=1, order='id asc')
 
             user_vals = {
                 'name':        name,
@@ -738,19 +740,10 @@ class UsersApiController(http.Controller):
                 'company_ids': [(4, main_company.id)],
             }
             if user_type == 'admin' and group_erp:
-                user_vals['group_ids'] = [(4, group_erp.id)]
+                user_vals['groups_id'] = [(4, group_erp.id)]
 
-            # flush_all() runs on request.env (uid=None in auth='none').  When the
-            # user's avatar SVG is written via a related field, ir_attachment._check_contents
-            # calls sudo(False).has_access() which fails on an empty user.
-            # Setting attachments_mime_plainxml on request.env propagates the flag
-            # through flush_all() so the failing has_access() branch is skipped.
-            # no_reset_password suppresses auth_signup's welcome email during create.
-            # no_reset_password: suppresses auth_signup's welcome email during create.
-            # The ir_attachment._check_contents crash (uid=None → sudo(False).has_access fails)
-            # is handled by the IrAttachment override in models/ir_attachment.py.
-            new_user = request.env['res.users'].sudo().with_context(no_reset_password=True).create(user_vals)
-            new_user.sudo().write({'password': password})
+            new_user = su_env['res.users'].with_context(no_reset_password=True).create(user_vals)
+            new_user.write({'password': password})
 
             # Mark token consumed
             payload['used']        = True
@@ -793,7 +786,8 @@ class UsersApiController(http.Controller):
             identifier = str(data.get('identifier', '')).strip()
             login_type = str(data.get('login_type', 'admin')).strip()
 
-            if not identifier:
+            # For employee login, identifier may be absent (employeeId + email used instead)
+            if not identifier and login_type != 'employee':
                 return self._err('Please provide your email or Employee ID.')
 
             env = request.env
@@ -804,31 +798,56 @@ class UsersApiController(http.Controller):
             recipient_name  = None
 
             if login_type == 'employee':
-                # Find hr.employee by email or mobile number only
-                emp = env['hr.employee'].sudo().search([
-                    '|', '|',
-                    ('work_email', '=ilike', identifier),
-                    ('x_mobile_no', '=', identifier),
-                    ('x_cug_mobile', '=', identifier),
-                ], limit=1)
-                if emp:
-                    # Find linked portal/internal user via work_email
-                    linked = env['res.users'].sudo().search([
-                        ('login', '=ilike', emp.work_email),
-                        ('active', 'in', [True, False]),
+                employee_id_input = str(data.get('employeeId', '')).strip()
+                email_input       = str(data.get('email', '')).strip()
+                # Both fields required — find employee matching both employee code AND email
+                if employee_id_input and email_input:
+                    from odoo import SUPERUSER_ID
+                    su_env = request.env(user=SUPERUSER_ID)
+                    emp = su_env['hr.employee'].search([
+                        ('x_employee_code', '=ilike', employee_id_input),
+                        ('work_email', '=ilike', email_input),
                     ], limit=1)
+                    if not emp:
+                        # Fallback: raw SQL with trim to handle whitespace in stored values
+                        request.env.cr.execute(
+                            "SELECT id FROM hr_employee WHERE lower(trim(x_employee_code))=lower(%s) AND lower(trim(work_email))=lower(%s) LIMIT 1",
+                            (employee_id_input, email_input)
+                        )
+                        row = request.env.cr.fetchone()
+                        if row:
+                            emp = su_env['hr.employee'].browse(row[0])
+                else:
+                    emp = env['hr.employee'].sudo().search([
+                        '|', '|', '|',
+                        ('work_email', '=ilike', identifier),
+                        ('x_mobile_no', '=', identifier),
+                        ('x_cug_mobile', '=', identifier),
+                        ('x_employee_code', '=ilike', identifier),
+                    ], limit=1)
+                if emp:
+                    # Use the direct employee→user link (login = employee code)
+                    linked = emp.user_id
+                    if not linked:
+                        linked = env['res.users'].sudo().with_context(active_test=False).search([
+                            ('login', '=ilike', emp.work_email),
+                        ], limit=1)
                     if linked:
                         user = linked
                         recipient_email = emp.work_email
                         recipient_name  = emp.name
             else:
-                # Admin: find by email or mobile only
-                user = env['res.users'].sudo().search([
-                    '|',
+                # Admin: find by email first, then try mobile
+                user = env['res.users'].sudo().with_context(active_test=False).search([
                     ('email', '=ilike', identifier),
-                    ('partner_id.mobile', '=', identifier),
-                    ('active', 'in', [True, False]),
                 ], limit=1)
+                if not user:
+                    try:
+                        user = env['res.users'].sudo().with_context(active_test=False).search([
+                            ('partner_id.mobile', '=', identifier),
+                        ], limit=1)
+                    except Exception:
+                        pass
                 if user:
                     recipient_email = user.email or user.login
                     recipient_name  = user.name
@@ -858,7 +877,7 @@ class UsersApiController(http.Controller):
 
             # Set the temp password on the Odoo user
             user.sudo().write({'password': temp_pw})
-            _logger.info('forgot-password: temp password set for user id=%s', user.id)
+            _logger.info('forgot-password: temp password set for user id=%s | temp_pw=%s [REMOVE IN PROD]', user.id, temp_pw)
 
             # ── Build and send email ──────────────────────────────────────────
             smtp_host = os.environ.get('SMTP_HOST', '').strip()
@@ -872,6 +891,15 @@ class UsersApiController(http.Controller):
             from_email = os.environ.get('SMTP_FROM_EMAIL', smtp_user).strip() or smtp_user
             from_name  = os.environ.get('SMTP_FROM_NAME', 'TNPD Prison HRMS').strip()
 
+            # Build login-hint row — show username for admin, employee code for employee
+            if login_type == 'employee':
+                emp_code = getattr(user.employee_ids[:1], 'x_employee_code', '') if user.employee_ids else ''
+                login_hint_label = 'Employee ID'
+                login_hint_value = emp_code or user.login
+            else:
+                login_hint_label = 'Username'
+                login_hint_value = user.login
+
             html_body = f"""
             <div style="font-family:Arial,sans-serif;max-width:520px;margin:auto;padding:32px;background:#f8fafc;border-radius:10px;">
               <div style="text-align:center;margin-bottom:24px;">
@@ -881,15 +909,21 @@ class UsersApiController(http.Controller):
               <div style="background:white;border-radius:8px;padding:28px;box-shadow:0 2px 8px rgba(0,0,0,.06);">
                 <p style="color:#334155;font-size:15px;margin-bottom:8px;">Hello <strong>{recipient_name or 'Officer'}</strong>,</p>
                 <p style="color:#475569;font-size:14px;line-height:1.6;margin-bottom:20px;">
-                  A password reset was requested for your TNPD HRMS account. Use the temporary password below to log in.
+                  A password reset was requested for your TNPD HRMS account. Use the credentials below to log in.
                 </p>
-                <div style="background:#f1f5f9;border:1px solid #e2e8f0;border-radius:6px;padding:16px 24px;text-align:center;margin-bottom:20px;">
-                  <div style="font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;">Temporary Password</div>
-                  <div style="font-size:26px;font-weight:700;color:#1D4ED8;letter-spacing:.12em;font-family:monospace;">{temp_pw}</div>
+                <div style="background:#f1f5f9;border:1px solid #e2e8f0;border-radius:6px;padding:16px 24px;margin-bottom:20px;">
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                    <div style="font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:.08em;">{login_hint_label}</div>
+                    <div style="font-size:15px;font-weight:700;color:#0F172A;font-family:monospace;">{login_hint_value}</div>
+                  </div>
+                  <div style="border-top:1px solid #e2e8f0;padding-top:12px;text-align:center;">
+                    <div style="font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;">Temporary Password</div>
+                    <div style="font-size:26px;font-weight:700;color:#1D4ED8;letter-spacing:.12em;font-family:monospace;">{temp_pw}</div>
+                  </div>
                 </div>
                 <p style="color:#64748b;font-size:13px;line-height:1.6;">
-                  Please log in with this temporary password and change it immediately from your profile settings.<br/>
-                  This password is valid for a single session.
+                  Please log in with these credentials and change your password immediately from the sidebar.<br/>
+                  This temporary password is for one-time use.
                 </p>
                 <hr style="border:none;border-top:1px solid #e2e8f0;margin:20px 0;"/>
                 <p style="color:#94a3b8;font-size:12px;">If you did not request this, please ignore this email. Your password will remain unchanged.</p>

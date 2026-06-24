@@ -292,7 +292,10 @@ class EmployeePortalAPI(http.Controller):
         return {
             'request_id':       rec.id,
             'transfer_type':    rec.transfer_type or 'request',
+            'reason_category':  rec.reason_category or '',
             'transfer_reason':  rec.transfer_reason or '',
+            'is_swap':          bool(rec.is_swap),
+            'swap_partner_id':  rec.swap_partner_id.id if rec.swap_partner_id else None,
             'priority':         rec.priority or 'medium',
             'state':            rec.state,
             'from_prison':      from_prison,
@@ -665,7 +668,8 @@ class EmployeePortalAPI(http.Controller):
         if err:
             return err
 
-        reason = (data.get('transfer_reason') or '').strip()
+        reason          = (data.get('transfer_reason') or '').strip()
+        reason_category = (data.get('reason_category') or '').strip()
 
         def _jail_id(key):
             v = data.get(key)
@@ -689,8 +693,11 @@ class EmployeePortalAPI(http.Controller):
         p3_district = _jail_id('p3_district_jail_id')
         p3_sub      = _jail_id('p3_sub_jail_id')
 
-        if not reason:
-            return self._err('Transfer reason is required')
+        valid_categories = {'single_parent', 'spouse_working', 'medical_reasons', 'others'}
+        if not reason_category or reason_category not in valid_categories:
+            return self._err('Please select a reason category')
+        if reason_category == 'others' and not reason:
+            return self._err('Please describe your reason when selecting "Others"')
         if not p1_central:
             return self._err('Preference 1 — Central Prison is required')
         if not p1_sub:
@@ -724,6 +731,7 @@ class EmployeePortalAPI(http.Controller):
         vals = {
             'employee_id':             emp.id,
             'transfer_type':           'request',
+            'reason_category':         reason_category,
             'transfer_reason':         reason,
             'priority':                data.get('priority') or 'medium',
             'state':                   'pending',
