@@ -1977,3 +1977,219 @@ class PrisonJailApiController(http.Controller):
     def _vac_type(jail_type):
         """Map prison.jail.jail_type → prison.vacancy.prison_type."""
         return 'central_prison' if jail_type == 'central_jail' else jail_type
+
+    # ══════════════════════════════════════════════════════════════════════════
+    # VACANCY MASTER DATA SYNC — client Staff-Strength file is single source of
+    # truth. Upserts roles + per-role designation vacancy + per-prison aggregate,
+    # prunes stale designations on matched prisons, and reports everything.
+    # ══════════════════════════════════════════════════════════════════════════
+
+    @http.route('/api/vacancy/sync-master-data',
+                methods=['POST'], auth='none', type='json', csrf=False)
+    def vacancy_sync_master_data(self, **kwargs):
+        """
+        POST /api/vacancy/sync-master-data
+        Body: {
+            "secret": "tnpd-phx-2025",
+            "reference": { "roles": [...], "facilities": [...] },   # optional
+            "dry_run": false,
+            "prune": true     # remove stale designations on matched prisons
+        }
+
+        Reference defaults to embedded data/local_master_vacancy_reference.json
+        (derived from the client master file). Validates and upserts:
+          - prison.role (by name)
+          - prison.designation.vacancy by (prison_id, role_id) — sanctioned/filled
+          - prison.vacancy aggregate per prison (sum of master posts)
+        Prunes designation rows on matched prisons that are absent from master.
+        Returns the spec sync summary + validation/correction report.
+        """
+        body = request.get_json_data() or {}
+        if body.get('secret') != self._PHX_SECRET:
+            return {'status': 'UNAUTHORIZED', 'error': 'Unauthorized'}
+
+        reference = body.get('reference') or {}
+        ref_source = 'request_body'
+        if not reference.get('facilities'):
+            try:
+                ref_path = os.path.join(
+                    os.path.dirname(os.path.dirname(__file__)),
+                    'data', 'local_master_vacancy_reference.json')
+                with open(ref_path, 'r', encoding='utf-8-sig') as fh:
+                    reference = json.load(fh)
+                ref_source = 'embedded_snapshot'
+            except Exception as exc:
+                _logger.exception('Could not load master vacancy reference: %s', exc)
+        if not reference.get('facilities'):
+            return {'status': 'ERROR',
+                    'error': 'No reference.facilities in body and embedded snapshot missing'}
+
+        dry_run = bool(body.get('dry_run'))
+        prune = body.get('prune', True)
+        Jail = request.env['prison.jail'].sudo()
+        Role = request.env['prison.role'].sudo()
+        PV   = request.env['prison.vacancy'].sudo()
+        DV   = request.env['prison.designation.vacancy'].sudo()
+
+        rep = {
+            'roles_created': [], 'facilities_unmatched': [],
+            'designations_created': 0, 'designations_updated': 0,
+            'designations_pruned': 0, 'aggregates_updated': 0,
+            'aggregates_created': 0, 'validation_failures': [],
+            'duplicates_merged': 0,
+        }
+
+        def resolve_jail(name, jtype, htype):
+            cands = Jail.with_context(active_test=False).search([
+                ('name', '=', name), ('jail_type', '=', jtype),
+                ('hierarchy_type', '=', htype or 'general')])
+            if not cands:
+                cands = Jail.with_context(active_test=False).search([
+                    ('name', '=', name), ('jail_type', '=', jtype)])
+            if not cands:
+                return None
+            act = cands.filtered(lambda c: c.active)
+            return (act[0] if act else cands[0])
+
+        try:
+            total_master_rows = sum(len(f.get('posts', [])) for f in reference['facilities'])
+
+            # ── 1. ROLES upsert (create all from master) ──────────────────────
+            role_by_name = {}
+            master_role_names = {(r.get('name') or '').strip()
+                                 for r in reference.get('roles', []) if r.get('name')}
+            for r in reference.get('roles', []):
+                nm = (r.get('name') or '').strip()
+                if not nm:
+                    continue
+                existing = Role.with_context(active_test=False).search(
+                    [('name', '=', nm)], limit=1)
+                if existing:
+                    role_by_name[nm] = existing
+                else:
+                    if not dry_run:
+                        existing = Role.create({
+                            'name': nm, 'gender_type': r.get('gender_type') or 'both'})
+                        role_by_name[nm] = existing
+                    rep['roles_created'].append(nm)
+
+            # ── 2. FACILITIES — designations + aggregate ──────────────────────
+            for fac in reference['facilities']:
+                jail = resolve_jail(fac.get('jail_name'), fac.get('jail_type'),
+                                    fac.get('hierarchy_type'))
+                if not jail:
+                    rep['facilities_unmatched'].append(
+                        f"{fac.get('jail_name')} [{fac.get('jail_type')}]")
+                    rep['validation_failures'].append(
+                        {'facility': fac.get('jail_name'), 'reason': 'prison not found'})
+                    continue
+
+                # Pre-aggregate posts per role (sum exact-duplicate roles), validate
+                role_totals = {}     # role_id -> [sanctioned, filled]
+                agg_s = agg_f = 0
+                for p in fac.get('posts', []):
+                    s, f = p.get('sanctioned'), p.get('filled')
+                    if s is None or s < 0 or f is None or f < 0:
+                        rep['validation_failures'].append(
+                            {'facility': jail.name, 'role': p.get('role'),
+                             'reason': 'invalid counts'})
+                        continue
+                    pname = (p.get('role') or '').strip()
+                    role = role_by_name.get(pname)
+                    if not role:
+                        role = Role.with_context(active_test=False).search(
+                            [('name', '=', pname)], limit=1) or None
+                    if role:
+                        rkey = role.id
+                    elif dry_run and pname in master_role_names:
+                        rkey = ('new', pname)   # would be created in a real run
+                    else:
+                        rep['validation_failures'].append(
+                            {'facility': jail.name, 'role': p.get('role'),
+                             'reason': 'role unresolved'})
+                        continue
+                    if rkey in role_totals:
+                        rep['duplicates_merged'] += 1
+                    rt = role_totals.setdefault(rkey, [0, 0])
+                    rt[0] += s
+                    rt[1] += f
+                    agg_s += s
+                    agg_f += f
+
+                # Upsert designation vacancy per role
+                real_role_ids = []
+                for rid, (s, f) in role_totals.items():
+                    if isinstance(rid, tuple):          # ('new', name) — dry-run only
+                        rep['designations_created'] += 1
+                        continue
+                    real_role_ids.append(rid)
+                    rec = DV.search([('prison_id', '=', jail.id),
+                                     ('role_id', '=', rid)], limit=1)
+                    if rec:
+                        if rec.sanctioned_strength != s or rec.filled_strength != f:
+                            if not dry_run:
+                                rec.write({'sanctioned_strength': s, 'filled_strength': f})
+                            rep['designations_updated'] += 1
+                    else:
+                        if not dry_run:
+                            DV.create({'prison_id': jail.id, 'role_id': rid,
+                                       'sanctioned_strength': s, 'filled_strength': f})
+                        rep['designations_created'] += 1
+
+                # Prune stale designations (roles not in master for this prison).
+                # Skip in dry-run when new roles exist (ids unknown → would over-report).
+                if prune and role_totals and not (dry_run and len(real_role_ids) != len(role_totals)):
+                    stale = DV.search([('prison_id', '=', jail.id),
+                                       ('role_id', 'not in', real_role_ids)])
+                    if stale:
+                        rep['designations_pruned'] += len(stale)
+                        if not dry_run:
+                            stale.unlink()
+
+                # Aggregate prison.vacancy = sum of master posts
+                vals = {'sanctioned_strength': agg_s, 'occupied_count': agg_f,
+                        'vacancy_count': max(0, agg_s - agg_f)}
+                pv = PV.with_context(active_test=False).search(
+                    [('prison_id', '=', jail.id)], limit=1)
+                if pv:
+                    if not dry_run:
+                        pv.write(vals)
+                    rep['aggregates_updated'] += 1
+                else:
+                    if not dry_run:
+                        PV.create(dict(vals, prison_id=jail.id, prison_name=jail.name,
+                                       prison_type=self._vac_type(jail.jail_type)))
+                    rep['aggregates_created'] += 1
+
+            if not dry_run:
+                request.env.cr.commit()
+
+            final_dv = DV.search_count([])
+            final_pv = PV.search_count([])
+
+            return {
+                'status': 'DRY_RUN' if dry_run else 'SUCCESS',
+                'referenceSource': ref_source,
+                'syncSummary': {
+                    'totalMasterRecords':      total_master_rows,
+                    'facilitiesInMaster':      len(reference['facilities']),
+                    'facilitiesMatched':       len(reference['facilities']) - len(rep['facilities_unmatched']),
+                    'facilitiesUnmatched':     len(rep['facilities_unmatched']),
+                    'rolesCreated':            len(rep['roles_created']),
+                    'designationsAdded':       rep['designations_created'],
+                    'designationsUpdated':     rep['designations_updated'],
+                    'staleDesignationsRemoved': rep['designations_pruned'],
+                    'duplicateRowsMerged':     rep['duplicates_merged'],
+                    'aggregatesUpdated':       rep['aggregates_updated'] + rep['aggregates_created'],
+                    'validationFailures':      len(rep['validation_failures']),
+                    'finalDesignationCount':   final_dv,
+                    'finalVacancyCount':       final_pv,
+                },
+                'unmatchedFacilities': rep['facilities_unmatched'],
+                'validationFailureSample': rep['validation_failures'][:25],
+            }
+        except Exception as exc:
+            if not dry_run:
+                request.env.cr.rollback()
+            _logger.exception('POST /api/vacancy/sync-master-data failed: %s', exc)
+            return {'status': 'ERROR', 'error': str(exc)}

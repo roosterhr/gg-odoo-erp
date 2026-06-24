@@ -1,0 +1,8202 @@
+{
+ "roles": [
+  {
+   "name": "Accountant",
+   "gender_type": "both"
+  },
+  {
+   "name": "Additional Superintend",
+   "gender_type": "both"
+  },
+  {
+   "name": "Additional Superintendent",
+   "gender_type": "both"
+  },
+  {
+   "name": "Additional Superintendent of Prisons",
+   "gender_type": "both"
+  },
+  {
+   "name": "Administrative Officer",
+   "gender_type": "both"
+  },
+  {
+   "name": "Aluminium Foreman",
+   "gender_type": "both"
+  },
+  {
+   "name": "Aluminium Skilled Worker",
+   "gender_type": "both"
+  },
+  {
+   "name": "Assistant",
+   "gender_type": "both"
+  },
+  {
+   "name": "Assistant Agriculture Officer",
+   "gender_type": "both"
+  },
+  {
+   "name": "Assistant Civil Surgeon",
+   "gender_type": "both"
+  },
+  {
+   "name": "Assistant Jailor",
+   "gender_type": "both"
+  },
+  {
+   "name": "Assistant Surgeon",
+   "gender_type": "both"
+  },
+  {
+   "name": "Assistant Tent Maistry",
+   "gender_type": "both"
+  },
+  {
+   "name": "Asst. Jailor",
+   "gender_type": "both"
+  },
+  {
+   "name": "Bailing Attendant",
+   "gender_type": "both"
+  },
+  {
+   "name": "Band Master",
+   "gender_type": "both"
+  },
+  {
+   "name": "Bandy Man",
+   "gender_type": "both"
+  },
+  {
+   "name": "Barber",
+   "gender_type": "both"
+  },
+  {
+   "name": "Binding Maistry",
+   "gender_type": "both"
+  },
+  {
+   "name": "Blacksmithy Foreman",
+   "gender_type": "both"
+  },
+  {
+   "name": "Boiler Attendant",
+   "gender_type": "both"
+  },
+  {
+   "name": "Boiler fireman",
+   "gender_type": "both"
+  },
+  {
+   "name": "Boot & Sandal Overseer",
+   "gender_type": "both"
+  },
+  {
+   "name": "Boot Maistry",
+   "gender_type": "both"
+  },
+  {
+   "name": "Boot Mechanic",
+   "gender_type": "both"
+  },
+  {
+   "name": "Carpentry Foreman",
+   "gender_type": "both"
+  },
+  {
+   "name": "Carpentry Instructor",
+   "gender_type": "both"
+  },
+  {
+   "name": "Carpentry Skilled Worker",
+   "gender_type": "both"
+  },
+  {
+   "name": "Chief Head Warder",
+   "gender_type": "both"
+  },
+  {
+   "name": "Chief Head Warder (Vigilance)",
+   "gender_type": "both"
+  },
+  {
+   "name": "Civil Assistant Surgeon",
+   "gender_type": "both"
+  },
+  {
+   "name": "Cleanliness Worker",
+   "gender_type": "both"
+  },
+  {
+   "name": "Cleanliness Worker (Contract Basis)",
+   "gender_type": "both"
+  },
+  {
+   "name": "Cook",
+   "gender_type": "both"
+  },
+  {
+   "name": "Cook (on consolidate pay basis)",
+   "gender_type": "both"
+  },
+  {
+   "name": "Counsellor",
+   "gender_type": "both"
+  },
+  {
+   "name": "Counsellor (Honorarium)",
+   "gender_type": "both"
+  },
+  {
+   "name": "Counsellors (Honoraium)",
+   "gender_type": "both"
+  },
+  {
+   "name": "Counsellors (Honorarium) Basis",
+   "gender_type": "both"
+  },
+  {
+   "name": "Craft Instructor",
+   "gender_type": "both"
+  },
+  {
+   "name": "Deputy Jailor",
+   "gender_type": "both"
+  },
+  {
+   "name": "Driver",
+   "gender_type": "both"
+  },
+  {
+   "name": "Electrical Motor Attendant",
+   "gender_type": "both"
+  },
+  {
+   "name": "Electrical Supervisor",
+   "gender_type": "both"
+  },
+  {
+   "name": "Electrician",
+   "gender_type": "both"
+  },
+  {
+   "name": "Female Nursing Assistant",
+   "gender_type": "women"
+  },
+  {
+   "name": "Female Nursing Asst.",
+   "gender_type": "women"
+  },
+  {
+   "name": "Female Second Grade Warder",
+   "gender_type": "women"
+  },
+  {
+   "name": "Female Second Warder Women",
+   "gender_type": "women"
+  },
+  {
+   "name": "First Grade Warder",
+   "gender_type": "both"
+  },
+  {
+   "name": "First Grade Warder (Female)",
+   "gender_type": "women"
+  },
+  {
+   "name": "First Grade Warder (Male)",
+   "gender_type": "men"
+  },
+  {
+   "name": "First Grade Warder Women",
+   "gender_type": "women"
+  },
+  {
+   "name": "Fitter",
+   "gender_type": "both"
+  },
+  {
+   "name": "Fitter Incharge of Pumping Station",
+   "gender_type": "both"
+  },
+  {
+   "name": "Garden Watchman",
+   "gender_type": "both"
+  },
+  {
+   "name": "Gardener",
+   "gender_type": "both"
+  },
+  {
+   "name": "Glazing Assistant",
+   "gender_type": "both"
+  },
+  {
+   "name": "Gr. I Warder (Female)",
+   "gender_type": "women"
+  },
+  {
+   "name": "Gr. I Warder (Male)",
+   "gender_type": "men"
+  },
+  {
+   "name": "Gr. II Warder (Female)",
+   "gender_type": "women"
+  },
+  {
+   "name": "Grade I Warder",
+   "gender_type": "both"
+  },
+  {
+   "name": "Grade I Warder Women",
+   "gender_type": "women"
+  },
+  {
+   "name": "Grade II Warder",
+   "gender_type": "both"
+  },
+  {
+   "name": "Grade II Warder (Vigilance)",
+   "gender_type": "both"
+  },
+  {
+   "name": "Grade II Warder Women",
+   "gender_type": "women"
+  },
+  {
+   "name": "Head Constable (Vigilance Wing)",
+   "gender_type": "both"
+  },
+  {
+   "name": "Head Constable (Vigilance)",
+   "gender_type": "both"
+  },
+  {
+   "name": "Instructor",
+   "gender_type": "both"
+  },
+  {
+   "name": "Jailor",
+   "gender_type": "both"
+  },
+  {
+   "name": "Junior Assistant",
+   "gender_type": "both"
+  },
+  {
+   "name": "Junior Assitant",
+   "gender_type": "both"
+  },
+  {
+   "name": "Lorry Driver",
+   "gender_type": "both"
+  },
+  {
+   "name": "Lorry Man",
+   "gender_type": "both"
+  },
+  {
+   "name": "Male Nursing Assistant",
+   "gender_type": "both"
+  },
+  {
+   "name": "Medical Officer",
+   "gender_type": "both"
+  },
+  {
+   "name": "Motor Attendant",
+   "gender_type": "both"
+  },
+  {
+   "name": "Night Watchman",
+   "gender_type": "both"
+  },
+  {
+   "name": "Night Watchman/Garden Watchman",
+   "gender_type": "both"
+  },
+  {
+   "name": "Nursing Assistant",
+   "gender_type": "both"
+  },
+  {
+   "name": "Office Manager",
+   "gender_type": "both"
+  },
+  {
+   "name": "Office Manager / Office Superintendent",
+   "gender_type": "both"
+  },
+  {
+   "name": "Office Manager/ Office Superintendent",
+   "gender_type": "both"
+  },
+  {
+   "name": "Office Manager/Office Superintendent",
+   "gender_type": "both"
+  },
+  {
+   "name": "Office Superintendent",
+   "gender_type": "both"
+  },
+  {
+   "name": "Office Superintendent /Office Manager",
+   "gender_type": "both"
+  },
+  {
+   "name": "Packer Clerk",
+   "gender_type": "both"
+  },
+  {
+   "name": "Pharmacist",
+   "gender_type": "both"
+  },
+  {
+   "name": "Phenyl Assistant",
+   "gender_type": "both"
+  },
+  {
+   "name": "Physical Edu Instructor",
+   "gender_type": "both"
+  },
+  {
+   "name": "Physiotherapy Technician",
+   "gender_type": "both"
+  },
+  {
+   "name": "Pipe line Fitter",
+   "gender_type": "both"
+  },
+  {
+   "name": "Plumbing Instructor",
+   "gender_type": "both"
+  },
+  {
+   "name": "Plumbing Instructor (Craft)",
+   "gender_type": "both"
+  },
+  {
+   "name": "Police Head Constable (Vigilance)",
+   "gender_type": "both"
+  },
+  {
+   "name": "Psychologist",
+   "gender_type": "both"
+  },
+  {
+   "name": "Pulp Making Assistant",
+   "gender_type": "both"
+  },
+  {
+   "name": "Rattan Instructor",
+   "gender_type": "both"
+  },
+  {
+   "name": "Record Assistant",
+   "gender_type": "both"
+  },
+  {
+   "name": "Record Clerk",
+   "gender_type": "both"
+  },
+  {
+   "name": "Record Clerk/Record Assistant",
+   "gender_type": "both"
+  },
+  {
+   "name": "Second Grade Teacher",
+   "gender_type": "both"
+  },
+  {
+   "name": "Second Grade Warder",
+   "gender_type": "both"
+  },
+  {
+   "name": "Second Grade Warder (Female)",
+   "gender_type": "women"
+  },
+  {
+   "name": "Second Grade Warder (Male)",
+   "gender_type": "men"
+  },
+  {
+   "name": "Second Grade Warder Women",
+   "gender_type": "women"
+  },
+  {
+   "name": "Secondary Grade Teacher",
+   "gender_type": "both"
+  },
+  {
+   "name": "Soap Chemist",
+   "gender_type": "both"
+  },
+  {
+   "name": "Social Case Work Expert",
+   "gender_type": "both"
+  },
+  {
+   "name": "Social Case Work Expert (Honorarium)",
+   "gender_type": "both"
+  },
+  {
+   "name": "Social Case Work Expert Honorarium",
+   "gender_type": "both"
+  },
+  {
+   "name": "Spinning Instructress",
+   "gender_type": "both"
+  },
+  {
+   "name": "Staff Nurse",
+   "gender_type": "both"
+  },
+  {
+   "name": "Sub Inspector (Technical)",
+   "gender_type": "both"
+  },
+  {
+   "name": "Sub Inspector (Vigilance)",
+   "gender_type": "both"
+  },
+  {
+   "name": "Sub Inspector of Police",
+   "gender_type": "both"
+  },
+  {
+   "name": "Sub Inspector of Police (Technical)",
+   "gender_type": "both"
+  },
+  {
+   "name": "Sub Inspector of Police (Vigilance Wing)",
+   "gender_type": "both"
+  },
+  {
+   "name": "Sub Inspector of Police (Vigilance)",
+   "gender_type": "both"
+  },
+  {
+   "name": "Superintendent",
+   "gender_type": "both"
+  },
+  {
+   "name": "Superintendent of Prisons",
+   "gender_type": "both"
+  },
+  {
+   "name": "Supervisor - cum - Instructor",
+   "gender_type": "both"
+  },
+  {
+   "name": "Supervisor - cum- Instructor",
+   "gender_type": "both"
+  },
+  {
+   "name": "Supervisor - cum- Instructor (Hand Made paper Industry)",
+   "gender_type": "both"
+  },
+  {
+   "name": "Supervisor -cum-Instructor",
+   "gender_type": "both"
+  },
+  {
+   "name": "Supervisor â€“ cum â€“ Instructor (Hand Made paper Industry)",
+   "gender_type": "both"
+  },
+  {
+   "name": "Supervisor- cum - Instructor",
+   "gender_type": "both"
+  },
+  {
+   "name": "Tailoring Instructor",
+   "gender_type": "both"
+  },
+  {
+   "name": "Tractor Driver",
+   "gender_type": "both"
+  },
+  {
+   "name": "Typist",
+   "gender_type": "both"
+  },
+  {
+   "name": "Warping & Sizing Jobber",
+   "gender_type": "both"
+  },
+  {
+   "name": "Warping Master",
+   "gender_type": "both"
+  },
+  {
+   "name": "Weaving Instructor",
+   "gender_type": "both"
+  },
+  {
+   "name": "Weaving Jobber",
+   "gender_type": "both"
+  },
+  {
+   "name": "Weaving Jobber (Grade I)",
+   "gender_type": "both"
+  },
+  {
+   "name": "Weaving Jobber (Grade II)",
+   "gender_type": "both"
+  },
+  {
+   "name": "Weaving Master",
+   "gender_type": "both"
+  },
+  {
+   "name": "Welder",
+   "gender_type": "both"
+  },
+  {
+   "name": "Welfare Officer",
+   "gender_type": "both"
+  },
+  {
+   "name": "Welfare officer",
+   "gender_type": "both"
+  },
+  {
+   "name": "Wire Man",
+   "gender_type": "both"
+  },
+  {
+   "name": "Wireman",
+   "gender_type": "both"
+  }
+ ],
+ "facilities": [
+  {
+   "title": "Central Prison-I, Chennai",
+   "jail_name": "Chennai - I",
+   "jail_type": "central_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Superintendent of Prisons",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Additional Superintendent",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Jailor",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Deputy Jailor",
+     "sanctioned": 3,
+     "filled": 3
+    },
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 10,
+     "filled": 10
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 18,
+     "filled": 18
+    },
+    {
+     "role": "Administrative Officer",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Sub Inspector of Police (Vigilance Wing)",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Head Constable (Vigilance Wing)",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "First Grade Warder",
+     "sanctioned": 63,
+     "filled": 62
+    },
+    {
+     "role": "Second Grade Warder",
+     "sanctioned": 84,
+     "filled": 82
+    },
+    {
+     "role": "Assistant Surgeon",
+     "sanctioned": 3,
+     "filled": 3
+    },
+    {
+     "role": "Staff Nurse",
+     "sanctioned": 3,
+     "filled": 3
+    },
+    {
+     "role": "Male Nursing Assistant",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Pharmacist",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Office Manager/Office Superintendent",
+     "sanctioned": 3,
+     "filled": 3
+    },
+    {
+     "role": "Accountant",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Assistant",
+     "sanctioned": 4,
+     "filled": 3
+    },
+    {
+     "role": "Junior Assistant",
+     "sanctioned": 7,
+     "filled": 7
+    },
+    {
+     "role": "Typist",
+     "sanctioned": 4,
+     "filled": 4
+    },
+    {
+     "role": "Record Clerk",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Packer Clerk",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Binding Maistry",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Lorry Driver",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Lorry Man",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Weaving Instructor",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Pulp Making Assistant",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Supervisor - cum - Instructor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Barber",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Wire Man",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 2,
+     "filled": 0
+    },
+    {
+     "role": "Boiler Attendant",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Sub Inspector (Technical)",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Rattan Instructor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Craft Instructor",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Psychologist",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Counsellors (Honorarium) Basis",
+     "sanctioned": 2,
+     "filled": 1
+    },
+    {
+     "role": "Social Case Work Expert Honorarium",
+     "sanctioned": 1,
+     "filled": 1
+    }
+   ]
+  },
+  {
+   "title": "District Jail, Chengalpattu",
+   "jail_name": "Chengalpattu",
+   "jail_type": "district_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Jailor",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Deputy Jailor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 4,
+     "filled": 4
+    },
+    {
+     "role": "Grade I Warder",
+     "sanctioned": 4,
+     "filled": 4
+    },
+    {
+     "role": "Grade II Warder",
+     "sanctioned": 12,
+     "filled": 12
+    },
+    {
+     "role": "Assistant",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Typist",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Record Clerk",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Male Nursing Assistant",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 0
+    }
+   ]
+  },
+  {
+   "title": "Sub Jail, Kancheepuram",
+   "jail_name": "Kancheepuram",
+   "jail_type": "sub_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "First Grade Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Second Grade Warder",
+     "sanctioned": 6,
+     "filled": 6
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 1
+    }
+   ]
+  },
+  {
+   "title": "Sub Jail, Maduranthagam (Closed)",
+   "jail_name": "S.J. Maduranthagam (Closed)",
+   "jail_type": "sub_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "First Grade Warder",
+     "sanctioned": 2,
+     "filled": 1
+    },
+    {
+     "role": "Second Grade Warder",
+     "sanctioned": 6,
+     "filled": 4
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 0
+    }
+   ]
+  },
+  {
+   "title": "Sub Jail, Tiruttani",
+   "jail_name": "Tiruthani",
+   "jail_type": "sub_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "First Grade Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Second Grade Warder",
+     "sanctioned": 5,
+     "filled": 5
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 0
+    }
+   ]
+  },
+  {
+   "title": "Sub Jail, Ponneri",
+   "jail_name": "Ponneri",
+   "jail_type": "sub_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "First Grade Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Second Grade Warder",
+     "sanctioned": 6,
+     "filled": 5
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 0
+    }
+   ]
+  },
+  {
+   "title": "Sub Jail, Tiruvallur",
+   "jail_name": "Tiruvallur",
+   "jail_type": "sub_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "First Grade Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Second Grade Warder",
+     "sanctioned": 4,
+     "filled": 4
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 0
+    }
+   ]
+  },
+  {
+   "title": "Sub Jail, Saidapet",
+   "jail_name": "Saidapet",
+   "jail_type": "sub_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "First Grade Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Second Grade Warder",
+     "sanctioned": 6,
+     "filled": 4
+    },
+    {
+     "role": "Record Clerk",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 1
+    }
+   ]
+  },
+  {
+   "title": "Special Sub Jail, Poonnamallee",
+   "jail_name": "Poonamallee (Men)",
+   "jail_type": "special_sub_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "First Grade Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Second Grade Warder",
+     "sanctioned": 6,
+     "filled": 2
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 0
+    }
+   ]
+  },
+  {
+   "title": "Central Prison-II, Chennai",
+   "jail_name": "Chennai - II",
+   "jail_type": "central_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Superintendent of Prisons",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Additional Superintendent",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Psychologist",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Jailor",
+     "sanctioned": 3,
+     "filled": 1
+    },
+    {
+     "role": "Welfare Officer",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Deputy Jailor",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 13,
+     "filled": 13
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 15,
+     "filled": 15
+    },
+    {
+     "role": "First Grade Warder",
+     "sanctioned": 84,
+     "filled": 81
+    },
+    {
+     "role": "First Grade Warder (Female)",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Second Grade Warder",
+     "sanctioned": 113,
+     "filled": 108
+    },
+    {
+     "role": "Second Grade Warder (Female)",
+     "sanctioned": 5,
+     "filled": 5
+    },
+    {
+     "role": "Administrative Officer",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Office Manager / Office Superintendent",
+     "sanctioned": 3,
+     "filled": 3
+    },
+    {
+     "role": "Accountant",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Assistant",
+     "sanctioned": 6,
+     "filled": 5
+    },
+    {
+     "role": "Junior Assitant",
+     "sanctioned": 8,
+     "filled": 6
+    },
+    {
+     "role": "Typist",
+     "sanctioned": 4,
+     "filled": 4
+    },
+    {
+     "role": "Record Clerk",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Boiler Attendant",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Sub Inspector of Police (Technical)",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Sub Inspector of Police (Vigilance)",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Assistant Surgeon",
+     "sanctioned": 3,
+     "filled": 3
+    },
+    {
+     "role": "Pharmacist",
+     "sanctioned": 2,
+     "filled": 0
+    },
+    {
+     "role": "Staff Nurse",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Male Nursing Assistant",
+     "sanctioned": 4,
+     "filled": 3
+    },
+    {
+     "role": "Secondary Grade Teacher",
+     "sanctioned": 3,
+     "filled": 2
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Barber",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Wireman",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 8,
+     "filled": 7
+    },
+    {
+     "role": "Packer Clerk",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Lorry Driver",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Counsellor (Honorarium)",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Social Case Work Expert (Honorarium)",
+     "sanctioned": 1,
+     "filled": 1
+    }
+   ]
+  },
+  {
+   "title": "Central Prison, Vellore",
+   "jail_name": "Vellore",
+   "jail_type": "central_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Superintendent of Prisons",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Additional Superintendent",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Administrative Officer",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Assistant Surgeon",
+     "sanctioned": 3,
+     "filled": 3
+    },
+    {
+     "role": "Psychologist",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Jailor",
+     "sanctioned": 2,
+     "filled": 1
+    },
+    {
+     "role": "Office Manager/ Office Superintendent",
+     "sanctioned": 3,
+     "filled": 3
+    },
+    {
+     "role": "Accountant",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Deputy Jailor",
+     "sanctioned": 3,
+     "filled": 3
+    },
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 14,
+     "filled": 11
+    },
+    {
+     "role": "Social Case Work Expert",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Welfare Officer",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Staff Nurse",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Pharmacist",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Secondary Grade Teacher",
+     "sanctioned": 5,
+     "filled": 5
+    },
+    {
+     "role": "Assistant",
+     "sanctioned": 6,
+     "filled": 6
+    },
+    {
+     "role": "Physiotherapy Technician",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 29,
+     "filled": 29
+    },
+    {
+     "role": "Junior Assistant",
+     "sanctioned": 6,
+     "filled": 4
+    },
+    {
+     "role": "Typist",
+     "sanctioned": 3,
+     "filled": 3
+    },
+    {
+     "role": "Tractor Driver",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Wireman",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Grade I Warder",
+     "sanctioned": 73,
+     "filled": 69
+    },
+    {
+     "role": "Grade II Warder",
+     "sanctioned": 120,
+     "filled": 118
+    },
+    {
+     "role": "Record Clerk",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Male Nursing Assistant",
+     "sanctioned": 4,
+     "filled": 2
+    },
+    {
+     "role": "Night Watchman/Garden Watchman",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Barber",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Boiler Attendant",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Boot & Sandal Overseer",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Tailoring Instructor",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Boot Mechanic",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Craft Instructor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Carpentry Instructor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Supervisor -cum-Instructor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Lorry Driver",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Boot Maistry",
+     "sanctioned": 4,
+     "filled": 4
+    },
+    {
+     "role": "Weaving Jobber",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Packer Clerk",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Sub Inspector of Police (Technical)",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Sub Inspector of Police (Vigilance)",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Head Constable (Vigilance)",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Counsellor (Honorarium)",
+     "sanctioned": 2,
+     "filled": 2
+    }
+   ]
+  },
+  {
+   "title": "Sub Jail, Ambur",
+   "jail_name": "Ambur",
+   "jail_type": "sub_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade I Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade II Warder",
+     "sanctioned": 6,
+     "filled": 6
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 1
+    }
+   ]
+  },
+  {
+   "title": "Sub Jail, Arani (Closed)",
+   "jail_name": "S.J. Arani (Closed)",
+   "jail_type": "sub_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade I Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade II Warder",
+     "sanctioned": 6,
+     "filled": 5
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 0
+    }
+   ]
+  },
+  {
+   "title": "Sub Jail, Arakkonam",
+   "jail_name": "Arakkonam",
+   "jail_type": "sub_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade I Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade II Warder",
+     "sanctioned": 6,
+     "filled": 5
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade I Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade II Warder",
+     "sanctioned": 6,
+     "filled": 6
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade I Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade II Warder",
+     "sanctioned": 6,
+     "filled": 6
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade I Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade II Warder",
+     "sanctioned": 6,
+     "filled": 6
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade I Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade II Warder",
+     "sanctioned": 6,
+     "filled": 4
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade I Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade II Warder",
+     "sanctioned": 6,
+     "filled": 5
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade I Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade II Warder",
+     "sanctioned": 6,
+     "filled": 6
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade I Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade II Warder",
+     "sanctioned": 6,
+     "filled": 5
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade I Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade II Warder",
+     "sanctioned": 6,
+     "filled": 6
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 1
+    }
+   ]
+  },
+  {
+   "title": "Sub Jail, Cheyyar (Closed)",
+   "jail_name": "S.J. Cheyyar (Closed)",
+   "jail_type": "sub_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Grade I Warder",
+     "sanctioned": 3,
+     "filled": 3
+    },
+    {
+     "role": "Grade II Warder",
+     "sanctioned": 6,
+     "filled": 5
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 1
+    }
+   ]
+  },
+  {
+   "title": "Central Prison, Cuddalore",
+   "jail_name": "Cuddalore",
+   "jail_type": "central_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Superintendent of Prisons",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Additional Superintendent",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Assistant Surgeon",
+     "sanctioned": 3,
+     "filled": 2
+    },
+    {
+     "role": "Administrative Officer",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Psychologist",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Jailor",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Office Superintendent",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Sub Inspector of Police (Vigilance)",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Sub Inspector of Police (Technical)",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Welfare Officer",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Deputy Jailor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Accountant",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 10,
+     "filled": 10
+    },
+    {
+     "role": "Staff Nurse",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Pharmacist",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Secondary Grade Teacher",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 23,
+     "filled": 22
+    },
+    {
+     "role": "Assistant",
+     "sanctioned": 4,
+     "filled": 3
+    },
+    {
+     "role": "Craft Instructor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Junior Assistant",
+     "sanctioned": 4,
+     "filled": 4
+    },
+    {
+     "role": "Typist",
+     "sanctioned": 3,
+     "filled": 3
+    },
+    {
+     "role": "Grade I Warder",
+     "sanctioned": 71,
+     "filled": 70
+    },
+    {
+     "role": "Police Head Constable (Vigilance)",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Wireman",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Boiler Attendant",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Grade II Warder",
+     "sanctioned": 115,
+     "filled": 114
+    },
+    {
+     "role": "Male Nursing Assistant",
+     "sanctioned": 3,
+     "filled": 3
+    },
+    {
+     "role": "Record Clerk",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Barber",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Garden Watchman",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 2,
+     "filled": 1
+    },
+    {
+     "role": "Weaving Instructor",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Carpentry Instructor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Lorry Driver",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Packer Clerk",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Counsellor (Honorarium)",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Social Case Work Expert",
+     "sanctioned": 1,
+     "filled": 1
+    }
+   ]
+  },
+  {
+   "title": "DISTRICT JAIL VILLUPURAM",
+   "jail_name": "Villupuram",
+   "jail_type": "district_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Additional Superintendent",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Jailor",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Deputy Jailor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 3,
+     "filled": 2
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 5,
+     "filled": 5
+    },
+    {
+     "role": "First Grade Warder",
+     "sanctioned": 3,
+     "filled": 3
+    },
+    {
+     "role": "Second Grade Warder",
+     "sanctioned": 17,
+     "filled": 17
+    },
+    {
+     "role": "Assistant",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Typist",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Male Nursing Assistant",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    }
+   ]
+  },
+  {
+   "title": "Sub Jail, Cuddalore (Closed)",
+   "jail_name": "S.J. Cuddalore (Closed)",
+   "jail_type": "sub_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade I Warder",
+     "sanctioned": 4,
+     "filled": 4
+    },
+    {
+     "role": "Grade II Warder",
+     "sanctioned": 8,
+     "filled": 8
+    },
+    {
+     "role": "Junior Assistant",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 2,
+     "filled": 0
+    }
+   ]
+  },
+  {
+   "title": "Sub Jail, Panruti",
+   "jail_name": "Panruti",
+   "jail_type": "sub_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade I Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade II Warder",
+     "sanctioned": 6,
+     "filled": 6
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 1
+    }
+   ]
+  },
+  {
+   "title": "Sub Jail, Chidambaram",
+   "jail_name": "Chidambaram",
+   "jail_type": "sub_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade I Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade II Warder",
+     "sanctioned": 6,
+     "filled": 6
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 1
+    }
+   ]
+  },
+  {
+   "title": "Sub Jail, Parangipet (Closed)",
+   "jail_name": "S.J. Parangipet (Closed)",
+   "jail_type": "sub_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade I Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade II Warder",
+     "sanctioned": 6,
+     "filled": 4
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 0
+    }
+   ]
+  },
+  {
+   "title": "Women Sub Jail - Cuddalore",
+   "jail_name": "Cuddalore",
+   "jail_type": "women_sub_jail",
+   "hierarchy_type": "women",
+   "posts": [
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade I Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade II Warder",
+     "sanctioned": 6,
+     "filled": 6
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 1
+    }
+   ]
+  },
+  {
+   "title": "Sub Jail, Kallakurichi",
+   "jail_name": "Kallakurichi",
+   "jail_type": "sub_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade I Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade II Warder",
+     "sanctioned": 6,
+     "filled": 6
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 1
+    }
+   ]
+  },
+  {
+   "title": "Sub Jail, Tindivanam",
+   "jail_name": "Thindivanam",
+   "jail_type": "sub_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade I Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade II Warder",
+     "sanctioned": 6,
+     "filled": 6
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 0
+    }
+   ]
+  },
+  {
+   "title": "Sub Jail, Virudhachalam",
+   "jail_name": "Virudhachalam",
+   "jail_type": "sub_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade I Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade II Warder",
+     "sanctioned": 6,
+     "filled": 4
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 0
+    }
+   ]
+  },
+  {
+   "title": "Sub Jail, Ulundurpet",
+   "jail_name": "Ulundurpet",
+   "jail_type": "sub_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade I Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade II Warder",
+     "sanctioned": 6,
+     "filled": 6
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 0
+    }
+   ]
+  },
+  {
+   "title": "Sub Jail, Tirukkovilur",
+   "jail_name": "Thirukovilur",
+   "jail_type": "sub_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade I Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade II Warder",
+     "sanctioned": 6,
+     "filled": 6
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 1
+    }
+   ]
+  },
+  {
+   "title": "Sub Jail, Gingee",
+   "jail_name": "Gingee",
+   "jail_type": "sub_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade I Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade II Warder",
+     "sanctioned": 6,
+     "filled": 6
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 0
+    }
+   ]
+  },
+  {
+   "title": "Central Prison, Salem",
+   "jail_name": "Salem",
+   "jail_type": "central_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Superintendent of Prisons",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Administrative Officer",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Additional Superintendent",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Assistant Surgeon",
+     "sanctioned": 3,
+     "filled": 3
+    },
+    {
+     "role": "Psychologist",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Jailor",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Office Superintendent /Office Manager",
+     "sanctioned": 3,
+     "filled": 3
+    },
+    {
+     "role": "Welfare Officer",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Sub Inspector of Police (Technical)",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Deputy Jailor",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Staff Nurse",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Plumbing Instructor (Craft)",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Pharmacist",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 13,
+     "filled": 13
+    },
+    {
+     "role": "Secondary Grade Teacher",
+     "sanctioned": 4,
+     "filled": 4
+    },
+    {
+     "role": "Assistant",
+     "sanctioned": 9,
+     "filled": 7
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 23,
+     "filled": 23
+    },
+    {
+     "role": "Wireman",
+     "sanctioned": 2,
+     "filled": 1
+    },
+    {
+     "role": "Junior Assistant",
+     "sanctioned": 6,
+     "filled": 6
+    },
+    {
+     "role": "Typist",
+     "sanctioned": 4,
+     "filled": 3
+    },
+    {
+     "role": "Record Clerk",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Grade I Warder",
+     "sanctioned": 91,
+     "filled": 90
+    },
+    {
+     "role": "Grade II Warder",
+     "sanctioned": 117,
+     "filled": 117
+    },
+    {
+     "role": "Boiler Attendant",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Male Nursing Assistant",
+     "sanctioned": 3,
+     "filled": 3
+    },
+    {
+     "role": "Garden Watchman",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Barber",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Weaving Instructor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Fitter",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Lorry Driver",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Welder",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Blacksmithy Foreman",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Aluminium Foreman",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Aluminium Skilled Worker",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Supervisor â€“ cum â€“ Instructor (Hand Made paper Industry)",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Bandy Man",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Packer Clerk",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Counsellor (Honorarium)",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Sub Inspector of Police (Vigilance)",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Head Constable (Vigilance)",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Carpentry Skilled Worker",
+     "sanctioned": 2,
+     "filled": 0
+    },
+    {
+     "role": "Tailoring Instructor",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Electrician",
+     "sanctioned": 2,
+     "filled": 1
+    },
+    {
+     "role": "Social Case Work Expert",
+     "sanctioned": 1,
+     "filled": 1
+    }
+   ]
+  },
+  {
+   "title": "District Jail- Attur (Closed)",
+   "jail_name": "D.J. Attur (Closed)",
+   "jail_type": "district_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Jailor",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Deputy Jailor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 3,
+     "filled": 2
+    },
+    {
+     "role": "Assistant",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Typist",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Male Nursing Assistant",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 5,
+     "filled": 3
+    },
+    {
+     "role": "Grade I Warder",
+     "sanctioned": 3,
+     "filled": 2
+    },
+    {
+     "role": "Grade II Warder",
+     "sanctioned": 17,
+     "filled": 0
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 2,
+     "filled": 0
+    }
+   ]
+  },
+  {
+   "title": "District Jail Dharmapuri",
+   "jail_name": "Dharmapuri",
+   "jail_type": "district_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Additional Superintendent",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Jailor",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Deputy Jailor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 3,
+     "filled": 1
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 5,
+     "filled": 5
+    },
+    {
+     "role": "Grade I Warder",
+     "sanctioned": 3,
+     "filled": 2
+    },
+    {
+     "role": "Grade II Warder",
+     "sanctioned": 17,
+     "filled": 16
+    },
+    {
+     "role": "Assistant",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Typist",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Male Nursing Assistant",
+     "sanctioned": 1,
+     "filled": 1
+    }
+   ]
+  },
+  {
+   "title": "Sub Jail, Sankagiri",
+   "jail_name": "Sankagiri",
+   "jail_type": "sub_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade I Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade II Warder",
+     "sanctioned": 6,
+     "filled": 5
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    }
+   ]
+  },
+  {
+   "title": "Sub Jail, Omalur",
+   "jail_name": "Omalur",
+   "jail_type": "sub_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade I Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade II Warder",
+     "sanctioned": 6,
+     "filled": 6
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    }
+   ]
+  },
+  {
+   "title": "Sub Jail, Namakkal",
+   "jail_name": "Namakkal",
+   "jail_type": "sub_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade I Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade II Warder",
+     "sanctioned": 6,
+     "filled": 6
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    }
+   ]
+  },
+  {
+   "title": "Sub Jail, Rasipuram (Closed)",
+   "jail_name": "S.J. Rasipuram (Closed)",
+   "jail_type": "sub_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade I Warder",
+     "sanctioned": 2,
+     "filled": 1
+    },
+    {
+     "role": "Grade II Warder",
+     "sanctioned": 6,
+     "filled": 5
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 0
+    }
+   ]
+  },
+  {
+   "title": "Sub Jail, Paramathivelur (Closed)",
+   "jail_name": "S.J. Paramathivelur (Closed)",
+   "jail_type": "sub_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade I Warder",
+     "sanctioned": 2,
+     "filled": 1
+    },
+    {
+     "role": "Grade II Warder",
+     "sanctioned": 6,
+     "filled": 6
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 0
+    }
+   ]
+  },
+  {
+   "title": "Sub Jail, Tiruchengodu",
+   "jail_name": "Tiruchengodu",
+   "jail_type": "sub_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade I Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade II Warder",
+     "sanctioned": 6,
+     "filled": 6
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    }
+   ]
+  },
+  {
+   "title": "Sub Jail, Harur",
+   "jail_name": "Harur",
+   "jail_type": "sub_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade I Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade II Warder",
+     "sanctioned": 6,
+     "filled": 6
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    }
+   ]
+  },
+  {
+   "title": "Sub Jail, Krishnagiri",
+   "jail_name": "Krishnagiri",
+   "jail_type": "sub_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade I Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade II Warder",
+     "sanctioned": 6,
+     "filled": 6
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    }
+   ]
+  },
+  {
+   "title": "Sub Jail, Hosur",
+   "jail_name": "Hosur",
+   "jail_type": "sub_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade I Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade II Warder",
+     "sanctioned": 6,
+     "filled": 6
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    }
+   ]
+  },
+  {
+   "title": "Sub Jail, Uthangarai",
+   "jail_name": "Uthangarai",
+   "jail_type": "sub_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade I Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade II Warder",
+     "sanctioned": 6,
+     "filled": 6
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 0
+    }
+   ]
+  },
+  {
+   "title": "Central Prison, Coimbatore",
+   "jail_name": "Coimbatore",
+   "jail_type": "central_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Superintendent of Prisons",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Additional Superintendent",
+     "sanctioned": 2,
+     "filled": 0
+    },
+    {
+     "role": "Administrative Officer",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Assistant Surgeon",
+     "sanctioned": 3,
+     "filled": 3
+    },
+    {
+     "role": "Psychologist",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Jailor",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Sub Inspector of Police (Vigilance)",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Sub Inspector of Police (Technical)",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Office Manager",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Office Superintendent",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Welfare Officer",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Deputy Jailor",
+     "sanctioned": 3,
+     "filled": 3
+    },
+    {
+     "role": "Staff Nurse",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Social Case Work Expert",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Accountant",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Pharmacist",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 14,
+     "filled": 13
+    },
+    {
+     "role": "Secondary Grade Teacher",
+     "sanctioned": 5,
+     "filled": 4
+    },
+    {
+     "role": "Craft Instructor",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Chief Head Warder (Vigilance)",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 33,
+     "filled": 31
+    },
+    {
+     "role": "Assistant",
+     "sanctioned": 12,
+     "filled": 8
+    },
+    {
+     "role": "Typist",
+     "sanctioned": 5,
+     "filled": 5
+    },
+    {
+     "role": "Tractor Driver",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Junior Assistant",
+     "sanctioned": 13,
+     "filled": 8
+    },
+    {
+     "role": "Grade I Warder",
+     "sanctioned": 88,
+     "filled": 82
+    },
+    {
+     "role": "Grade II Warder (Vigilance)",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Grade II Warder",
+     "sanctioned": 170,
+     "filled": 164
+    },
+    {
+     "role": "Male Nursing Assistant",
+     "sanctioned": 3,
+     "filled": 2
+    },
+    {
+     "role": "Record Clerk/Record Assistant",
+     "sanctioned": 4,
+     "filled": 3
+    },
+    {
+     "role": "Packer Clerk",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 4,
+     "filled": 4
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 2,
+     "filled": 0
+    },
+    {
+     "role": "Night Watchman",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Barber",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Electrical Supervisor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Warping Master",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Weaving Master",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Tailoring Instructor",
+     "sanctioned": 2,
+     "filled": 0
+    },
+    {
+     "role": "Pulp Making Assistant",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Warping & Sizing Jobber",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Fitter Incharge of Pumping Station",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Pipe line Fitter",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Wireman",
+     "sanctioned": 4,
+     "filled": 2
+    },
+    {
+     "role": "Lorry Driver",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Boiler Attendant",
+     "sanctioned": 2,
+     "filled": 1
+    },
+    {
+     "role": "Supervisor- cum - Instructor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Motor Attendant",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Binding Maistry",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Assistant Tent Maistry",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Weaving Jobber (Grade II)",
+     "sanctioned": 4,
+     "filled": 2
+    },
+    {
+     "role": "Boiler fireman",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Bailing Attendant",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Counsellor (Honorarium)",
+     "sanctioned": 2,
+     "filled": 1
+    },
+    {
+     "role": "Weaving Jobber (Grade I)",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Assistant Agriculture Officer",
+     "sanctioned": 1,
+     "filled": 1
+    }
+   ]
+  },
+  {
+   "title": "District Jail Tiruppur",
+   "jail_name": "Tiruppur",
+   "jail_type": "district_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Jailor",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Deputy Jailor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 3,
+     "filled": 3
+    },
+    {
+     "role": "Grade I Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade II Warder",
+     "sanctioned": 12,
+     "filled": 8
+    },
+    {
+     "role": "Assistant",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Typist",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 1
+    }
+   ]
+  },
+  {
+   "title": "District Jail, Erode @ Gobichettipalayam",
+   "jail_name": "Erode @ Gobichettipalayam",
+   "jail_type": "district_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Jailor",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Deputy Jailor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 3,
+     "filled": 3
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 5,
+     "filled": 5
+    },
+    {
+     "role": "Grade I Warder",
+     "sanctioned": 3,
+     "filled": 3
+    },
+    {
+     "role": "Grade II Warder",
+     "sanctioned": 17,
+     "filled": 13
+    },
+    {
+     "role": "Assistant",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Typist",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Male Nursing Assistant",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 1
+    }
+   ]
+  },
+  {
+   "title": "Sub Jail, Erode",
+   "jail_name": "Erode",
+   "jail_type": "sub_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 1
+    },
+    {
+     "role": "Grade I Warder",
+     "sanctioned": 2,
+     "filled": 1
+    },
+    {
+     "role": "Grade II Warder",
+     "sanctioned": 6,
+     "filled": 6
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    }
+   ]
+  },
+  {
+   "title": "Sub Jail, Bhavani",
+   "jail_name": "Bhavani",
+   "jail_type": "sub_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade I Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade II Warder",
+     "sanctioned": 6,
+     "filled": 5
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 1
+    }
+   ]
+  },
+  {
+   "title": "Sub Jail, Sathiamangalam",
+   "jail_name": "Sathiamangalam",
+   "jail_type": "sub_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade I Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade II Warder",
+     "sanctioned": 6,
+     "filled": 4
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 1
+    }
+   ]
+  },
+  {
+   "title": "Sub Jail, Perundurai",
+   "jail_name": "Perundhurai",
+   "jail_type": "sub_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade I Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade II Warder",
+     "sanctioned": 6,
+     "filled": 6
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 0
+    }
+   ]
+  },
+  {
+   "title": "Sub Jail, Coonoor",
+   "jail_name": "Coonoor",
+   "jail_type": "sub_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade I Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade II Warder",
+     "sanctioned": 6,
+     "filled": 2
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 1
+    }
+   ]
+  },
+  {
+   "title": "Sub Jail, Gudalur",
+   "jail_name": "Gudalur",
+   "jail_type": "sub_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade I Warder",
+     "sanctioned": 2,
+     "filled": 1
+    },
+    {
+     "role": "Grade II Warder",
+     "sanctioned": 6,
+     "filled": 4
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 0
+    }
+   ]
+  },
+  {
+   "title": "Sub Jail, Ooty",
+   "jail_name": "Ooty",
+   "jail_type": "sub_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade I Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade II Warder",
+     "sanctioned": 6,
+     "filled": 4
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 0
+    }
+   ]
+  },
+  {
+   "title": "Sub Jail, Palladam",
+   "jail_name": "Palladam",
+   "jail_type": "sub_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade I Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade II Warder",
+     "sanctioned": 6,
+     "filled": 2
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 0
+    }
+   ]
+  },
+  {
+   "title": "Sub Jail, Mettupalayam (Closed)",
+   "jail_name": "S.J. Mettupalayam (Closed)",
+   "jail_type": "sub_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade I Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade II Warder",
+     "sanctioned": 6,
+     "filled": 1
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 0
+    }
+   ]
+  },
+  {
+   "title": "Open Air Jail, Singanallur",
+   "jail_name": "Singanallur",
+   "jail_type": "open_air_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Deputy Jailor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Grade I Warder",
+     "sanctioned": 3,
+     "filled": 2
+    },
+    {
+     "role": "Grade II Warder",
+     "sanctioned": 7,
+     "filled": 7
+    },
+    {
+     "role": "Record Clerk",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Assistant",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Assistant Agriculture Officer",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Motor Attendant",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Gardener",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Garden Watchman",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Pharmacist",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    }
+   ]
+  },
+  {
+   "title": "Sub Jail, Tharapuram",
+   "jail_name": "Dharapuram",
+   "jail_type": "sub_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade I Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade II Warder",
+     "sanctioned": 6,
+     "filled": 6
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 0
+    }
+   ]
+  },
+  {
+   "title": "Sub Jail, Avinasi",
+   "jail_name": "Avinashi",
+   "jail_type": "sub_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade I Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade II Warder",
+     "sanctioned": 6,
+     "filled": 5
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 1
+    }
+   ]
+  },
+  {
+   "title": "Sub Jail, Udumalaipettai",
+   "jail_name": "Udumalaipettai",
+   "jail_type": "sub_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade I Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade II Warder",
+     "sanctioned": 6,
+     "filled": 6
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 0
+    }
+   ]
+  },
+  {
+   "title": "Sub Jail, Pollachi",
+   "jail_name": "Pollachi",
+   "jail_type": "sub_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Deputy Jailor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade I Warder",
+     "sanctioned": 3,
+     "filled": 3
+    },
+    {
+     "role": "Grade II Warder",
+     "sanctioned": 6,
+     "filled": 4
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 0
+    }
+   ]
+  },
+  {
+   "title": "Central Prison, Tiruchirappalli",
+   "jail_name": "Tiruchirappalli",
+   "jail_type": "central_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Superintendent of Prisons",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Additional Superintendent",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Administrative Officer",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Assistant Civil Surgeon",
+     "sanctioned": 3,
+     "filled": 3
+    },
+    {
+     "role": "Jailor",
+     "sanctioned": 2,
+     "filled": 1
+    },
+    {
+     "role": "Psychologist",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Office Manager/Office Superintendent",
+     "sanctioned": 3,
+     "filled": 3
+    },
+    {
+     "role": "Sub Inspector of Police (Vigilance)",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Sub Inspector of Police (Technical)",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Welfare Officer",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Accountant",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Assistant",
+     "sanctioned": 7,
+     "filled": 5
+    },
+    {
+     "role": "Junior Assistant",
+     "sanctioned": 8,
+     "filled": 8
+    },
+    {
+     "role": "Typist",
+     "sanctioned": 3,
+     "filled": 3
+    },
+    {
+     "role": "Deputy Jailor",
+     "sanctioned": 3,
+     "filled": 2
+    },
+    {
+     "role": "Staff Nurse",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Pharmacist",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Secondary Grade Teacher",
+     "sanctioned": 4,
+     "filled": 4
+    },
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 11,
+     "filled": 9
+    },
+    {
+     "role": "Plumbing Instructor",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 34,
+     "filled": 34
+    },
+    {
+     "role": "Tractor Driver",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "First Grade Warder",
+     "sanctioned": 76,
+     "filled": 76
+    },
+    {
+     "role": "Second Grade Warder",
+     "sanctioned": 148,
+     "filled": 140
+    },
+    {
+     "role": "Wireman",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Electrical Motor Attendant",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Male Nursing Assistant",
+     "sanctioned": 3,
+     "filled": 3
+    },
+    {
+     "role": "Record Clerk",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Barber",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 2,
+     "filled": 0
+    },
+    {
+     "role": "Boiler Attendant",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Weaving Instructor",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Carpentry Instructor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Tailoring Instructor",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Soap Chemist",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Lorry Driver",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Packer Clerk",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Counsellor (Honorarium)",
+     "sanctioned": 2,
+     "filled": 2
+    }
+   ]
+  },
+  {
+   "title": "Sub Jail, Lalgudi",
+   "jail_name": "Lalgudi",
+   "jail_type": "sub_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade I Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade II Warder",
+     "sanctioned": 6,
+     "filled": 6
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    }
+   ]
+  },
+  {
+   "title": "Sub Jail, Thuraiyur",
+   "jail_name": "Thuraiyur",
+   "jail_type": "sub_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade I Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade II Warder",
+     "sanctioned": 6,
+     "filled": 6
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    }
+   ]
+  },
+  {
+   "title": "Sub Jail, Manapparai (Closed)",
+   "jail_name": "S.J. Manapparai (Closed)",
+   "jail_type": "sub_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade I Warder",
+     "sanctioned": 2,
+     "filled": 1
+    },
+    {
+     "role": "Grade II Warder",
+     "sanctioned": 6,
+     "filled": 6
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 0
+    }
+   ]
+  },
+  {
+   "title": "Sub Jail, Musiri (Closed)",
+   "jail_name": "S.J. Musiri (Closed)",
+   "jail_type": "sub_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade I Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade II Warder",
+     "sanctioned": 6,
+     "filled": 5
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 0
+    }
+   ]
+  },
+  {
+   "title": "Sub Jail, Perambalur",
+   "jail_name": "Perambalur",
+   "jail_type": "sub_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade I Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade II Warder",
+     "sanctioned": 6,
+     "filled": 6
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    }
+   ]
+  },
+  {
+   "title": "Sub Jail, Ariyalur",
+   "jail_name": "Ariyalur",
+   "jail_type": "sub_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade I Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade II Warder",
+     "sanctioned": 6,
+     "filled": 6
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    }
+   ]
+  },
+  {
+   "title": "Sub Jail, Jeyakondam",
+   "jail_name": "Jeyankondam",
+   "jail_type": "sub_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade I Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade II Warder",
+     "sanctioned": 6,
+     "filled": 5
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    }
+   ]
+  },
+  {
+   "title": "Sub Jail, Karur",
+   "jail_name": "Karur",
+   "jail_type": "sub_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade I Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade II Warder",
+     "sanctioned": 6,
+     "filled": 6
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    }
+   ]
+  },
+  {
+   "title": "Sub Jail, Kulithalai",
+   "jail_name": "Kulithalai",
+   "jail_type": "sub_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade I Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade II Warder",
+     "sanctioned": 6,
+     "filled": 6
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    }
+   ]
+  },
+  {
+   "title": "District Jail, Pudukkottai",
+   "jail_name": "Pudukkottai",
+   "jail_type": "district_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Superintendent of Prisons",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Jailor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Deputy Jailor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 5,
+     "filled": 5
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 8,
+     "filled": 7
+    },
+    {
+     "role": "First Grade Warder",
+     "sanctioned": 8,
+     "filled": 8
+    },
+    {
+     "role": "Second Grade Warder",
+     "sanctioned": 26,
+     "filled": 25
+    },
+    {
+     "role": "Psychologist",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Welfare Officer",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Office Manager",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Assistant",
+     "sanctioned": 4,
+     "filled": 3
+    },
+    {
+     "role": "Junior Assistant",
+     "sanctioned": 3,
+     "filled": 3
+    },
+    {
+     "role": "Typist",
+     "sanctioned": 3,
+     "filled": 2
+    },
+    {
+     "role": "Record Assistant",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Civil Assistant Surgeon",
+     "sanctioned": 3,
+     "filled": 3
+    },
+    {
+     "role": "Pharmacist",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Male Nursing Assistant",
+     "sanctioned": 2,
+     "filled": 1
+    },
+    {
+     "role": "Staff Nurse",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Wireman",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Phenyl Assistant",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Craft Instructor",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Binding Maistry",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Secondary Grade Teacher",
+     "sanctioned": 5,
+     "filled": 2
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 3,
+     "filled": 2
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 5,
+     "filled": 1
+    },
+    {
+     "role": "Barber",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Packer Clerk",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Physical Edu Instructor",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Band Master",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Sub Inspector of Police",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Counsellors (Honoraium)",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Carpentry Foreman",
+     "sanctioned": 1,
+     "filled": 0
+    }
+   ]
+  },
+  {
+   "title": "Sub Jail, Thirumayam",
+   "jail_name": "Thirumayam",
+   "jail_type": "sub_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "First Grade Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Second Grade Warder",
+     "sanctioned": 6,
+     "filled": 6
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 0
+    }
+   ]
+  },
+  {
+   "title": "Sub Jail, Aranthangi",
+   "jail_name": "Aranthangi",
+   "jail_type": "sub_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "First Grade Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Second Grade Warder",
+     "sanctioned": 6,
+     "filled": 3
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 0
+    }
+   ]
+  },
+  {
+   "title": "Sub Jail, Keeranur (Closed)",
+   "jail_name": "S.J. Keeranur (Closed)",
+   "jail_type": "sub_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "First Grade Warder",
+     "sanctioned": 2,
+     "filled": 1
+    },
+    {
+     "role": "Second Grade Warder",
+     "sanctioned": 6,
+     "filled": 1
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 1
+    }
+   ]
+  },
+  {
+   "title": "Sub Jail, Thanjavur",
+   "jail_name": "Thanjavur",
+   "jail_type": "sub_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "First Grade Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Second Grade Warder",
+     "sanctioned": 6,
+     "filled": 4
+    },
+    {
+     "role": "Record Clerk/Record Assistant",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Pharmacist",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 0
+    }
+   ]
+  },
+  {
+   "title": "Sub Jail, Kumbakonam",
+   "jail_name": "Kumbakonam",
+   "jail_type": "sub_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "First Grade Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Second Grade Warder",
+     "sanctioned": 6,
+     "filled": 5
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 1
+    }
+   ]
+  },
+  {
+   "title": "Sub Jail, Papanasam",
+   "jail_name": "Papanasam",
+   "jail_type": "sub_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "First Grade Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Second Grade Warder",
+     "sanctioned": 6,
+     "filled": 6
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 0
+    }
+   ]
+  },
+  {
+   "title": "Sub Jail, Thiruvidaimaruthur",
+   "jail_name": "Thiruvidaimaruthur",
+   "jail_type": "sub_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "First Grade Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Second Grade Warder",
+     "sanctioned": 6,
+     "filled": 4
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 1
+    }
+   ]
+  },
+  {
+   "title": "Sub Jail, Pattukottai (closed)",
+   "jail_name": "S.J. Pattukottai (Closed)",
+   "jail_type": "sub_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "First Grade Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Second Grade Warder",
+     "sanctioned": 6,
+     "filled": 2
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 0
+    }
+   ]
+  },
+  {
+   "title": "Sub Jail, Mannarkudi",
+   "jail_name": "Mannargudi",
+   "jail_type": "sub_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "First Grade Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Second Grade Warder",
+     "sanctioned": 6,
+     "filled": 5
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 1
+    }
+   ]
+  },
+  {
+   "title": "Sub Jail, Nannilam",
+   "jail_name": "Nannilam",
+   "jail_type": "sub_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "First Grade Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Second Grade Warder",
+     "sanctioned": 6,
+     "filled": 6
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 1
+    }
+   ]
+  },
+  {
+   "title": "Sub Jail, Thiruthuraipoondi",
+   "jail_name": "Thiruthuraipoondi",
+   "jail_type": "sub_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 1
+    },
+    {
+     "role": "First Grade Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Second Grade Warder",
+     "sanctioned": 6,
+     "filled": 4
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 0
+    }
+   ]
+  },
+  {
+   "title": "District Jail, Nagapattinam",
+   "jail_name": "Nagapattinam",
+   "jail_type": "district_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Jailor",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Deputy Jailor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 3,
+     "filled": 3
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 5,
+     "filled": 4
+    },
+    {
+     "role": "Grade I Warder",
+     "sanctioned": 3,
+     "filled": 3
+    },
+    {
+     "role": "Grade II Warder",
+     "sanctioned": 17,
+     "filled": 9
+    },
+    {
+     "role": "Assistant",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Typist",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Male Nursing Assistant",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 0
+    }
+   ]
+  },
+  {
+   "title": "Sub Jail, Mayiladuthurai",
+   "jail_name": "Mayiladuthurai",
+   "jail_type": "sub_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "First Grade Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Second Grade Warder",
+     "sanctioned": 6,
+     "filled": 6
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 1
+    }
+   ]
+  },
+  {
+   "title": "Sub Jail, Tharangampadi",
+   "jail_name": "Tharangampadi",
+   "jail_type": "sub_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "First Grade Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Second Grade Warder",
+     "sanctioned": 6,
+     "filled": 5
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 1
+    }
+   ]
+  },
+  {
+   "title": "Sub Jail, Sirkazhi",
+   "jail_name": "Sirkazhi",
+   "jail_type": "sub_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "First Grade Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Second Grade Warder",
+     "sanctioned": 6,
+     "filled": 5
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 1
+    }
+   ]
+  },
+  {
+   "title": "Central Prison, Madurai",
+   "jail_name": "Madurai",
+   "jail_type": "central_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Superintendent",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Additional Superintendent",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Administrative Officer",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Civil Assistant Surgeon",
+     "sanctioned": 3,
+     "filled": 3
+    },
+    {
+     "role": "Psychologist",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Jailor",
+     "sanctioned": 2,
+     "filled": 1
+    },
+    {
+     "role": "Office Superintendent",
+     "sanctioned": 3,
+     "filled": 3
+    },
+    {
+     "role": "Welfare officer",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Social Case Work Expert",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Accountant",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Deputy Jailor",
+     "sanctioned": 3,
+     "filled": 3
+    },
+    {
+     "role": "Sub Inspector (Vigilance)",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Sub Inspector (Technical)",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 12,
+     "filled": 11
+    },
+    {
+     "role": "Assistant",
+     "sanctioned": 6,
+     "filled": 6
+    },
+    {
+     "role": "Secondary Grade Teacher",
+     "sanctioned": 3,
+     "filled": 3
+    },
+    {
+     "role": "Junior Assistant",
+     "sanctioned": 6,
+     "filled": 6
+    },
+    {
+     "role": "Typist",
+     "sanctioned": 4,
+     "filled": 4
+    },
+    {
+     "role": "Wireman",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Staff Nurse",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Pharmacist",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Male Nursing Assistant",
+     "sanctioned": 3,
+     "filled": 2
+    },
+    {
+     "role": "Record Clerk",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 2,
+     "filled": 1
+    },
+    {
+     "role": "Barber",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Garden Watchman",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 2,
+     "filled": 1
+    },
+    {
+     "role": "Boiler Attendant",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 28,
+     "filled": 28
+    },
+    {
+     "role": "First Grade Warder",
+     "sanctioned": 88,
+     "filled": 88
+    },
+    {
+     "role": "Second Grade Warder",
+     "sanctioned": 101,
+     "filled": 101
+    },
+    {
+     "role": "Weaving Instructor",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Craft Instructor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Supervisor - cum- Instructor (Hand Made paper Industry)",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Lorry Driver",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Pulp Making Assistant",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Glazing Assistant",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Packer Clerk",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Counsellor (Honorarium)",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Head Constable (Vigilance)",
+     "sanctioned": 1,
+     "filled": 1
+    }
+   ]
+  },
+  {
+   "title": "District Jail Dindigul",
+   "jail_name": "Dindigul",
+   "jail_type": "district_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Jailor",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Deputy Jailor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 3,
+     "filled": 3
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 5,
+     "filled": 5
+    },
+    {
+     "role": "Grade I Warder",
+     "sanctioned": 4,
+     "filled": 4
+    },
+    {
+     "role": "Grade II Warder",
+     "sanctioned": 17,
+     "filled": 16
+    },
+    {
+     "role": "Assistant",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Typist",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    }
+   ]
+  },
+  {
+   "title": "District Jail â€“ Ramanathapuram",
+   "jail_name": "Ramanathapuram",
+   "jail_type": "district_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Jailor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Deputy Jailor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 3,
+     "filled": 2
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 5,
+     "filled": 5
+    },
+    {
+     "role": "Grade I Warder",
+     "sanctioned": 3,
+     "filled": 3
+    },
+    {
+     "role": "Grade II Warder",
+     "sanctioned": 17,
+     "filled": 16
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Assistant",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Typist",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Nursing Assistant",
+     "sanctioned": 1,
+     "filled": 1
+    }
+   ]
+  },
+  {
+   "title": "District Jailâ€“ Virudhunagar",
+   "jail_name": "Virudhunagar",
+   "jail_type": "district_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Jailor",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Deputy Jailor",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 3,
+     "filled": 3
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 5,
+     "filled": 5
+    },
+    {
+     "role": "Grade I Warder",
+     "sanctioned": 3,
+     "filled": 3
+    },
+    {
+     "role": "Grade II Warder",
+     "sanctioned": 16,
+     "filled": 15
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Assistant",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Typist",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Nursing Assistant",
+     "sanctioned": 1,
+     "filled": 0
+    }
+   ]
+  },
+  {
+   "title": "District Jailâ€“ Theni",
+   "jail_name": "Theni",
+   "jail_type": "district_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Additional Superintend",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Jailor",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Deputy Jailor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 3,
+     "filled": 3
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 5,
+     "filled": 5
+    },
+    {
+     "role": "Grade I Warder",
+     "sanctioned": 3,
+     "filled": 3
+    },
+    {
+     "role": "Grade II Warder",
+     "sanctioned": 17,
+     "filled": 16
+    },
+    {
+     "role": "Assistant",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Typist",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Nursing Assistant",
+     "sanctioned": 1,
+     "filled": 0
+    }
+   ]
+  },
+  {
+   "title": "Open Air Prison - Purasadai Udaippu",
+   "jail_name": "Purasaraidaiudaippu",
+   "jail_type": "open_air_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Deputy Jailor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 0,
+     "filled": 0
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Grade I Warder",
+     "sanctioned": 3,
+     "filled": 3
+    },
+    {
+     "role": "Grade II Warder",
+     "sanctioned": 8,
+     "filled": 8
+    },
+    {
+     "role": "Assistant",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Record Clerk",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Pharmacist",
+     "sanctioned": 1,
+     "filled": 1
+    }
+   ]
+  },
+  {
+   "title": "Sub Jail, Aruppukottai",
+   "jail_name": "Aruppukottai",
+   "jail_type": "sub_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade I Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade II Warder",
+     "sanctioned": 6,
+     "filled": 6
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 1
+    }
+   ]
+  },
+  {
+   "title": "Sub Jail, Kodaikannal (Closed)",
+   "jail_name": "S.J. Kodaikanal (Closed)",
+   "jail_type": "sub_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade I Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade II Warder",
+     "sanctioned": 6,
+     "filled": 6
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade I Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade II Warder",
+     "sanctioned": 6,
+     "filled": 5
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 1
+    }
+   ]
+  },
+  {
+   "title": "Sub Jail, Mudukulathur",
+   "jail_name": "Mudukulathur",
+   "jail_type": "sub_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade I Warder",
+     "sanctioned": 2,
+     "filled": 1
+    },
+    {
+     "role": "Grade II Warder",
+     "sanctioned": 6,
+     "filled": 6
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade I Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade II Warder",
+     "sanctioned": 6,
+     "filled": 6
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 0
+    }
+   ]
+  },
+  {
+   "title": "Sub Jail, Periyakulam",
+   "jail_name": "Periakulam",
+   "jail_type": "sub_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade I Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade II Warder",
+     "sanctioned": 6,
+     "filled": 6
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 0
+    }
+   ]
+  },
+  {
+   "title": "Sub Jail, Sivagangai",
+   "jail_name": "Sivagangai",
+   "jail_type": "sub_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade I Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade II Warder",
+     "sanctioned": 6,
+     "filled": 6
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 1
+    }
+   ]
+  },
+  {
+   "title": "Sub Jail, Srivilliputhur",
+   "jail_name": "Srivilliputhur",
+   "jail_type": "sub_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade I Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade II Warder",
+     "sanctioned": 6,
+     "filled": 5
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 0
+    }
+   ]
+  },
+  {
+   "title": "Sub Jail, Thirumangalam",
+   "jail_name": "Thirumangalam",
+   "jail_type": "sub_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade I Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade II Warder",
+     "sanctioned": 6,
+     "filled": 5
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 0
+    }
+   ]
+  },
+  {
+   "title": "Sub Jail, Thiruppathur",
+   "jail_name": "Thiruppathur",
+   "jail_type": "sub_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade I Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade II Warder",
+     "sanctioned": 6,
+     "filled": 5
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 1
+    }
+   ]
+  },
+  {
+   "title": "Sub Jail, Thiruvadanai (Closed)",
+   "jail_name": "S.J. Thiruvadanai (Closed)",
+   "jail_type": "sub_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade I Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade II Warder",
+     "sanctioned": 6,
+     "filled": 6
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 0
+    }
+   ]
+  },
+  {
+   "title": "Sub Jail, Usilampatti",
+   "jail_name": "Usilampatti",
+   "jail_type": "sub_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade I Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade II Warder",
+     "sanctioned": 6,
+     "filled": 5
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 1
+    }
+   ]
+  },
+  {
+   "title": "Sub Jail, Uthamapalayam",
+   "jail_name": "Uthamapalayam",
+   "jail_type": "sub_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade I Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade II Warder",
+     "sanctioned": 6,
+     "filled": 6
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 1
+    }
+   ]
+  },
+  {
+   "title": "Sub Jail, Vedasandur",
+   "jail_name": "Vedasandur",
+   "jail_type": "sub_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade I Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade II Warder",
+     "sanctioned": 6,
+     "filled": 6
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 0
+    }
+   ]
+  },
+  {
+   "title": "Central Prison, Palayamkottai",
+   "jail_name": "Palayamkottai",
+   "jail_type": "central_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Superintendent of Prisons",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Additional Superintendent",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Administrative Officer",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Civil Assistant Surgeon",
+     "sanctioned": 3,
+     "filled": 2
+    },
+    {
+     "role": "Psychologist",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Jailor",
+     "sanctioned": 2,
+     "filled": 1
+    },
+    {
+     "role": "Office Manager",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Office Superintendent",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Welfare officer",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Accountant",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Deputy Jailor",
+     "sanctioned": 3,
+     "filled": 3
+    },
+    {
+     "role": "Sub Inspector (Vigilance)",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Sub Inspector (Technical)",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 13,
+     "filled": 13
+    },
+    {
+     "role": "Assistant",
+     "sanctioned": 6,
+     "filled": 6
+    },
+    {
+     "role": "Secondary Grade Teacher",
+     "sanctioned": 3,
+     "filled": 3
+    },
+    {
+     "role": "Junior Assistant",
+     "sanctioned": 5,
+     "filled": 5
+    },
+    {
+     "role": "Typist",
+     "sanctioned": 4,
+     "filled": 4
+    },
+    {
+     "role": "Wireman",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Staff Nurse",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Pharmacist",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 29,
+     "filled": 29
+    },
+    {
+     "role": "First Grade Warder",
+     "sanctioned": 79,
+     "filled": 79
+    },
+    {
+     "role": "Second Grade Warder",
+     "sanctioned": 141,
+     "filled": 140
+    },
+    {
+     "role": "First Grade Warder (Female)",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Second Grade Warder (Female)",
+     "sanctioned": 8,
+     "filled": 8
+    },
+    {
+     "role": "Male Nursing Assistant",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Record Clerk",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Barber",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Garden Watchman",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Boiler Attendant",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Weaving Instructor",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Supervisor - cum- Instructor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Lorry Driver",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Pulp Making Assistant",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Packer Clerk",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Craft Instructor",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Counsellor (Honorarium)",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Social Case Work Expert",
+     "sanctioned": 1,
+     "filled": 1
+    }
+   ]
+  },
+  {
+   "title": "District Jail Thoothukudi @ Perurani",
+   "jail_name": "Thoothukudi @ Perurani",
+   "jail_type": "district_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Jailor",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Deputy Jailor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 4,
+     "filled": 3
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 7,
+     "filled": 7
+    },
+    {
+     "role": "First Grade Warder",
+     "sanctioned": 4,
+     "filled": 4
+    },
+    {
+     "role": "Second Grade Warder",
+     "sanctioned": 14,
+     "filled": 14
+    },
+    {
+     "role": "Assistant",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Typist",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Record Clerk",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Medical Officer",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 1
+    }
+   ]
+  },
+  {
+   "title": "Sub Jail, Nanguneri",
+   "jail_name": "Nanguneri (Men)",
+   "jail_type": "special_sub_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Deputy Jailor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "First Grade Warder",
+     "sanctioned": 3,
+     "filled": 3
+    },
+    {
+     "role": "Second Grade Warder",
+     "sanctioned": 11,
+     "filled": 11
+    },
+    {
+     "role": "Record Clerk",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    }
+   ]
+  },
+  {
+   "title": "Sub Jail, Ambasamudram",
+   "jail_name": "Ambasamuthiram",
+   "jail_type": "sub_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "First Grade Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Second Grade Warder",
+     "sanctioned": 6,
+     "filled": 6
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 1
+    }
+   ]
+  },
+  {
+   "title": "Sub Jail, Thenkasi",
+   "jail_name": "Tenkasi",
+   "jail_type": "sub_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "First Grade Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Second Grade Warder",
+     "sanctioned": 6,
+     "filled": 6
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 1
+    }
+   ]
+  },
+  {
+   "title": "Sub Jail, Sankarankovil",
+   "jail_name": "Sankarankovil",
+   "jail_type": "sub_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "First Grade Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Second Grade Warder",
+     "sanctioned": 6,
+     "filled": 6
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 1
+    }
+   ]
+  },
+  {
+   "title": "Sub Jail, Thiruchendur (closed)",
+   "jail_name": "S.J. Thiruchendur (Closed)",
+   "jail_type": "sub_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "First Grade Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Second Grade Warder",
+     "sanctioned": 6,
+     "filled": 6
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 0
+    }
+   ]
+  },
+  {
+   "title": "Sub Jail, Srivaikundam",
+   "jail_name": "Srivaikundam",
+   "jail_type": "sub_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "First Grade Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Second Grade Warder",
+     "sanctioned": 6,
+     "filled": 6
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 0
+    }
+   ]
+  },
+  {
+   "title": "Sub Jail, Kuzhithurai",
+   "jail_name": "Kuzhithurai",
+   "jail_type": "sub_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "First Grade Warder",
+     "sanctioned": 2,
+     "filled": 1
+    },
+    {
+     "role": "Second Grade Warder",
+     "sanctioned": 6,
+     "filled": 6
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 0
+    }
+   ]
+  },
+  {
+   "title": "Sub Jail, Kovilpatti",
+   "jail_name": "Kovilpatti",
+   "jail_type": "sub_jail",
+   "hierarchy_type": "general",
+   "posts": [
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "First Grade Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Second Grade Warder",
+     "sanctioned": 6,
+     "filled": 5
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 1
+    }
+   ]
+  },
+  {
+   "title": "Special Prison for Women, Chennai",
+   "jail_name": "Chennai",
+   "jail_type": "spw",
+   "hierarchy_type": "women",
+   "posts": [
+    {
+     "role": "Superintendent",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Jailor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Psychologist",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Welfare Officer",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Deputy Jailor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 3,
+     "filled": 3
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 6,
+     "filled": 6
+    },
+    {
+     "role": "Grade I Warder Women",
+     "sanctioned": 11,
+     "filled": 10
+    },
+    {
+     "role": "Grade II Warder Women",
+     "sanctioned": 36,
+     "filled": 36
+    },
+    {
+     "role": "Accountant",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Assistant",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Junior Assistant",
+     "sanctioned": 2,
+     "filled": 1
+    },
+    {
+     "role": "Typist",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Record Clerk",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Instructor",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Assistant Surgeon",
+     "sanctioned": 3,
+     "filled": 3
+    },
+    {
+     "role": "Pharmacist",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Staff Nurse",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Female Nursing Assistant",
+     "sanctioned": 3,
+     "filled": 3
+    },
+    {
+     "role": "Secondary Grade Teacher",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Wireman",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cleanliness Worker (Contract Basis)",
+     "sanctioned": 2,
+     "filled": 0
+    },
+    {
+     "role": "Boiler Attendant",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Counsellor",
+     "sanctioned": 1,
+     "filled": 1
+    }
+   ]
+  },
+  {
+   "title": "Special Prison for Women, Vellore",
+   "jail_name": "Vellore",
+   "jail_type": "spw",
+   "hierarchy_type": "women",
+   "posts": [
+    {
+     "role": "Superintendent",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Psychologist",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Jailor",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Welfare Officer",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Deputy Jailor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 3,
+     "filled": 3
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 5,
+     "filled": 5
+    },
+    {
+     "role": "First Grade Warder (Female)",
+     "sanctioned": 15,
+     "filled": 15
+    },
+    {
+     "role": "First Grade Warder (Male)",
+     "sanctioned": 2,
+     "filled": 1
+    },
+    {
+     "role": "Second Grade Warder (Female)",
+     "sanctioned": 21,
+     "filled": 18
+    },
+    {
+     "role": "Second Grade Warder (Male)",
+     "sanctioned": 12,
+     "filled": 9
+    },
+    {
+     "role": "Accountant",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Assistant",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Junior Assistant",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Typist",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Record Clerk",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Boiler Attendant",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Assistant Surgeon",
+     "sanctioned": 3,
+     "filled": 2
+    },
+    {
+     "role": "Pharmacist",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Staff Nurse",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Female Nursing Assistant",
+     "sanctioned": 3,
+     "filled": 3
+    },
+    {
+     "role": "Second Grade Teacher",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Spinning Instructress",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Wire Man",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Social Case Work Expert",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Counsellor",
+     "sanctioned": 1,
+     "filled": 0
+    }
+   ]
+  },
+  {
+   "title": "Special Prison for Women, Coimbatore",
+   "jail_name": "Coimbatore",
+   "jail_type": "spw",
+   "hierarchy_type": "women",
+   "posts": [
+    {
+     "role": "Additional Superintendent",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Jailor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Deputy Jailor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 3,
+     "filled": 3
+    },
+    {
+     "role": "Assistant Civil Surgeon",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 5,
+     "filled": 5
+    },
+    {
+     "role": "First Grade Warder",
+     "sanctioned": 3,
+     "filled": 3
+    },
+    {
+     "role": "Second Grade Warder",
+     "sanctioned": 16,
+     "filled": 16
+    },
+    {
+     "role": "Assistant",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Typist",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Female Nursing Asst.",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Counsellor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Psychologist",
+     "sanctioned": 1,
+     "filled": 0
+    }
+   ]
+  },
+  {
+   "title": "Special Prison for Women, Tiruchirappalli",
+   "jail_name": "Tiruchirappalli",
+   "jail_type": "spw",
+   "hierarchy_type": "women",
+   "posts": [
+    {
+     "role": "Superintendent of Prisons",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Additional Superintendent of Prisons",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Jailor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Deputy Jailor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Asst. Jailor",
+     "sanctioned": 4,
+     "filled": 3
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 5,
+     "filled": 5
+    },
+    {
+     "role": "Gr. I Warder (Female)",
+     "sanctioned": 20,
+     "filled": 18
+    },
+    {
+     "role": "Gr. I Warder (Male)",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Gr. II Warder (Female)",
+     "sanctioned": 41,
+     "filled": 24
+    },
+    {
+     "role": "Office Manager",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Accountant",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Assistant",
+     "sanctioned": 2,
+     "filled": 1
+    },
+    {
+     "role": "Junior Assistant",
+     "sanctioned": 3,
+     "filled": 2
+    },
+    {
+     "role": "Typist",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Medical Officer",
+     "sanctioned": 3,
+     "filled": 3
+    },
+    {
+     "role": "Pharmacist",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Staff Nurse",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Female Nursing Asst.",
+     "sanctioned": 3,
+     "filled": 3
+    },
+    {
+     "role": "Wireman",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Boiler Attendant",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Psychologist",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Counsellor",
+     "sanctioned": 1,
+     "filled": 1
+    }
+   ]
+  },
+  {
+   "title": "Special Prison for Women, Madurai",
+   "jail_name": "Madurai",
+   "jail_type": "spw",
+   "hierarchy_type": "women",
+   "posts": [
+    {
+     "role": "Additional Superintendent",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Jailor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Deputy Jailor",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 3,
+     "filled": 3
+    },
+    {
+     "role": "Assistant Civil Surgeon",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 5,
+     "filled": 4
+    },
+    {
+     "role": "First Grade Warder Women",
+     "sanctioned": 3,
+     "filled": 3
+    },
+    {
+     "role": "Second Grade Warder Women",
+     "sanctioned": 17,
+     "filled": 16
+    },
+    {
+     "role": "Assistant",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Typist",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Female Nursing Asst.",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cook (on consolidate pay basis)",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Psychologist",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Counsellor",
+     "sanctioned": 1,
+     "filled": 0
+    }
+   ]
+  },
+  {
+   "title": "Sub Jail Women, Villupuram",
+   "jail_name": "Villupuram",
+   "jail_type": "women_sub_jail",
+   "hierarchy_type": "women",
+   "posts": [
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade I Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade II Warder",
+     "sanctioned": 6,
+     "filled": 6
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 1
+    }
+   ]
+  },
+  {
+   "title": "Special Sub Jail (Women), Salem",
+   "jail_name": "Salem (Women)",
+   "jail_type": "special_sub_jail",
+   "hierarchy_type": "women",
+   "posts": [
+    {
+     "role": "Deputy Jailor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 3,
+     "filled": 3
+    },
+    {
+     "role": "Assistant",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Record Clerk",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Pharmacist",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Grade I Warder",
+     "sanctioned": 7,
+     "filled": 7
+    },
+    {
+     "role": "Grade II Warder",
+     "sanctioned": 23,
+     "filled": 19
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 1
+    }
+   ]
+  },
+  {
+   "title": "Women Sub Jail, Dharmapuri",
+   "jail_name": "Dharmapuri",
+   "jail_type": "women_sub_jail",
+   "hierarchy_type": "women",
+   "posts": [
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 1
+    },
+    {
+     "role": "Grade I Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade II Warder",
+     "sanctioned": 6,
+     "filled": 6
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    }
+   ]
+  },
+  {
+   "title": "District Jail Tiruppur Women Annexure",
+   "jail_name": "Tiruppur (Annex)",
+   "jail_type": "women_sub_jail",
+   "hierarchy_type": "women",
+   "posts": [
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade I Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade II Warder",
+     "sanctioned": 4,
+     "filled": 4
+    },
+    {
+     "role": "Male Nursing Assistant",
+     "sanctioned": 1,
+     "filled": 1
+    }
+   ]
+  },
+  {
+   "title": "Female Sub Jail, Thiruvarur",
+   "jail_name": "Thiruvarur",
+   "jail_type": "women_sub_jail",
+   "hierarchy_type": "women",
+   "posts": [
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "First Grade Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Second Grade Warder",
+     "sanctioned": 6,
+     "filled": 2
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 1
+    }
+   ]
+  },
+  {
+   "title": "Sub Jail Women, Nilakottai",
+   "jail_name": "Nilakottai",
+   "jail_type": "women_sub_jail",
+   "hierarchy_type": "women",
+   "posts": [
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade I Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade II Warder",
+     "sanctioned": 6,
+     "filled": 6
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 0
+    },
+    {
+     "role": "Driver",
+     "sanctioned": 1,
+     "filled": 1
+    }
+   ]
+  },
+  {
+   "title": "Sub Jail Women Paramakudi",
+   "jail_name": "Paramakudi",
+   "jail_type": "women_sub_jail",
+   "hierarchy_type": "women",
+   "posts": [
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade I Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Grade II Warder",
+     "sanctioned": 6,
+     "filled": 5
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Driver",
+     "sanctioned": 1,
+     "filled": 1
+    }
+   ]
+  },
+  {
+   "title": "Special Sub Jail, Kokkirakulam",
+   "jail_name": "Kokkirakulam (Women)",
+   "jail_type": "special_sub_jail",
+   "hierarchy_type": "women",
+   "posts": [
+    {
+     "role": "Deputy Jailor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "First Grade Warder Women",
+     "sanctioned": 4,
+     "filled": 4
+    },
+    {
+     "role": "Female Second Warder Women",
+     "sanctioned": 9,
+     "filled": 9
+    },
+    {
+     "role": "Assistant",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Record Clerk",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Pharmacist",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 1
+    }
+   ]
+  },
+  {
+   "title": "Sub Jail for Women, Thukalay",
+   "jail_name": "Thuckalay",
+   "jail_type": "women_sub_jail",
+   "hierarchy_type": "women",
+   "posts": [
+    {
+     "role": "Assistant Jailor",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Chief Head Warder",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "First Grade Warder Women",
+     "sanctioned": 2,
+     "filled": 2
+    },
+    {
+     "role": "Female Second Grade Warder",
+     "sanctioned": 6,
+     "filled": 4
+    },
+    {
+     "role": "Cook",
+     "sanctioned": 1,
+     "filled": 1
+    },
+    {
+     "role": "Cleanliness Worker",
+     "sanctioned": 1,
+     "filled": 1
+    }
+   ]
+  }
+ ]
+}
