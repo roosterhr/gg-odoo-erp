@@ -1175,6 +1175,28 @@ class PrisonJailApiController(http.Controller):
                         })
                         log['created'].append(f'{name} [closed]')
 
+            # ── 6. REACTIVATE SPW + women hierarchy records ───────────────
+            women_types = ('spw', 'women_sub_jail', 'special_sub_jail')
+            inactive_women = Jail.with_context(active_test=False).search([
+                ('jail_type', 'in', women_types),
+                ('hierarchy_type', '=', 'women'),
+                ('active', '=', False),
+            ])
+            if inactive_women:
+                inactive_women.write({'active': True})
+                for r in inactive_women:
+                    log['migrated'].append(f'reactivated: {r.name} [{r.jail_type}]')
+
+            # Also reactivate transit_yard and special_sub_jail general ones
+            inactive_special = Jail.with_context(active_test=False).search([
+                ('jail_type', 'in', ('transit_yard', 'open_air_jail', 'farm_jail')),
+                ('active', '=', False),
+            ])
+            if inactive_special:
+                inactive_special.write({'active': True})
+                for r in inactive_special:
+                    log['migrated'].append(f'reactivated: {r.name} [{r.jail_type}]')
+
             request.env.cr.commit()
 
             return {
@@ -1190,6 +1212,7 @@ class PrisonJailApiController(http.Controller):
                 'detail': log,
                 'stats': {
                     'spw':          Jail.search_count([('jail_type', '=', 'spw')]),
+                    'women_sj':     Jail.search_count([('jail_type', '=', 'women_sub_jail')]),
                     'active_total': Jail.search_count([]),
                     'closed_total': Jail.with_context(active_test=False).search_count([('active', '=', False)]),
                     'grand_total':  Jail.with_context(active_test=False).search_count([]),
