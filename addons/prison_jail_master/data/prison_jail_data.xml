@@ -23,6 +23,11 @@
     <field name="jail_type">central_jail</field>
     <field name="sequence">10</field>
 </record>
+<record id="jail_central_chennai_1" model="prison.jail">
+    <field name="name">Chennai - II</field>
+    <field name="jail_type">central_jail</field>
+    <field name="sequence">11</field>
+</record>
 <record id="jail_central_vellore" model="prison.jail">
     <field name="name">Central Prison, Vellore</field>
     <field name="jail_type">central_jail</field>
