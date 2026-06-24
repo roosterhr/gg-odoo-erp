@@ -1277,19 +1277,29 @@ class PrisonJailApiController(http.Controller):
                         f'reparented/fixed: {child_name} → {spw_name} SPW {updates}')
 
             # ── 8. DEDUP: remove extra duplicate transit/women records ────────
-            # Deactivate old Puzhal under Chennai-I (correct one is under Chennai-II)
+            # Correct Puzhal is under Chennai-I; deactivate the duplicate under Chennai-II
+            chennai1 = find_parent('Chennai - I', 'central_jail')
             chennai2 = find_parent('Chennai - II', 'central_jail')
-            if chennai2:
-                old_puzhal = Jail.with_context(active_test=False).search([
+            if chennai1 and chennai2:
+                # Ensure the Chennai-I Puzhal is active
+                puzhal_c1 = Jail.with_context(active_test=False).search([
                     ('name', 'ilike', 'Puzhal'),
                     ('jail_type', '=', 'transit_yard'),
-                    ('parent_id', '!=', chennai2.id),
+                    ('parent_id', '=', chennai1.id),
+                ], limit=1)
+                if puzhal_c1 and not puzhal_c1.active:
+                    puzhal_c1.write({'active': True})
+                    log['migrated'].append('reactivated: Puzhal under Chennai - I')
+                # Deactivate the Chennai-II duplicate
+                puzhal_c2 = Jail.with_context(active_test=False).search([
+                    ('name', 'ilike', 'Puzhal'),
+                    ('jail_type', '=', 'transit_yard'),
+                    ('parent_id', '=', chennai2.id),
                     ('active', '=', True),
                 ], limit=1)
-                if old_puzhal:
-                    old_puzhal.write({'active': False})
-                    log['deactivated'].append(
-                        f'dedup: Puzhal transit_yard under {old_puzhal.parent_id.name}')
+                if puzhal_c2:
+                    puzhal_c2.write({'active': False})
+                    log['deactivated'].append('dedup: Puzhal transit_yard under Chennai - II')
 
             # Deactivate duplicate inactive women sub-jails (keep active ones only)
             dedup_women = ['Paramakudi', 'Thuckalay', 'Nilakottai', 'Kokkirakulam (Women)']
