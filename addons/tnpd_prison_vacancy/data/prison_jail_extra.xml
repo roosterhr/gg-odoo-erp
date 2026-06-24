@@ -148,28 +148,28 @@
 <record id="jail_sj_arani_closed" model="prison.jail">
     <field name="name">S.J. Arani (Closed)</field>
     <field name="jail_type">sub_jail</field>
-    <field name="parent_id" ref="prison_jail_master.jail_dj_tirupattur"/>
+    <field name="parent_id" ref="prison_jail_master.jail_dist_tirupattur"/>
     <field name="active" eval="False"/>
     <field name="sequence">30</field>
 </record>
 <record id="jail_sj_cheyyar_closed" model="prison.jail">
     <field name="name">S.J. Cheyyar (Closed)</field>
     <field name="jail_type">sub_jail</field>
-    <field name="parent_id" ref="prison_jail_master.jail_dj_tirupattur"/>
+    <field name="parent_id" ref="prison_jail_master.jail_dist_tirupattur"/>
     <field name="active" eval="False"/>
     <field name="sequence">40</field>
 </record>
 <record id="jail_sj_cuddalore_closed" model="prison.jail">
     <field name="name">S.J. Cuddalore (Closed)</field>
     <field name="jail_type">sub_jail</field>
-    <field name="parent_id" ref="prison_jail_master.jail_dj_cuddalore"/>
+    <field name="parent_id" ref="prison_jail_master.jail_dist_cuddalore"/>
     <field name="active" eval="False"/>
     <field name="sequence">50</field>
 </record>
 <record id="jail_sj_parangipet_closed" model="prison.jail">
     <field name="name">S.J. Parangipet (Closed)</field>
     <field name="jail_type">sub_jail</field>
-    <field name="parent_id" ref="prison_jail_master.jail_dj_cuddalore"/>
+    <field name="parent_id" ref="prison_jail_master.jail_dist_cuddalore"/>
     <field name="active" eval="False"/>
     <field name="sequence">60</field>
 </record>
@@ -183,42 +183,42 @@
 <record id="jail_sj_pattukottai_closed" model="prison.jail">
     <field name="name">S.J. Pattukottai (Closed)</field>
     <field name="jail_type">sub_jail</field>
-    <field name="parent_id" ref="prison_jail_master.jail_dj_thanjavur"/>
+    <field name="parent_id" ref="prison_jail_master.jail_dist_thanjavur"/>
     <field name="active" eval="False"/>
     <field name="sequence">60</field>
 </record>
 <record id="jail_sj_manapparai_closed" model="prison.jail">
     <field name="name">S.J. Manapparai (Closed)</field>
     <field name="jail_type">sub_jail</field>
-    <field name="parent_id" ref="prison_jail_master.jail_dj_trichy"/>
+    <field name="parent_id" ref="prison_jail_master.jail_dist_trichy"/>
     <field name="active" eval="False"/>
     <field name="sequence">30</field>
 </record>
 <record id="jail_sj_musiri_closed" model="prison.jail">
     <field name="name">S.J. Musiri (Closed)</field>
     <field name="jail_type">sub_jail</field>
-    <field name="parent_id" ref="prison_jail_master.jail_dj_trichy"/>
+    <field name="parent_id" ref="prison_jail_master.jail_dist_trichy"/>
     <field name="active" eval="False"/>
     <field name="sequence">40</field>
 </record>
 <record id="jail_sj_rasipuram_closed" model="prison.jail">
     <field name="name">S.J. Rasipuram (Closed)</field>
     <field name="jail_type">sub_jail</field>
-    <field name="parent_id" ref="prison_jail_master.jail_dj_namakkal"/>
+    <field name="parent_id" ref="prison_jail_master.jail_dist_namakkal"/>
     <field name="active" eval="False"/>
     <field name="sequence">30</field>
 </record>
 <record id="jail_sj_paramathivelur_closed" model="prison.jail">
     <field name="name">S.J. Paramathivelur (Closed)</field>
     <field name="jail_type">sub_jail</field>
-    <field name="parent_id" ref="prison_jail_master.jail_dj_namakkal"/>
+    <field name="parent_id" ref="prison_jail_master.jail_dist_namakkal"/>
     <field name="active" eval="False"/>
     <field name="sequence">40</field>
 </record>
 <record id="jail_sj_mettupalayam_closed" model="prison.jail">
     <field name="name">S.J. Mettupalayam (Closed)</field>
     <field name="jail_type">sub_jail</field>
-    <field name="parent_id" ref="prison_jail_master.jail_dj_coimbatore"/>
+    <field name="parent_id" ref="prison_jail_master.jail_dist_coimbatore"/>
     <field name="active" eval="False"/>
     <field name="sequence">30</field>
 </record>
