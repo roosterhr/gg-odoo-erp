@@ -1211,6 +1211,66 @@ class PrisonJailApiController(http.Controller):
                 for r in inactive_special:
                     log['migrated'].append(f'reactivated: {r.name} [{r.jail_type}]')
 
+            # Reactivate Nanguneri (Men) special_sub_jail
+            nanguneri = Jail.with_context(active_test=False).search([
+                ('name', '=', 'Nanguneri (Men)'), ('jail_type', '=', 'special_sub_jail'),
+            ], limit=1)
+            if nanguneri and not nanguneri.active:
+                nanguneri.write({'active': True})
+                log['migrated'].append('reactivated: Nanguneri (Men) [special_sub_jail]')
+
+            # ── 7. FIX women sub-jail parent → correct SPW ───────────────────
+            # Map: sub-jail name → SPW name it belongs to
+            spw_parent_map = {
+                'Cuddalore':           ('Vellore',         'spw'),
+                'Villupuram':          ('Vellore',         'spw'),
+                'Dharmapuri':          ('Coimbatore',      'spw'),
+                'Salem (Women)':       ('Coimbatore',      'spw'),
+                'Thiruvarur':          ('Tiruchirappalli', 'spw'),
+                'Nilakottai':          ('Madurai',         'spw'),
+                'Paramakudi':          ('Madurai',         'spw'),
+                'Thuckalay':           ('Madurai',         'spw'),
+                'Kokkirakulam (Women)':('Madurai',         'spw'),
+            }
+            for child_name, (spw_name, spw_type) in spw_parent_map.items():
+                spw_rec = Jail.with_context(active_test=False).search(
+                    [('name', '=', spw_name), ('jail_type', '=', spw_type)], limit=1)
+                if not spw_rec:
+                    continue
+                child = Jail.with_context(active_test=False).search(
+                    [('name', '=', child_name),
+                     ('hierarchy_type', '=', 'women'),
+                     ('active', '=', True)], limit=1)
+                if child and child.parent_id.id != spw_rec.id:
+                    child.write({'parent_id': spw_rec.id})
+                    log['migrated'].append(
+                        f'reparented: {child_name} → {spw_name} SPW')
+
+            # ── 8. DEDUP: remove extra duplicate transit/women records ────────
+            # Deactivate old Puzhal under Chennai-I (correct one is under Chennai-II)
+            chennai2 = find_parent('Chennai - II', 'central_jail')
+            if chennai2:
+                old_puzhal = Jail.with_context(active_test=False).search([
+                    ('name', 'ilike', 'Puzhal'),
+                    ('jail_type', '=', 'transit_yard'),
+                    ('parent_id', '!=', chennai2.id),
+                    ('active', '=', True),
+                ], limit=1)
+                if old_puzhal:
+                    old_puzhal.write({'active': False})
+                    log['deactivated'].append(
+                        f'dedup: Puzhal transit_yard under {old_puzhal.parent_id.name}')
+
+            # Deactivate duplicate inactive women sub-jails (keep active ones only)
+            dedup_women = ['Paramakudi', 'Thuckalay', 'Nilakottai', 'Kokkirakulam (Women)']
+            for dname in dedup_women:
+                dupes = Jail.with_context(active_test=False).search([
+                    ('name', '=', dname), ('hierarchy_type', '=', 'women'),
+                    ('active', '=', False),
+                ])
+                if dupes:
+                    dupes.write({'active': False})  # already inactive, just confirm
+
             request.env.cr.commit()
 
             return {
