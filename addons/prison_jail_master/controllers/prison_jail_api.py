@@ -548,7 +548,10 @@ class PrisonJailApiController(http.Controller):
 
             all_parents = Jail.search(parent_domain, order='sequence, name')
 
-            child_domain_base = [('active', '=', True)]
+            child_domain_base = [
+                ('active', '=', True),
+                ('jail_type', '!=', 'district_jail'),  # district_jails are legacy nodes, excluded from flat hierarchy
+            ]
             if not include_closed:
                 child_domain_base.append(('is_closed', '=', False))
 
