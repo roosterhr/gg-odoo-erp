@@ -877,4 +877,123 @@ class PrisonJailApiController(http.Controller):
 
         except Exception as exc:
             _logger.exception('GET /api/jails/export failed: %s', exc)
+
+    # ── Seed endpoint (one-time data import) ──────────────────────────────────
+
+    @http.route('/api/admin/seed-spw', methods=['POST'], auth='none', type='json', csrf=False)
+    def seed_spw_data(self, **kwargs):
+        """
+        POST /api/admin/seed-spw
+        Body: { "secret": "<SEED_SECRET>" }
+
+        One-time seed: creates missing SPW + women sub-jails + closed sub-jails.
+        Safe to call multiple times — skips records that already exist.
+        Remove this endpoint after DEV/PROD are in sync.
+        """
+        SEED_SECRET = 'tnpd-seed-2025'
+        body = request.get_json_data() or {}
+        if body.get('secret') != SEED_SECRET:
+            return {'success': False, 'error': 'Unauthorized'}
+
+        Jail = request.env['prison.jail'].sudo()
+        created, skipped = [], []
+
+        def find(name, jail_type=None):
+            d = [('name', '=', name)]
+            if jail_type:
+                d.append(('jail_type', '=', jail_type))
+            return Jail.with_context(active_test=False).search(d, limit=1)
+
+        def upsert(name, jail_type, vals):
+            rec = find(name, jail_type)
+            if rec:
+                skipped.append(f'{name} [{jail_type}]')
+                return rec
+            rec = Jail.with_context(active_test=False).create(dict(vals, name=name, jail_type=jail_type))
+            created.append(f'{name} [{jail_type}] id={rec.id}')
+            return rec
+
+        def get_parent_id(name, jail_type, fallback_name=None, fallback_type='central_jail'):
+            rec = find(name, jail_type)
+            if rec:
+                return rec.id
+            if fallback_name:
+                rec = find(fallback_name, fallback_type)
+                if rec:
+                    return rec.id
+            return None
+
+        try:
+            # 1. SPW — top-level
+            spw_chennai    = upsert('Chennai',         'spw', {'hierarchy_type': 'women', 'sequence': 15})
+            spw_vellore    = upsert('Vellore',         'spw', {'hierarchy_type': 'women', 'sequence': 25})
+            spw_coimbatore = upsert('Coimbatore',      'spw', {'hierarchy_type': 'women', 'sequence': 65})
+            spw_trichy     = upsert('Tiruchirappalli', 'spw', {'hierarchy_type': 'women', 'sequence': 45})
+            spw_madurai    = upsert('Madurai',         'spw', {'hierarchy_type': 'women', 'sequence': 75})
+
+            # 2. Women sub-jails
+            upsert('Cuddalore',  'women_sub_jail', {'hierarchy_type': 'women', 'parent_id': spw_vellore.id,    'is_closed': True,  'sequence': 40})
+            upsert('Dharmapuri', 'women_sub_jail', {'hierarchy_type': 'women', 'parent_id': spw_coimbatore.id, 'sequence': 10})
+            upsert('Nilakottai', 'women_sub_jail', {'hierarchy_type': 'women', 'parent_id': spw_madurai.id,    'sequence': 30})
+            upsert('Paramakudi', 'women_sub_jail', {'hierarchy_type': 'women', 'parent_id': spw_madurai.id,    'sequence': 20})
+            upsert('Thiruvarur', 'women_sub_jail', {'hierarchy_type': 'women', 'parent_id': spw_trichy.id,     'sequence': 40})
+            upsert('Thuckalay',  'women_sub_jail', {'hierarchy_type': 'women', 'parent_id': spw_madurai.id,    'sequence': 20})
+
+            # 3. Special sub-jails
+            upsert('Kokkirakulam (Women)', 'special_sub_jail', {'hierarchy_type': 'women',   'parent_id': spw_madurai.id,    'sequence': 30})
+            upsert('Salem (Women)',        'special_sub_jail', {'hierarchy_type': 'women',   'parent_id': spw_coimbatore.id, 'sequence': 30})
+            pid = get_parent_id('Palayamkottai', 'central_jail')
+            if pid:
+                upsert('Nanguneri (Men)', 'special_sub_jail', {'hierarchy_type': 'general', 'parent_id': pid, 'sequence': 20})
+
+            # 4. Transit yard
+            pid = get_parent_id('Chennai - II', 'central_jail')
+            if pid:
+                upsert('Puzhal (Young Offenders Correctional Facility)', 'transit_yard', {'hierarchy_type': 'general', 'parent_id': pid, 'sequence': 20})
+
+            # 5. Closed sub-jails
+            closed = [
+                ('S.J. Maduranthagam (Closed)', 'sub_jail',     'Chengalpattu',        'district_jail', 'Chennai - I',     20),
+                ('S.J. Arani (Closed)',         'sub_jail',     'Tirupattur District', 'district_jail', 'Vellore',         30),
+                ('S.J. Cheyyar (Closed)',       'sub_jail',     'Tirupattur District', 'district_jail', 'Vellore',         40),
+                ('S.J. Cuddalore (Closed)',     'sub_jail',     'Cuddalore District',  'district_jail', 'Cuddalore',       50),
+                ('S.J. Parangipet (Closed)',    'sub_jail',     'Cuddalore District',  'district_jail', 'Cuddalore',       60),
+                ('S.J. Keeranur (Closed)',      'sub_jail',     'Pudukkottai',         'district_jail', 'Tiruchirappalli', 20),
+                ('S.J. Pattukottai (Closed)',   'sub_jail',     'Thanjavur District',  'district_jail', 'Tiruchirappalli', 60),
+                ('S.J. Manapparai (Closed)',    'sub_jail',     'Trichy District',     'district_jail', 'Tiruchirappalli', 30),
+                ('S.J. Musiri (Closed)',        'sub_jail',     'Trichy District',     'district_jail', 'Tiruchirappalli', 40),
+                ('S.J. Rasipuram (Closed)',     'sub_jail',     'Namakkal District',   'district_jail', 'Salem',           30),
+                ('S.J. Paramathivelur (Closed)','sub_jail',     'Namakkal District',   'district_jail', 'Salem',           40),
+                ('S.J. Mettupalayam (Closed)',  'sub_jail',     'Coimbatore District', 'district_jail', 'Coimbatore',      30),
+                ('S.J. Thiruvadanai (Closed)',  'sub_jail',     'Ramanathapuram',      'district_jail', 'Madurai',         40),
+                ('S.J. Thiruchendur (Closed)',  'sub_jail',     'Thoothukudi',         'district_jail', 'Palayamkottai',   40),
+                ('S.J. Kodaikanal (Closed)',    'sub_jail',     'Dindigul',            'district_jail', 'Madurai',         40),
+                ('D.J. Attur (Closed)',         'district_jail','Salem',               'central_jail',  None,              60),
+            ]
+            for name, jtype, pname, ptype, fallback, seq in closed:
+                pid = get_parent_id(pname, ptype, fallback, 'central_jail')
+                if pid:
+                    upsert(name, jtype, {'parent_id': pid, 'active': False, 'sequence': seq})
+                else:
+                    skipped.append(f'{name} [no parent found]')
+
+            request.env.cr.commit()
+
+            return {
+                'success': True,
+                'created_count': len(created),
+                'skipped_count': len(skipped),
+                'created': created,
+                'skipped': skipped,
+                'stats': {
+                    'spw':          Jail.search_count([('jail_type', '=', 'spw')]),
+                    'women_sub_jail': Jail.search_count([('jail_type', '=', 'women_sub_jail')]),
+                    'closed':       Jail.with_context(active_test=False).search_count([('active', '=', False)]),
+                    'total':        Jail.with_context(active_test=False).search_count([]),
+                },
+            }
+
+        except Exception as exc:
+            _logger.exception('POST /api/admin/seed-spw failed: %s', exc)
+            return {'success': False, 'error': str(exc)}
             return self._err('Internal server error', status=500)
