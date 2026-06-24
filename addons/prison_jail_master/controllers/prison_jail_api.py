@@ -1735,3 +1735,245 @@ class PrisonJailApiController(http.Controller):
                 request.env.cr.rollback()
             _logger.exception('POST /api/admin/prison-hierarchy/sync failed: %s', exc)
             return {'status': 'ERROR', 'error': str(exc)}
+
+    # ══════════════════════════════════════════════════════════════════════════
+    # DEV VACANCY SYNC — bring prison.vacancy + prison.designation.vacancy in
+    # line with LOCAL. Matched by the prison's (name, jail_type, hierarchy_type)
+    # and the role's name, since DB ids differ between environments.
+    # ══════════════════════════════════════════════════════════════════════════
+
+    @http.route('/api/admin/prison-vacancy/export',
+                methods=['GET'], auth='none', type='http', csrf=False)
+    def prison_vacancy_export(self, **kwargs):
+        """
+        GET /api/admin/prison-vacancy/export?secret=tnpd-phx-2025
+
+        Dumps the canonical vacancy dataset from the LIVE database (LOCAL):
+          - roles          (name, gender_type, sequence)
+          - prison_vacancy (per-prison aggregate totals)
+          - designations   (per prison+role figures)
+        Feeds /prison-vacancy/sync on DEV.
+        """
+        if kwargs.get('secret') != self._PHX_SECRET:
+            return request.make_response(
+                json.dumps({'success': False, 'error': 'Unauthorized'}),
+                headers=[('Content-Type', 'application/json')], status=401)
+        try:
+            Role  = request.env['prison.role'].sudo()
+            PV    = request.env['prison.vacancy'].sudo()
+            DV    = request.env['prison.designation.vacancy'].sudo()
+
+            roles = [{
+                'name': r.name, 'gender_type': r.gender_type,
+                'sequence': r.sequence,
+            } for r in Role.with_context(active_test=False).search([])]
+
+            prison_vacancy = []
+            for v in PV.with_context(active_test=False).search([]):
+                j = v.prison_id
+                if not j:
+                    continue
+                prison_vacancy.append({
+                    'jail_name': j.name, 'jail_type': j.jail_type,
+                    'hierarchy_type': j.hierarchy_type,
+                    'sanctioned_strength': v.sanctioned_strength,
+                    'occupied_count':      v.occupied_count,
+                    'vacancy_count':       v.vacancy_count,
+                })
+
+            designations = []
+            for d in DV.search([]):
+                j = d.prison_id
+                if not j or not d.role_id:
+                    continue
+                designations.append({
+                    'jail_name': j.name, 'jail_type': j.jail_type,
+                    'hierarchy_type': j.hierarchy_type,
+                    'role_name': d.role_id.name,
+                    'sanctioned_strength': d.sanctioned_strength,
+                    'filled_strength':     d.filled_strength,
+                })
+
+            payload = {
+                'success': True,
+                'counts': {'roles': len(roles),
+                           'prison_vacancy': len(prison_vacancy),
+                           'designations': len(designations)},
+                'roles': roles,
+                'prison_vacancy': prison_vacancy,
+                'designations': designations,
+            }
+            return request.make_response(
+                json.dumps(payload),
+                headers=[('Content-Type', 'application/json')])
+        except Exception as exc:
+            _logger.exception('GET /api/admin/prison-vacancy/export failed: %s', exc)
+            return request.make_response(
+                json.dumps({'success': False, 'error': str(exc)}),
+                headers=[('Content-Type', 'application/json')], status=500)
+
+    @http.route('/api/admin/prison-vacancy/sync',
+                methods=['POST'], auth='none', type='json', csrf=False)
+    def prison_vacancy_sync(self, **kwargs):
+        """
+        POST /api/admin/prison-vacancy/sync
+        Body: {
+            "secret": "tnpd-phx-2025",
+            "reference": { "roles": [...], "prison_vacancy": [...], "designations": [...] },
+            "dry_run": false
+        }
+
+        Reconciles DEV vacancy data with the LOCAL reference:
+          1. Upserts roles (prison.role) by name.
+          2. Upserts prison.vacancy by resolved prison_id.
+          3. Upserts prison.designation.vacancy by (prison_id, role_id).
+        Falls back to the embedded data/local_vacancy_reference.json snapshot
+        when no reference is supplied, so DEV syncs with just the secret.
+        """
+        body = request.get_json_data() or {}
+        if body.get('secret') != self._PHX_SECRET:
+            return {'status': 'UNAUTHORIZED', 'error': 'Unauthorized'}
+
+        reference = body.get('reference') or {}
+        ref_source = 'request_body'
+        if not (reference.get('roles') or reference.get('prison_vacancy')
+                or reference.get('designations')):
+            try:
+                ref_path = os.path.join(
+                    os.path.dirname(os.path.dirname(__file__)),
+                    'data', 'local_vacancy_reference.json')
+                with open(ref_path, 'r', encoding='utf-8-sig') as fh:
+                    reference = json.load(fh)
+                ref_source = 'embedded_snapshot'
+            except Exception as exc:
+                _logger.exception('Could not load embedded vacancy reference: %s', exc)
+        if not (reference.get('roles') or reference.get('prison_vacancy')
+                or reference.get('designations')):
+            return {'status': 'ERROR',
+                    'error': 'No reference in body and embedded snapshot missing'}
+
+        dry_run = bool(body.get('dry_run'))
+        Jail = request.env['prison.jail'].sudo()
+        Role = request.env['prison.role'].sudo()
+        PV   = request.env['prison.vacancy'].sudo()
+        DV   = request.env['prison.designation.vacancy'].sudo()
+
+        log = {'roles_created': [], 'roles_skipped': [],
+               'vacancy_created': [], 'vacancy_updated': [], 'vacancy_unmatched': [],
+               'desig_created': [], 'desig_updated': [], 'desig_unmatched': []}
+
+        def resolve_jail(name, jtype, htype):
+            cands = Jail.with_context(active_test=False).search([
+                ('name', '=', name), ('jail_type', '=', jtype),
+                ('hierarchy_type', '=', htype or 'general')])
+            if not cands:
+                # Fallback: match by name + type only
+                cands = Jail.with_context(active_test=False).search([
+                    ('name', '=', name), ('jail_type', '=', jtype)])
+            if not cands:
+                return None
+            active_one = cands.filtered(lambda c: c.active)
+            return (active_one[0] if active_one else cands[0])
+
+        try:
+            # ── 1. ROLES ──────────────────────────────────────────────────────
+            role_by_name = {}
+            for r in reference.get('roles', []):
+                name = r.get('name')
+                if not name:
+                    continue
+                existing = Role.with_context(active_test=False).search(
+                    [('name', '=', name)], limit=1)
+                if existing:
+                    role_by_name[name] = existing
+                    log['roles_skipped'].append(name)
+                else:
+                    if not dry_run:
+                        existing = Role.create({
+                            'name': name,
+                            'gender_type': r.get('gender_type') or 'both',
+                            'sequence': r.get('sequence') or 10,
+                        })
+                        role_by_name[name] = existing
+                    log['roles_created'].append(name)
+
+            # ── 2. PRISON-LEVEL VACANCY ───────────────────────────────────────
+            for v in reference.get('prison_vacancy', []):
+                jail = resolve_jail(v.get('jail_name'), v.get('jail_type'),
+                                    v.get('hierarchy_type'))
+                if not jail:
+                    log['vacancy_unmatched'].append(
+                        f"{v.get('jail_name')} [{v.get('jail_type')}]")
+                    continue
+                vals = {
+                    'sanctioned_strength': v.get('sanctioned_strength', 0),
+                    'occupied_count':      v.get('occupied_count', 0),
+                    'vacancy_count':       v.get('vacancy_count', 0),
+                }
+                rec = PV.with_context(active_test=False).search(
+                    [('prison_id', '=', jail.id)], limit=1)
+                if rec:
+                    if not dry_run:
+                        rec.write(vals)
+                    log['vacancy_updated'].append(jail.name)
+                else:
+                    if not dry_run:
+                        PV.create(dict(vals, prison_id=jail.id,
+                                       prison_name=jail.name,
+                                       prison_type=self._vac_type(jail.jail_type)))
+                    log['vacancy_created'].append(jail.name)
+
+            # ── 3. DESIGNATION-WISE VACANCY ───────────────────────────────────
+            for d in reference.get('designations', []):
+                jail = resolve_jail(d.get('jail_name'), d.get('jail_type'),
+                                    d.get('hierarchy_type'))
+                role = role_by_name.get(d.get('role_name'))
+                if not role:
+                    role = Role.with_context(active_test=False).search(
+                        [('name', '=', d.get('role_name'))], limit=1)
+                if not jail or not role:
+                    log['desig_unmatched'].append(
+                        f"{d.get('jail_name')} / {d.get('role_name')}")
+                    continue
+                vals = {
+                    'sanctioned_strength': d.get('sanctioned_strength', 0),
+                    'filled_strength':     d.get('filled_strength', 0),
+                }
+                rec = DV.search([('prison_id', '=', jail.id),
+                                 ('role_id', '=', role.id)], limit=1)
+                if rec:
+                    if not dry_run:
+                        rec.write(vals)
+                    log['desig_updated'].append(f'{jail.name} / {role.name}')
+                else:
+                    if not dry_run:
+                        DV.create(dict(vals, prison_id=jail.id, role_id=role.id))
+                    log['desig_created'].append(f'{jail.name} / {role.name}')
+
+            if not dry_run:
+                request.env.cr.commit()
+
+            return {
+                'status': 'DRY_RUN' if dry_run else 'SUCCESS',
+                'referenceSource': ref_source,
+                'summary': {
+                    'rolesCreated':      len(log['roles_created']),
+                    'vacancyCreated':    len(log['vacancy_created']),
+                    'vacancyUpdated':    len(log['vacancy_updated']),
+                    'vacancyUnmatched':  len(log['vacancy_unmatched']),
+                    'designationsCreated': len(log['desig_created']),
+                    'designationsUpdated': len(log['desig_updated']),
+                    'designationsUnmatched': len(log['desig_unmatched']),
+                },
+                'detail': log,
+            }
+        except Exception as exc:
+            if not dry_run:
+                request.env.cr.rollback()
+            _logger.exception('POST /api/admin/prison-vacancy/sync failed: %s', exc)
+            return {'status': 'ERROR', 'error': str(exc)}
+
+    @staticmethod
+    def _vac_type(jail_type):
+        """Map prison.jail.jail_type → prison.vacancy.prison_type."""
+        return 'central_prison' if jail_type == 'central_jail' else jail_type
