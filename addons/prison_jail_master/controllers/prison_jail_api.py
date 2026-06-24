@@ -1126,7 +1126,9 @@ class PrisonJailApiController(http.Controller):
 
             # ── 4. CREATE missing active jails ────────────────────────────────
             def upsert(name, jail_type, vals):
-                existing = find(name, jail_type, vals.get('_parent_name'))
+                # Search by name+jail_type only — parent may differ across envs
+                existing = Jail.with_context(active_test=False).search(
+                    [('name', '=', name), ('jail_type', '=', jail_type)], limit=1)
                 if existing:
                     log['skipped'].append(f'create: {name} [{jail_type}]')
                     return existing
@@ -1151,10 +1153,19 @@ class PrisonJailApiController(http.Controller):
                 upsert('Salem', 'farm_jail', {'hierarchy_type': 'general', 'parent_id': salem.id, '_parent_name': 'Salem', 'sequence': 95})
             if madurai:
                 upsert('Kodaikanal', 'sub_jail', {'hierarchy_type': 'general', 'parent_id': madurai.id, '_parent_name': 'Madurai', 'sequence': 95})
+                # Fix Purasaraidaiudaippu: sub_jail → open_air_jail
+                purasa = find('Purasaraidaiudaippu', 'sub_jail', 'Madurai')
+                if purasa:
+                    purasa.write({'jail_type': 'open_air_jail'})
+                    log['migrated'].append('Purasaraidaiudaippu: sub_jail → open_air_jail')
             if palk:
-                spw_m = find('Madurai', 'spw')
-                if spw_m:
-                    upsert('Nanguneri (Men)', 'special_sub_jail', {'hierarchy_type': 'general', 'parent_id': palk.id, '_parent_name': 'Palayamkottai', 'sequence': 20})
+                upsert('Nanguneri (Men)', 'special_sub_jail', {'hierarchy_type': 'general', 'parent_id': palk.id, '_parent_name': 'Palayamkottai', 'sequence': 20})
+
+            # SPW: Tiruppur (Annex) under Coimbatore SPW
+            spw_coimbatore = find_parent('Coimbatore', 'spw')
+            if spw_coimbatore:
+                upsert('Tiruppur (Annex)', 'women_sub_jail', {
+                    'hierarchy_type': 'women', 'parent_id': spw_coimbatore.id, 'sequence': 20})
 
             # ── 5. CREATE missing closed jails ────────────────────────────────
             closed_to_add = [
@@ -1190,28 +1201,41 @@ class PrisonJailApiController(http.Controller):
                         log['created'].append(f'{name} [closed]')
 
             # ── 6. REACTIVATE SPW + women hierarchy records ───────────────
+            # Only reactivate if no active record with same (name, hierarchy_type) exists
             women_types = ('spw', 'women_sub_jail', 'special_sub_jail')
             inactive_women = Jail.with_context(active_test=False).search([
                 ('jail_type', 'in', women_types),
                 ('hierarchy_type', '=', 'women'),
                 ('active', '=', False),
             ])
-            if inactive_women:
-                inactive_women.write({'active': True})
-                for r in inactive_women:
+            for r in inactive_women:
+                has_dup = Jail.search([
+                    ('name', '=', r.name),
+                    ('hierarchy_type', '=', r.hierarchy_type),
+                    ('id', '!=', r.id),
+                ], limit=1)
+                if has_dup:
+                    log['skipped'].append(f'dup-inactive: {r.name} [{r.jail_type}]')
+                else:
+                    r.write({'active': True})
                     log['migrated'].append(f'reactivated: {r.name} [{r.jail_type}]')
 
-            # Also reactivate transit_yard and special_sub_jail general ones
+            # Reactivate transit_yard / open_air_jail / farm_jail if no active dup
             inactive_special = Jail.with_context(active_test=False).search([
                 ('jail_type', 'in', ('transit_yard', 'open_air_jail', 'farm_jail')),
                 ('active', '=', False),
             ])
-            if inactive_special:
-                inactive_special.write({'active': True})
-                for r in inactive_special:
+            for r in inactive_special:
+                has_dup = Jail.search([
+                    ('name', '=', r.name),
+                    ('hierarchy_type', '=', r.hierarchy_type),
+                    ('id', '!=', r.id),
+                ], limit=1)
+                if not has_dup:
+                    r.write({'active': True})
                     log['migrated'].append(f'reactivated: {r.name} [{r.jail_type}]')
 
-            # Reactivate Nanguneri (Men) special_sub_jail
+            # Reactivate Nanguneri (Men) special_sub_jail (general hierarchy — safe)
             nanguneri = Jail.with_context(active_test=False).search([
                 ('name', '=', 'Nanguneri (Men)'), ('jail_type', '=', 'special_sub_jail'),
             ], limit=1)
@@ -1220,31 +1244,37 @@ class PrisonJailApiController(http.Controller):
                 log['migrated'].append('reactivated: Nanguneri (Men) [special_sub_jail]')
 
             # ── 7. FIX women sub-jail parent → correct SPW ───────────────────
-            # Map: sub-jail name → SPW name it belongs to
+            # Map: (child_name, child_jail_type) → SPW name + activate + extra vals
             spw_parent_map = {
-                'Cuddalore':           ('Vellore',         'spw'),
-                'Villupuram':          ('Vellore',         'spw'),
-                'Dharmapuri':          ('Coimbatore',      'spw'),
-                'Salem (Women)':       ('Coimbatore',      'spw'),
-                'Thiruvarur':          ('Tiruchirappalli', 'spw'),
-                'Nilakottai':          ('Madurai',         'spw'),
-                'Paramakudi':          ('Madurai',         'spw'),
-                'Thuckalay':           ('Madurai',         'spw'),
-                'Kokkirakulam (Women)':('Madurai',         'spw'),
+                'Cuddalore':            ('Vellore',         'women_sub_jail', {'is_closed': True}),
+                'Villupuram':           ('Vellore',         'women_sub_jail', {}),
+                'Dharmapuri':           ('Coimbatore',      'women_sub_jail', {}),
+                'Tiruppur (Annex)':     ('Coimbatore',      'women_sub_jail', {}),
+                'Salem (Women)':        ('Coimbatore',      'special_sub_jail', {}),
+                'Thiruvarur':           ('Tiruchirappalli', 'women_sub_jail', {}),
+                'Nilakottai':           ('Madurai',         'women_sub_jail', {}),
+                'Paramakudi':           ('Madurai',         'women_sub_jail', {}),
+                'Thuckalay':            ('Madurai',         'women_sub_jail', {}),
+                'Kokkirakulam (Women)': ('Madurai',         'special_sub_jail', {}),
             }
-            for child_name, (spw_name, spw_type) in spw_parent_map.items():
+            for child_name, (spw_name, child_type, extra_vals) in spw_parent_map.items():
                 spw_rec = Jail.with_context(active_test=False).search(
-                    [('name', '=', spw_name), ('jail_type', '=', spw_type)], limit=1)
+                    [('name', '=', spw_name), ('jail_type', '=', 'spw')], limit=1)
                 if not spw_rec:
                     continue
                 child = Jail.with_context(active_test=False).search(
-                    [('name', '=', child_name),
-                     ('hierarchy_type', '=', 'women'),
-                     ('active', '=', True)], limit=1)
-                if child and child.parent_id.id != spw_rec.id:
-                    child.write({'parent_id': spw_rec.id})
+                    [('name', '=', child_name), ('jail_type', '=', child_type)], limit=1)
+                if not child:
+                    continue
+                updates = dict(extra_vals)
+                if child.parent_id.id != spw_rec.id:
+                    updates['parent_id'] = spw_rec.id
+                if not child.active and child_name != 'Cuddalore':
+                    updates['active'] = True
+                if updates:
+                    child.write(updates)
                     log['migrated'].append(
-                        f'reparented: {child_name} → {spw_name} SPW')
+                        f'reparented/fixed: {child_name} → {spw_name} SPW {updates}')
 
             # ── 8. DEDUP: remove extra duplicate transit/women records ────────
             # Deactivate old Puzhal under Chennai-I (correct one is under Chennai-II)
