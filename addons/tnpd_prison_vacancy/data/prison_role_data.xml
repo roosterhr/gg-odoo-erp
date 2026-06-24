@@ -1,0 +1,350 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    TNPD Prison Role Master Seed Data
+    Source of truth: Post Detail PDF + role_vacancy_clean.csv
+    Standardization rules:
+        Jailor / Jailer (Men)  → "Jailer"      gender_type=men
+        Deputy Jailor          → "Deputy Jailer" gender_type=men
+        Assistant Jailor       → "Assistant Jailer" gender_type=men
+        *Women variants        → gender_type=women
+        Administrative/other   → gender_type=both
+-->
+<odoo noupdate="1">
+
+    <!-- ── Core Men Warder / Jailer Roles ───────────────────────────────── -->
+    <record id="role_jailer" model="prison.role">
+        <field name="name">Jailer</field>
+        <field name="gender_type">men</field>
+        <field name="sequence">1</field>
+    </record>
+    <record id="role_deputy_jailer" model="prison.role">
+        <field name="name">Deputy Jailer</field>
+        <field name="gender_type">men</field>
+        <field name="sequence">2</field>
+    </record>
+    <record id="role_assistant_jailer" model="prison.role">
+        <field name="name">Assistant Jailer</field>
+        <field name="gender_type">men</field>
+        <field name="sequence">3</field>
+    </record>
+    <record id="role_chief_head_warder" model="prison.role">
+        <field name="name">Chief Head Warder</field>
+        <field name="gender_type">men</field>
+        <field name="sequence">4</field>
+    </record>
+    <record id="role_grade1_warder" model="prison.role">
+        <field name="name">Grade I Warder</field>
+        <field name="gender_type">men</field>
+        <field name="sequence">5</field>
+    </record>
+    <record id="role_grade2_warder" model="prison.role">
+        <field name="name">Grade II Warder</field>
+        <field name="gender_type">men</field>
+        <field name="sequence">6</field>
+    </record>
+
+    <!-- ── Core Women Warder / Jailer Roles ─────────────────────────────── -->
+    <record id="role_jailer_women" model="prison.role">
+        <field name="name">Jailer Women</field>
+        <field name="gender_type">women</field>
+        <field name="sequence">11</field>
+    </record>
+    <record id="role_deputy_jailer_women" model="prison.role">
+        <field name="name">Deputy Jailer Women</field>
+        <field name="gender_type">women</field>
+        <field name="sequence">12</field>
+    </record>
+    <record id="role_assistant_jailer_women" model="prison.role">
+        <field name="name">Assistant Jailer Women</field>
+        <field name="gender_type">women</field>
+        <field name="sequence">13</field>
+    </record>
+    <record id="role_chief_head_warder_women" model="prison.role">
+        <field name="name">Chief Head Warder Women</field>
+        <field name="gender_type">women</field>
+        <field name="sequence">14</field>
+    </record>
+    <record id="role_grade1_warder_women" model="prison.role">
+        <field name="name">Grade I Warder Women</field>
+        <field name="gender_type">women</field>
+        <field name="sequence">15</field>
+    </record>
+    <record id="role_grade2_warder_women" model="prison.role">
+        <field name="name">Grade II Warder Women</field>
+        <field name="gender_type">women</field>
+        <field name="sequence">16</field>
+    </record>
+
+    <!-- ── Administrative / Support Roles (gender_type=both) ────────────── -->
+    <record id="role_accountant" model="prison.role">
+        <field name="name">Accountant</field>
+        <field name="gender_type">both</field>
+        <field name="sequence">20</field>
+    </record>
+    <record id="role_additional_superintendent" model="prison.role">
+        <field name="name">Additional Superintendent</field>
+        <field name="gender_type">both</field>
+        <field name="sequence">20</field>
+    </record>
+    <record id="role_administrative_officer" model="prison.role">
+        <field name="name">Administrative Officer</field>
+        <field name="gender_type">both</field>
+        <field name="sequence">20</field>
+    </record>
+    <record id="role_assistant" model="prison.role">
+        <field name="name">Assistant</field>
+        <field name="gender_type">both</field>
+        <field name="sequence">20</field>
+    </record>
+    <record id="role_assistant_surgeon" model="prison.role">
+        <field name="name">Assistant Surgeon</field>
+        <field name="gender_type">both</field>
+        <field name="sequence">20</field>
+    </record>
+    <record id="role_band_master" model="prison.role">
+        <field name="name">Band Master</field>
+        <field name="gender_type">both</field>
+        <field name="sequence">20</field>
+    </record>
+    <record id="role_barber" model="prison.role">
+        <field name="name">Barber</field>
+        <field name="gender_type">both</field>
+        <field name="sequence">20</field>
+    </record>
+    <record id="role_binding_maistry" model="prison.role">
+        <field name="name">Binding Maistry</field>
+        <field name="gender_type">both</field>
+        <field name="sequence">20</field>
+    </record>
+    <record id="role_boiler_attendant" model="prison.role">
+        <field name="name">Boiler Attendant</field>
+        <field name="gender_type">both</field>
+        <field name="sequence">20</field>
+    </record>
+    <record id="role_boot_sandal_overseer" model="prison.role">
+        <field name="name">Boot and Sandal Overseer</field>
+        <field name="gender_type">both</field>
+        <field name="sequence">20</field>
+    </record>
+    <record id="role_boot_maistry" model="prison.role">
+        <field name="name">Boot Maistry</field>
+        <field name="gender_type">both</field>
+        <field name="sequence">20</field>
+    </record>
+    <record id="role_boot_mechanic" model="prison.role">
+        <field name="name">Boot Mechanic</field>
+        <field name="gender_type">both</field>
+        <field name="sequence">20</field>
+    </record>
+    <record id="role_carpentry_foreman" model="prison.role">
+        <field name="name">Carpentry Foreman</field>
+        <field name="gender_type">both</field>
+        <field name="sequence">20</field>
+    </record>
+    <record id="role_carpentry_instructor" model="prison.role">
+        <field name="name">Carpentry Instructor</field>
+        <field name="gender_type">both</field>
+        <field name="sequence">20</field>
+    </record>
+    <record id="role_chief_probation_superintendent" model="prison.role">
+        <field name="name">Chief Probation Superintendent</field>
+        <field name="gender_type">both</field>
+        <field name="sequence">20</field>
+    </record>
+    <record id="role_civil_assistant_surgeon" model="prison.role">
+        <field name="name">Civil Assistant Surgeon</field>
+        <field name="gender_type">both</field>
+        <field name="sequence">20</field>
+    </record>
+    <record id="role_cleanliness_worker" model="prison.role">
+        <field name="name">Cleanliness Worker</field>
+        <field name="gender_type">both</field>
+        <field name="sequence">20</field>
+    </record>
+    <record id="role_cook" model="prison.role">
+        <field name="name">Cook</field>
+        <field name="gender_type">both</field>
+        <field name="sequence">20</field>
+    </record>
+    <record id="role_counsellor" model="prison.role">
+        <field name="name">Counsellor</field>
+        <field name="gender_type">both</field>
+        <field name="sequence">20</field>
+    </record>
+    <record id="role_craft_instructor" model="prison.role">
+        <field name="name">Craft Instructor</field>
+        <field name="gender_type">both</field>
+        <field name="sequence">20</field>
+    </record>
+    <record id="role_driver" model="prison.role">
+        <field name="name">Driver</field>
+        <field name="gender_type">both</field>
+        <field name="sequence">20</field>
+    </record>
+    <record id="role_glazing_assistant" model="prison.role">
+        <field name="name">Glazing Assistant</field>
+        <field name="gender_type">both</field>
+        <field name="sequence">20</field>
+    </record>
+    <record id="role_head_constable" model="prison.role">
+        <field name="name">Head Constable</field>
+        <field name="gender_type">both</field>
+        <field name="sequence">20</field>
+    </record>
+    <record id="role_junior_assistant" model="prison.role">
+        <field name="name">Junior Assistant</field>
+        <field name="gender_type">both</field>
+        <field name="sequence">20</field>
+    </record>
+    <record id="role_lorry_driver" model="prison.role">
+        <field name="name">Lorry Driver</field>
+        <field name="gender_type">both</field>
+        <field name="sequence">20</field>
+    </record>
+    <record id="role_male_nursing_assistant" model="prison.role">
+        <field name="name">Male Nursing Assistant</field>
+        <field name="gender_type">both</field>
+        <field name="sequence">20</field>
+    </record>
+    <record id="role_night_watchman" model="prison.role">
+        <field name="name">Night Watchman</field>
+        <field name="gender_type">both</field>
+        <field name="sequence">20</field>
+    </record>
+    <record id="role_office_manager" model="prison.role">
+        <field name="name">Office Manager / Office Superintendent</field>
+        <field name="gender_type">both</field>
+        <field name="sequence">20</field>
+    </record>
+    <record id="role_packer_clerk" model="prison.role">
+        <field name="name">Packer Clerk</field>
+        <field name="gender_type">both</field>
+        <field name="sequence">20</field>
+    </record>
+    <record id="role_pharmacist" model="prison.role">
+        <field name="name">Pharmacist</field>
+        <field name="gender_type">both</field>
+        <field name="sequence">20</field>
+    </record>
+    <record id="role_phenyl_assistant" model="prison.role">
+        <field name="name">Phenyl Assistant</field>
+        <field name="gender_type">both</field>
+        <field name="sequence">20</field>
+    </record>
+    <record id="role_physical_edu_instructor" model="prison.role">
+        <field name="name">Physical Edu Instructor</field>
+        <field name="gender_type">both</field>
+        <field name="sequence">20</field>
+    </record>
+    <record id="role_physiotherapy_technician" model="prison.role">
+        <field name="name">Physiotherapy Technician</field>
+        <field name="gender_type">both</field>
+        <field name="sequence">20</field>
+    </record>
+    <record id="role_probation_officer" model="prison.role">
+        <field name="name">Probation Officer</field>
+        <field name="gender_type">both</field>
+        <field name="sequence">20</field>
+    </record>
+    <record id="role_psychologist" model="prison.role">
+        <field name="name">Psychologist</field>
+        <field name="gender_type">both</field>
+        <field name="sequence">20</field>
+    </record>
+    <record id="role_pulp_making_assistant" model="prison.role">
+        <field name="name">Pulp Making Assistant</field>
+        <field name="gender_type">both</field>
+        <field name="sequence">20</field>
+    </record>
+    <record id="role_rattan_instructor" model="prison.role">
+        <field name="name">Rattan Instructor</field>
+        <field name="gender_type">both</field>
+        <field name="sequence">20</field>
+    </record>
+    <record id="role_record_clerk" model="prison.role">
+        <field name="name">Record Clerk</field>
+        <field name="gender_type">both</field>
+        <field name="sequence">20</field>
+    </record>
+    <record id="role_regional_probation_officer" model="prison.role">
+        <field name="name">Regional Probation Officer</field>
+        <field name="gender_type">both</field>
+        <field name="sequence">20</field>
+    </record>
+    <record id="role_secondary_grade_teacher" model="prison.role">
+        <field name="name">Secondary Grade Teacher</field>
+        <field name="gender_type">both</field>
+        <field name="sequence">20</field>
+    </record>
+    <record id="role_social_case_work_expert" model="prison.role">
+        <field name="name">Social Case Work Expert</field>
+        <field name="gender_type">both</field>
+        <field name="sequence">20</field>
+    </record>
+    <record id="role_staff_nurse" model="prison.role">
+        <field name="name">Staff Nurse</field>
+        <field name="gender_type">both</field>
+        <field name="sequence">20</field>
+    </record>
+    <record id="role_steno_typist" model="prison.role">
+        <field name="name">Steno Typist</field>
+        <field name="gender_type">both</field>
+        <field name="sequence">20</field>
+    </record>
+    <record id="role_sub_inspector" model="prison.role">
+        <field name="name">Sub Inspector</field>
+        <field name="gender_type">both</field>
+        <field name="sequence">20</field>
+    </record>
+    <record id="role_sub_inspector_police" model="prison.role">
+        <field name="name">Sub Inspector of Police</field>
+        <field name="gender_type">both</field>
+        <field name="sequence">20</field>
+    </record>
+    <record id="role_superintendent" model="prison.role">
+        <field name="name">Superintendent</field>
+        <field name="gender_type">both</field>
+        <field name="sequence">20</field>
+    </record>
+    <record id="role_superintendent_of_prisons" model="prison.role">
+        <field name="name">Superintendent of Prisons</field>
+        <field name="gender_type">both</field>
+        <field name="sequence">20</field>
+    </record>
+    <record id="role_supervisor_cum_instructor" model="prison.role">
+        <field name="name">Supervisor-cum-Instructor</field>
+        <field name="gender_type">both</field>
+        <field name="sequence">20</field>
+    </record>
+    <record id="role_tractor_driver" model="prison.role">
+        <field name="name">Tractor Driver</field>
+        <field name="gender_type">both</field>
+        <field name="sequence">20</field>
+    </record>
+    <record id="role_typist" model="prison.role">
+        <field name="name">Typist</field>
+        <field name="gender_type">both</field>
+        <field name="sequence">20</field>
+    </record>
+    <record id="role_weaving_instructor" model="prison.role">
+        <field name="name">Weaving Instructor</field>
+        <field name="gender_type">both</field>
+        <field name="sequence">20</field>
+    </record>
+    <record id="role_weaving_jobber" model="prison.role">
+        <field name="name">Weaving Jobber</field>
+        <field name="gender_type">both</field>
+        <field name="sequence">20</field>
+    </record>
+    <record id="role_welfare_officer" model="prison.role">
+        <field name="name">Welfare Officer</field>
+        <field name="gender_type">both</field>
+        <field name="sequence">20</field>
+    </record>
+    <record id="role_wireman" model="prison.role">
+        <field name="name">Wireman</field>
+        <field name="gender_type">both</field>
+        <field name="sequence">20</field>
+    </record>
+
+</odoo>

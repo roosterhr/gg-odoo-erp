@@ -219,11 +219,25 @@ class EmployeePortalAPI(http.Controller):
             delta = date.today() - emp.x_date_present_station
             tenure_years = round(delta.days / 365.25, 1)
 
+        role_id = None
+        try:
+            if emp.x_designation:
+                import re as _re
+                clean_desig = _re.sub(r'\s*\((Men|Women|Male|Female)\)\s*$', '', emp.x_designation, flags=_re.IGNORECASE).strip()
+                Role = emp.env['prison.role'].sudo()
+                role = Role.search([('name', '=', clean_desig)], limit=1)
+                if not role:
+                    role = Role.search([('name', 'ilike', clean_desig)], limit=1)
+                role_id = role.id if role else None
+        except Exception:
+            pass
+
         return {
             'employee_code':                 _s(emp.x_employee_code),
             'name':                          _s(emp.name),
             'initial':                       _s(emp.x_initial),
             'designation':                   _s(emp.x_designation),
+            'role_id':                       role_id,
             'gender':                        _s(emp.x_gender),
             'dob':                           birthday_raw,
             'status':                        _s(emp.x_status or 'active'),

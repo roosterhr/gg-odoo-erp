@@ -42,12 +42,20 @@ class HrEmployee(models.Model):
     )
 
     x_designation = fields.Char(
-        string='Designation',
-        help='Official designation of the employee within the prison department '
-             '(e.g. Jailor, Deputy Jailor, Warder).',
+        string='Designation (Legacy)',
+        help='Legacy free-text designation. Use x_role_id for new records.',
         index=True,
         tracking=True,
         groups='hr.group_hr_user',
+    )
+    x_role_id = fields.Many2one(
+        comodel_name='prison.role',
+        string='Designation',
+        help='Official role from Role Master. Drives vacancy and transfer validation.',
+        index=True,
+        tracking=True,
+        groups='hr.group_hr_user',
+        ondelete='restrict',
     )
 
     x_employee_code = fields.Char(

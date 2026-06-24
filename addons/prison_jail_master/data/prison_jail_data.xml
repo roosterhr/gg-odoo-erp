@@ -19,9 +19,14 @@
 ══════════════════════════════════════════════════════════════════════ -->
 
 <record id="jail_central_chennai" model="prison.jail">
-    <field name="name">Central Prison-I &amp; II, Chennai</field>
+    <field name="name">Chennai - I</field>
     <field name="jail_type">central_jail</field>
     <field name="sequence">10</field>
+</record>
+<record id="jail_central_chennai_1" model="prison.jail">
+    <field name="name">Chennai - II</field>
+    <field name="jail_type">central_jail</field>
+    <field name="sequence">11</field>
 </record>
 <record id="jail_central_vellore" model="prison.jail">
     <field name="name">Central Prison, Vellore</field>
@@ -898,7 +903,7 @@
     <field name="sequence">30</field>
 </record>
 <record id="jail_oaj_purasadaiudaippu" model="prison.jail">
-    <field name="name">OAJ, Purasadaiudaippu</field>
+    <field name="name">Purasaraidaiudaippu</field>
     <field name="jail_type">sub_jail</field>
     <field name="parent_id" ref="jail_dist_ramanathapuram"/>
     <field name="sequence">20</field>
@@ -940,7 +945,7 @@
     <field name="sequence">60</field>
 </record>
 <record id="jail_sj_poonamallee" model="prison.jail">
-    <field name="name">S.J. Poonamallee</field>
+    <field name="name">Poonamallee (Men)</field>
     <field name="jail_type">sub_jail</field>
     <field name="parent_id" ref="jail_dist_chennai"/>
     <field name="sequence">30</field>
