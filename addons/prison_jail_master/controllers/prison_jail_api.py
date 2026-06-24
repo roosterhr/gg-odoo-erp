@@ -904,10 +904,22 @@ class PrisonJailApiController(http.Controller):
                 d.append(('jail_type', '=', jail_type))
             return Jail.with_context(active_test=False).search(d, limit=1)
 
+        reactivated = []
+
         def upsert(name, jail_type, vals):
             rec = find(name, jail_type)
             if rec:
-                skipped.append(f'{name} [{jail_type}]')
+                # Always reactivate women records and patch hierarchy_type
+                update = {}
+                if not rec.active and vals.get('hierarchy_type') == 'women':
+                    update['active'] = True
+                if rec.hierarchy_type != vals.get('hierarchy_type', rec.hierarchy_type):
+                    update['hierarchy_type'] = vals['hierarchy_type']
+                if update:
+                    rec.write(update)
+                    reactivated.append(f'{name} [{jail_type}] {update}')
+                else:
+                    skipped.append(f'{name} [{jail_type}]')
                 return rec
             rec = Jail.with_context(active_test=False).create(dict(vals, name=name, jail_type=jail_type))
             created.append(f'{name} [{jail_type}] id={rec.id}')
@@ -981,15 +993,17 @@ class PrisonJailApiController(http.Controller):
 
             return {
                 'success': True,
-                'created_count': len(created),
-                'skipped_count': len(skipped),
-                'created': created,
-                'skipped': skipped,
+                'created_count':    len(created),
+                'reactivated_count': len(reactivated),
+                'skipped_count':    len(skipped),
+                'created':     created,
+                'reactivated': reactivated,
+                'skipped':     skipped,
                 'stats': {
-                    'spw':          Jail.search_count([('jail_type', '=', 'spw')]),
+                    'spw':            Jail.search_count([('jail_type', '=', 'spw')]),
                     'women_sub_jail': Jail.search_count([('jail_type', '=', 'women_sub_jail')]),
-                    'closed':       Jail.with_context(active_test=False).search_count([('active', '=', False)]),
-                    'total':        Jail.with_context(active_test=False).search_count([]),
+                    'closed':         Jail.with_context(active_test=False).search_count([('active', '=', False)]),
+                    'total':          Jail.with_context(active_test=False).search_count([]),
                 },
             }
 
@@ -1221,4 +1235,52 @@ class PrisonJailApiController(http.Controller):
 
         except Exception as exc:
             _logger.exception('POST /api/admin/sync-hierarchy failed: %s', exc)
+            return {'success': False, 'error': str(exc)}
+
+    # ── Diagnostic endpoint ────────────────────────────────────────────────────
+
+    @http.route('/api/admin/diagnose', methods=['POST'], auth='none', type='json', csrf=False)
+    def diagnose_women_records(self, **kwargs):
+        """
+        POST /api/admin/diagnose
+        Body: { "secret": "tnpd-diag-2025" }
+
+        Returns raw state of all women/SPW/transit/special records in DB.
+        Use to debug why SPW shows 0 after sync. Remove after DEV sync confirmed.
+        """
+        DIAG_SECRET = 'tnpd-diag-2025'
+        body = request.get_json_data() or {}
+        if body.get('secret') != DIAG_SECRET:
+            return {'success': False, 'error': 'Unauthorized'}
+
+        Jail = request.env['prison.jail'].sudo()
+        try:
+            women_types = ('spw', 'women_sub_jail', 'special_sub_jail', 'transit_yard', 'open_air_jail', 'farm_jail')
+            recs = Jail.with_context(active_test=False).search([
+                '|', ('jail_type', 'in', women_types),
+                     ('hierarchy_type', '=', 'women'),
+            ])
+            records = []
+            for r in recs:
+                records.append({
+                    'id': r.id,
+                    'name': r.name,
+                    'jail_type': r.jail_type,
+                    'hierarchy_type': r.hierarchy_type,
+                    'active': r.active,
+                    'parent': r.parent_id.name if r.parent_id else None,
+                })
+            stats = {
+                'spw_active':   Jail.search_count([('jail_type', '=', 'spw')]),
+                'spw_inactive': Jail.with_context(active_test=False).search_count([
+                    ('jail_type', '=', 'spw'), ('active', '=', False)]),
+                'spw_total':    Jail.with_context(active_test=False).search_count([('jail_type', '=', 'spw')]),
+                'women_hier_total': Jail.with_context(active_test=False).search_count([
+                    ('hierarchy_type', '=', 'women')]),
+                'active_total': Jail.search_count([]),
+                'grand_total':  Jail.with_context(active_test=False).search_count([]),
+            }
+            return {'success': True, 'stats': stats, 'records': records}
+        except Exception as exc:
+            _logger.exception('POST /api/admin/diagnose failed: %s', exc)
             return {'success': False, 'error': str(exc)}
