@@ -996,4 +996,206 @@ class PrisonJailApiController(http.Controller):
         except Exception as exc:
             _logger.exception('POST /api/admin/seed-spw failed: %s', exc)
             return {'success': False, 'error': str(exc)}
-            return self._err('Internal server error', status=500)
+
+    # ── Full hierarchy sync endpoint ───────────────────────────────────────────
+
+    @http.route('/api/admin/sync-hierarchy', methods=['POST'], auth='none', type='json', csrf=False)
+    def sync_hierarchy(self, **kwargs):
+        """
+        POST /api/admin/sync-hierarchy
+        Body: { "secret": "<SYNC_SECRET>" }
+
+        Syncs DEV prison hierarchy to match LOCAL canonical state:
+          - Renames misnamed records (S.J. prefix cleanup)
+          - Migrates SPW-related sub_jails to women hierarchy
+          - Deactivates stale placeholder records
+          - Creates missing active jails
+          - Creates missing closed jails
+        Safe to call multiple times. Remove after DEV/PROD sync confirmed.
+        """
+        SYNC_SECRET = 'tnpd-sync-2025'
+        body = request.get_json_data() or {}
+        if body.get('secret') != SYNC_SECRET:
+            return {'success': False, 'error': 'Unauthorized'}
+
+        Jail = request.env['prison.jail'].sudo()
+        log = {'renamed': [], 'migrated': [], 'deactivated': [], 'created': [], 'skipped': [], 'errors': []}
+
+        def find(name, jail_type=None, parent_name=None):
+            d = [('name', '=', name)]
+            if jail_type:    d.append(('jail_type', '=', jail_type))
+            if parent_name:
+                parent = Jail.with_context(active_test=False).search([('name', '=', parent_name)], limit=1)
+                if parent: d.append(('parent_id', '=', parent.id))
+            return Jail.with_context(active_test=False).search(d, limit=1)
+
+        def find_parent(name, jail_type=None):
+            d = [('name', '=', name)]
+            if jail_type: d.append(('jail_type', '=', jail_type))
+            return Jail.with_context(active_test=False).search(d, limit=1)
+
+        try:
+            # ── 1. RENAMES ────────────────────────────────────────────────────
+            renames = [
+                # (old_name, old_jail_type, old_parent, new_name, new_jail_type)
+                ('S.J. Kanchipuram',   'sub_jail', 'Chennai - I',    'Kancheepuram',    'sub_jail'),
+                ('S.J. Thiruvallur',   'sub_jail', 'Chennai - I',    'Tiruvallur',       'sub_jail'),
+                ('S.J. Tirupattur',    'sub_jail', 'Vellore',        'Tirupathur',       'sub_jail'),
+                ('S.J. Walaja',        'sub_jail', 'Vellore',        'Walajah',          'sub_jail'),
+                ('S.J. Thirukovilur',  'sub_jail', 'Cuddalore',      'Thirukovilur',     'sub_jail'),
+                ('S.J. Thiruchengodu', 'sub_jail', 'Salem',          'Thiruchengodu',    'sub_jail'),
+                ('OAJ, Singanallur',   'sub_jail', 'Coimbatore',     'Singanallur',      'open_air_jail'),
+                ('S.J. Udumalaipet',   'sub_jail', 'Coimbatore',     'Udumalaipettai',   'sub_jail'),
+                ('S.J. Tiruppattur',   'sub_jail', 'Madurai',        'Tiruppathur',      'sub_jail'),
+                ('S.J. Sankarankoil',  'sub_jail', 'Palayamkottai',  'Sankarankoil',     'sub_jail'),
+            ]
+            for old_name, old_type, parent_name, new_name, new_type in renames:
+                rec = find(old_name, old_type, parent_name)
+                if rec:
+                    vals = {}
+                    if rec.name != new_name:      vals['name']      = new_name
+                    if rec.jail_type != new_type: vals['jail_type'] = new_type
+                    if vals:
+                        rec.write(vals)
+                        log['renamed'].append(f'{old_name} → {new_name}')
+                    else:
+                        log['skipped'].append(f'rename: {old_name} (already correct)')
+                else:
+                    # might already be renamed — skip silently if target exists
+                    if not find(new_name, new_type, parent_name):
+                        log['errors'].append(f'rename: source not found: {old_name}')
+
+            # ── 2. MIGRATE to SPW hierarchy ───────────────────────────────────
+            spw_madurai    = find('Madurai',         'spw')
+            spw_coimbatore = find('Coimbatore',      'spw')
+
+            migrations = [
+                # (old_name, old_type, old_parent, new_name, new_type, new_hierarchy, spw_rec)
+                ('S.J. Nilakottai',  'sub_jail', 'Madurai',       'Nilakottai',          'women_sub_jail',   'women',   spw_madurai),
+                ('S.J. Paramakudi',  'sub_jail', 'Madurai',       'Paramakudi',          'women_sub_jail',   'women',   spw_madurai),
+                ('S.J. Thuckalay',   'sub_jail', 'Palayamkottai', 'Thuckalay',           'women_sub_jail',   'women',   spw_madurai),
+                ('S.J. Kokkirakulam','sub_jail', 'Palayamkottai', 'Kokkirakulam (Women)','special_sub_jail', 'women',   spw_madurai),
+            ]
+            for old_name, old_type, old_parent, new_name, new_type, new_hier, spw_rec in migrations:
+                rec = find(old_name, old_type, old_parent)
+                if rec and spw_rec:
+                    rec.write({
+                        'name':           new_name,
+                        'jail_type':      new_type,
+                        'hierarchy_type': new_hier,
+                        'parent_id':      spw_rec.id,
+                    })
+                    log['migrated'].append(f'{old_name} → {new_name} (SPW {spw_rec.name})')
+                elif not rec:
+                    if not find(new_name, new_type):
+                        log['errors'].append(f'migrate: source not found: {old_name}')
+
+            # S.J. Manapparai: deactivate (it becomes closed Manaparai)
+            sj_manapparai = find('S.J. Manapparai', 'sub_jail', 'Tiruchirappalli')
+            if sj_manapparai and sj_manapparai.active:
+                sj_manapparai.write({'active': False})
+                log['deactivated'].append('S.J. Manapparai (→ closed)')
+
+            # ── 3. DEACTIVATE stale placeholders ──────────────────────────────
+            to_deactivate = [
+                ('SPW, Vellore',    'sub_jail', 'Vellore'),
+                ('SPW, Trichy',     'sub_jail', 'Tiruchirappalli'),
+                ('SPW, Salem',      'sub_jail', 'Salem'),
+                ('SPW, Coimbatore', 'sub_jail', 'Coimbatore'),
+                ('S.J. Madurai',    'sub_jail', 'Madurai'),
+            ]
+            for name, jtype, parent_name in to_deactivate:
+                rec = find(name, jtype, parent_name)
+                if rec and rec.active:
+                    rec.write({'active': False})
+                    log['deactivated'].append(name)
+
+            # ── 4. CREATE missing active jails ────────────────────────────────
+            def upsert(name, jail_type, vals):
+                existing = find(name, jail_type, vals.get('_parent_name'))
+                if existing:
+                    log['skipped'].append(f'create: {name} [{jail_type}]')
+                    return existing
+                clean_vals = {k: v for k, v in vals.items() if not k.startswith('_')}
+                rec = Jail.with_context(active_test=False).create(
+                    dict(clean_vals, name=name, jail_type=jail_type)
+                )
+                log['created'].append(f'{name} [{jail_type}]')
+                return rec
+
+            vellore  = find_parent('Vellore',      'central_jail')
+            salem    = find_parent('Salem',         'central_jail')
+            madurai  = find_parent('Madurai',       'central_jail')
+            palk     = find_parent('Palayamkottai', 'central_jail')
+            trichy   = find_parent('Tiruchirappalli','central_jail')
+            cuddalore = find_parent('Cuddalore',    'central_jail')
+            chennai1  = find_parent('Chennai - I',  'central_jail')
+
+            if vellore:
+                upsert('Cheyyar', 'sub_jail', {'hierarchy_type': 'general', 'parent_id': vellore.id, '_parent_name': 'Vellore', 'sequence': 35})
+            if salem:
+                upsert('Salem', 'farm_jail', {'hierarchy_type': 'general', 'parent_id': salem.id, '_parent_name': 'Salem', 'sequence': 95})
+            if madurai:
+                upsert('Kodaikanal', 'sub_jail', {'hierarchy_type': 'general', 'parent_id': madurai.id, '_parent_name': 'Madurai', 'sequence': 95})
+            if palk:
+                spw_m = find('Madurai', 'spw')
+                if spw_m:
+                    upsert('Nanguneri (Men)', 'special_sub_jail', {'hierarchy_type': 'general', 'parent_id': palk.id, '_parent_name': 'Palayamkottai', 'sequence': 20})
+
+            # ── 5. CREATE missing closed jails ────────────────────────────────
+            closed_to_add = [
+                # (name, jail_type, parent_name, parent_type, fallback_central)
+                ('Madurantagam',              'sub_jail', 'Chennai - I',    'central_jail', None),
+                ('Pattukottai',               'sub_jail', 'Chennai - I',    'central_jail', None),
+                ('Arani',                     'sub_jail', 'Vellore',        'central_jail', None),
+                ('Sattur',                    'sub_jail', 'Palayamkottai',  'central_jail', None),
+                ('Keeranur',                  'sub_jail', 'Tiruchirappalli','central_jail', None),
+                ('Manaparai',                 'sub_jail', 'Tiruchirappalli','central_jail', None),
+                ('Rasipuram',                 'sub_jail', 'Salem',          'central_jail', None),
+                ('Paramathivelur',            'sub_jail', 'Salem',          'central_jail', None),
+                ('Thiruvadanai',              'sub_jail', 'Madurai',        'central_jail', None),
+                ('Thiruchendur',              'sub_jail', 'Palayamkottai',  'central_jail', None),
+                ('Portonovo @ Parangipettai', 'sub_jail', 'Cuddalore',      'central_jail', None),
+                ('Cuddalore',                 'sub_jail', 'Cuddalore',      'central_jail', None),
+                ('Mettupalayam',              'sub_jail', 'Coimbatore',     'central_jail', None),
+            ]
+            for name, jtype, parent_name, parent_type, _ in closed_to_add:
+                parent = find_parent(parent_name, parent_type)
+                if parent:
+                    existing = Jail.with_context(active_test=False).search(
+                        [('name', '=', name), ('jail_type', '=', jtype),
+                         ('parent_id', '=', parent.id), ('active', '=', False)], limit=1
+                    )
+                    if existing:
+                        log['skipped'].append(f'closed: {name}')
+                    else:
+                        Jail.with_context(active_test=False).create({
+                            'name': name, 'jail_type': jtype,
+                            'parent_id': parent.id, 'active': False,
+                        })
+                        log['created'].append(f'{name} [closed]')
+
+            request.env.cr.commit()
+
+            return {
+                'success': True,
+                'summary': {
+                    'renamed':     len(log['renamed']),
+                    'migrated':    len(log['migrated']),
+                    'deactivated': len(log['deactivated']),
+                    'created':     len(log['created']),
+                    'skipped':     len(log['skipped']),
+                    'errors':      len(log['errors']),
+                },
+                'detail': log,
+                'stats': {
+                    'spw':          Jail.search_count([('jail_type', '=', 'spw')]),
+                    'active_total': Jail.search_count([]),
+                    'closed_total': Jail.with_context(active_test=False).search_count([('active', '=', False)]),
+                    'grand_total':  Jail.with_context(active_test=False).search_count([]),
+                },
+            }
+
+        except Exception as exc:
+            _logger.exception('POST /api/admin/sync-hierarchy failed: %s', exc)
+            return {'success': False, 'error': str(exc)}
