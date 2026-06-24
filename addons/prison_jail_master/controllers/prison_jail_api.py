@@ -27,6 +27,7 @@ import csv as csv_mod
 import io
 import json
 import logging
+import os
 
 from odoo import http
 from odoo.http import request
@@ -1384,3 +1385,353 @@ class PrisonJailApiController(http.Controller):
         except Exception as exc:
             _logger.exception('POST /api/admin/diagnose failed: %s', exc)
             return {'success': False, 'error': str(exc)}
+
+    # ══════════════════════════════════════════════════════════════════════════
+    # DEV DATA CONSISTENCY FIX — Prison Hierarchy & Closed Prison Validation
+    # Reference-dataset-driven sync. Run export on LOCAL (source of truth),
+    # POST the snapshot to /sync on DEV. Remove all three endpoints after sync.
+    # ══════════════════════════════════════════════════════════════════════════
+
+    _PHX_SECRET = 'tnpd-phx-2025'
+
+    @http.route('/api/admin/prison-hierarchy/export',
+                methods=['GET'], auth='none', type='http', csrf=False)
+    def prison_hierarchy_export(self, **kwargs):
+        """
+        GET /api/admin/prison-hierarchy/export?secret=tnpd-phx-2025
+
+        Dumps the full canonical prison hierarchy from the LIVE database
+        (LOCAL = source of truth). Output feeds /prison-hierarchy/sync on DEV.
+
+        Each record carries its match key (name, jail_type, hierarchy_type),
+        its parent's match coordinates (parent_name, parent_type), and the
+        visibility flags (is_closed, active, sequence).
+        """
+        if kwargs.get('secret') != self._PHX_SECRET:
+            return request.make_response(
+                json.dumps({'success': False, 'error': 'Unauthorized'}),
+                headers=[('Content-Type', 'application/json')], status=401)
+
+        Jail = request.env['prison.jail'].sudo()
+        try:
+            recs = Jail.with_context(active_test=False).search(
+                [], order='sequence, name')
+            records = []
+            for r in recs:
+                records.append({
+                    'name':           r.name,
+                    'jail_type':      r.jail_type,
+                    'hierarchy_type': r.hierarchy_type,
+                    'sequence':       r.sequence,
+                    'is_closed':      r.is_closed,
+                    'active':         r.active,
+                    'parent_name':    r.parent_id.name if r.parent_id else None,
+                    'parent_type':    r.parent_id.jail_type if r.parent_id else None,
+                })
+            payload = {
+                'success': True,
+                'count': len(records),
+                'records': records,
+            }
+            return request.make_response(
+                json.dumps(payload),
+                headers=[('Content-Type', 'application/json')])
+        except Exception as exc:
+            _logger.exception('GET /api/admin/prison-hierarchy/export failed: %s', exc)
+            return request.make_response(
+                json.dumps({'success': False, 'error': str(exc)}),
+                headers=[('Content-Type', 'application/json')], status=500)
+
+    @http.route('/api/admin/prison-hierarchy/sync',
+                methods=['POST'], auth='none', type='json', csrf=False)
+    def prison_hierarchy_sync(self, **kwargs):
+        """
+        POST /api/admin/prison-hierarchy/sync
+        Body: {
+            "secret": "tnpd-phx-2025",
+            "reference": { "records": [ ...export payload... ] },
+            "dry_run": false        # true = validate + report only, no writes
+        }
+
+        Reconciles DEV prison data against the LOCAL reference snapshot:
+          1. Creates missing records (incl. closed) with correct parent linkage.
+          2. Repairs invalid / missing parent mappings to match LOCAL.
+          3. Restores Closed Prison visibility (is_closed + active=True).
+          4. Resolves duplicates (deactivate extras — never deletes; no data loss).
+          5. Re-homes / flags orphan records.
+          6. Emits a full validation report + before/after counts.
+
+        Match key: (name, jail_type, hierarchy_type).
+        Parent resolved by (parent_name, parent_type), preferring the active row.
+        """
+        body = request.get_json_data() or {}
+        if body.get('secret') != self._PHX_SECRET:
+            return {'status': 'UNAUTHORIZED', 'error': 'Unauthorized'}
+
+        reference = (body.get('reference') or {})
+        ref_records = reference.get('records') or []
+        ref_source = 'request_body'
+        # Fall back to the reference snapshot embedded in the module
+        # (data/local_hierarchy_reference.json) so DEV can sync with just
+        # the secret — no need to pipe the payload over the wire.
+        if not ref_records:
+            try:
+                ref_path = os.path.join(
+                    os.path.dirname(os.path.dirname(__file__)),
+                    'data', 'local_hierarchy_reference.json')
+                with open(ref_path, 'r', encoding='utf-8-sig') as fh:
+                    embedded = json.load(fh)
+                ref_records = embedded.get('records') or []
+                ref_source = 'embedded_snapshot'
+            except Exception as exc:
+                _logger.exception('Could not load embedded reference: %s', exc)
+        if not ref_records:
+            return {'status': 'ERROR',
+                    'error': 'No reference.records in body and embedded snapshot missing'}
+
+        dry_run = bool(body.get('dry_run'))
+        Jail = request.env['prison.jail'].sudo()
+        PARENT_TYPES = ('central_jail', 'spw')
+
+        report = {
+            'missing_parent_mappings': [],
+            'invalid_parent_mappings': [],
+            'duplicate_records':       [],
+            'orphan_records':          [],
+            'corrected_records':       [],
+            'created_records':         [],
+            'closed_restored':         [],
+        }
+
+        def key(name, jail_type, hierarchy_type):
+            return (name, jail_type, hierarchy_type)
+
+        try:
+            # ── Snapshot BEFORE ───────────────────────────────────────────────
+            before = {
+                'total':       Jail.with_context(active_test=False).search_count([]),
+                'active':      Jail.search_count([]),
+                'closed':      Jail.with_context(active_test=False).search_count([('is_closed', '=', True)]),
+                'central':     Jail.search_count([('jail_type', '=', 'central_jail')]),
+                'spw':         Jail.search_count([('jail_type', '=', 'spw')]),
+            }
+
+            # ── Index DEV records by match key ────────────────────────────────
+            dev_all = Jail.with_context(active_test=False).search([])
+            dev_by_key = {}
+            for r in dev_all:
+                dev_by_key.setdefault(
+                    key(r.name, r.jail_type, r.hierarchy_type), []).append(r)
+
+            # Resolve a parent record in DEV by (name, type); prefer active row.
+            def resolve_parent(parent_name, parent_type):
+                if not parent_name:
+                    return None
+                cands = Jail.with_context(active_test=False).search(
+                    [('name', '=', parent_name), ('jail_type', '=', parent_type)])
+                if not cands:
+                    return None
+                active_one = cands.filtered(lambda c: c.active)
+                return (active_one[0] if active_one else cands[0])
+
+            # ── PASS 1: ensure every reference record exists & is correct ─────
+            for ref in ref_records:
+                name = ref.get('name')
+                jtype = ref.get('jail_type')
+                htype = ref.get('hierarchy_type') or 'general'
+                k = key(name, jtype, htype)
+                ref_closed = bool(ref.get('is_closed'))
+                # Closed prisons stay active in DB so they remain visible.
+                ref_active = True if ref_closed else bool(ref.get('active', True))
+
+                expected_parent = None
+                if jtype not in PARENT_TYPES:
+                    expected_parent = resolve_parent(
+                        ref.get('parent_name'), ref.get('parent_type'))
+                    if ref.get('parent_name') and not expected_parent:
+                        report['missing_parent_mappings'].append({
+                            'record': name, 'jail_type': jtype,
+                            'wanted_parent': ref.get('parent_name'),
+                            'wanted_parent_type': ref.get('parent_type'),
+                        })
+
+                matches = dev_by_key.get(k, [])
+
+                if not matches:
+                    # CREATE missing record
+                    if not dry_run:
+                        vals = {
+                            'name': name, 'jail_type': jtype,
+                            'hierarchy_type': htype,
+                            'sequence': ref.get('sequence') or 10,
+                            'is_closed': ref_closed, 'active': ref_active,
+                        }
+                        if expected_parent:
+                            vals['parent_id'] = expected_parent.id
+                        rec = Jail.with_context(active_test=False).create(vals)
+                        dev_by_key.setdefault(k, []).append(rec)
+                    report['created_records'].append(
+                        {'record': name, 'jail_type': jtype, 'hierarchy_type': htype,
+                         'closed': ref_closed})
+                    if ref_closed:
+                        report['closed_restored'].append(
+                            {'record': name, 'jail_type': jtype, 'action': 'created'})
+                    continue
+
+                # Pick the primary DEV record for this key (prefer active)
+                active_matches = [m for m in matches if m.active]
+                primary = active_matches[0] if active_matches else matches[0]
+
+                # Validate + fix parent mapping
+                if expected_parent and primary.parent_id.id != expected_parent.id:
+                    report['invalid_parent_mappings'].append({
+                        'record': name, 'jail_type': jtype,
+                        'current_parent': primary.parent_id.name or None,
+                        'expected_parent': expected_parent.name,
+                    })
+                    if not dry_run:
+                        primary.write({'parent_id': expected_parent.id})
+                    report['corrected_records'].append(
+                        {'record': name, 'fix': 'parent',
+                         'to': expected_parent.name})
+
+                # Validate + fix visibility flags
+                flag_updates = {}
+                if primary.is_closed != ref_closed:
+                    flag_updates['is_closed'] = ref_closed
+                if primary.active != ref_active:
+                    flag_updates['active'] = ref_active
+                if ref.get('sequence') is not None and primary.sequence != ref['sequence']:
+                    flag_updates['sequence'] = ref['sequence']
+                if flag_updates:
+                    if not dry_run:
+                        primary.write(flag_updates)
+                    report['corrected_records'].append(
+                        {'record': name, 'fix': 'flags', 'changes': flag_updates})
+                    if ref_closed and ('active' in flag_updates or 'is_closed' in flag_updates):
+                        report['closed_restored'].append(
+                            {'record': name, 'jail_type': jtype, 'action': 'restored_visibility'})
+
+            # Build set of valid reference keys + their parent coords up-front.
+            ref_keys = {key(r.get('name'), r.get('jail_type'),
+                            r.get('hierarchy_type') or 'general') for r in ref_records}
+            ref_parent_by_key = {}
+            for r in ref_records:
+                ref_parent_by_key[key(r.get('name'), r.get('jail_type'),
+                                      r.get('hierarchy_type') or 'general')] = (
+                    r.get('parent_name'), r.get('parent_type'))
+
+            # ── PASS 2: duplicates — SAFE dedup, reference-scoped ─────────────
+            # Only collapse leaf child-types that the reference knows about.
+            # Never touch parent types; never deactivate a row that has active
+            # children (would orphan them). Parent-type dups are reported only.
+            LEAF_CHILD_TYPES = (
+                'sub_jail', 'women_sub_jail', 'special_sub_jail',
+                'open_air_jail', 'farm_jail', 'transit_yard',
+            )
+
+            def has_active_children(rec):
+                return Jail.search_count(
+                    [('parent_id', '=', rec.id), ('active', '=', True)]) > 0
+
+            for k in ref_keys:
+                rows = dev_by_key.get(k, [])
+                active_rows = [r for r in rows if r.active]
+                if len(active_rows) <= 1:
+                    continue
+                jtype = k[1]
+                if jtype not in LEAF_CHILD_TYPES:
+                    # Parent / district dups — report for manual review only.
+                    for ex in active_rows[1:]:
+                        report['duplicate_records'].append({
+                            'record': ex.name, 'jail_type': ex.jail_type,
+                            'hierarchy_type': ex.hierarchy_type, 'id': ex.id,
+                            'action': 'reported_only (parent-type, manual review)',
+                        })
+                    continue
+                # Keep the row that has a parent; deactivate childless extras.
+                rows_sorted = sorted(
+                    active_rows, key=lambda r: 1 if r.parent_id else 0, reverse=True)
+                primary = rows_sorted[0]
+                for ex in rows_sorted[1:]:
+                    if has_active_children(ex):
+                        report['duplicate_records'].append({
+                            'record': ex.name, 'jail_type': ex.jail_type, 'id': ex.id,
+                            'action': 'kept (has active children — not deactivated)',
+                        })
+                        continue
+                    report['duplicate_records'].append({
+                        'record': ex.name, 'jail_type': ex.jail_type, 'id': ex.id,
+                        'action': 'deactivated (kept id=%s)' % primary.id,
+                    })
+                    if not dry_run:
+                        ex.write({'active': False})
+
+            # ── PASS 3: orphans — child-type rows with missing/invalid parent ─
+            # Report-only for visibility; reparent only when the reference
+            # supplies a resolvable parent. Never deactivates (no data loss).
+            child_rows = Jail.with_context(active_test=False).search([
+                ('jail_type', 'not in', list(PARENT_TYPES)),
+                ('active', '=', True),
+            ])
+            for r in child_rows:
+                parent_ok = bool(r.parent_id) and r.parent_id.jail_type in (
+                    'central_jail', 'spw', 'district_jail')
+                if parent_ok:
+                    continue
+                k = key(r.name, r.jail_type, r.hierarchy_type)
+                fixed = False
+                if k in ref_parent_by_key:
+                    pn, pt = ref_parent_by_key[k]
+                    prec = resolve_parent(pn, pt)
+                    if prec:
+                        if not dry_run:
+                            r.write({'parent_id': prec.id})
+                        report['corrected_records'].append(
+                            {'record': r.name, 'fix': 'orphan_reparent', 'to': prec.name})
+                        fixed = True
+                report['orphan_records'].append({
+                    'record': r.name, 'jail_type': r.jail_type,
+                    'hierarchy_type': r.hierarchy_type,
+                    'current_parent': r.parent_id.name if r.parent_id else None,
+                    'resolved': fixed,
+                })
+
+            if not dry_run:
+                request.env.cr.commit()
+
+            # ── Snapshot AFTER ────────────────────────────────────────────────
+            after = {
+                'total':   Jail.with_context(active_test=False).search_count([]),
+                'active':  Jail.search_count([]),
+                'closed':  Jail.with_context(active_test=False).search_count([('is_closed', '=', True)]),
+                'central': Jail.search_count([('jail_type', '=', 'central_jail')]),
+                'spw':     Jail.search_count([('jail_type', '=', 'spw')]),
+            }
+
+            hierarchy_issues = (len(report['invalid_parent_mappings'])
+                                + len(report['missing_parent_mappings'])
+                                + len(report['orphan_records']))
+            hierarchy_fixed = len([c for c in report['corrected_records']
+                                   if c.get('fix') in ('parent', 'orphan_reparent')])
+
+            return {
+                'status': 'DRY_RUN' if dry_run else 'SUCCESS',
+                'referenceSource': ref_source,
+                'totalPrisonsValidated': len(ref_records),
+                'hierarchyIssuesFound':  hierarchy_issues,
+                'hierarchyIssuesFixed':  hierarchy_fixed,
+                'closedPrisonsRestored': len(report['closed_restored']),
+                'orphanRecordsFixed':    len([o for o in report['orphan_records'] if o['resolved']]),
+                'duplicatesResolved':    len(report['duplicate_records']),
+                'recordsCreated':        len(report['created_records']),
+                'before': before,
+                'after':  after,
+                'report': report,
+            }
+
+        except Exception as exc:
+            if not dry_run:
+                request.env.cr.rollback()
+            _logger.exception('POST /api/admin/prison-hierarchy/sync failed: %s', exc)
+            return {'status': 'ERROR', 'error': str(exc)}
