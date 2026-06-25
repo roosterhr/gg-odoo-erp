@@ -49,6 +49,17 @@ class TransferApprovalRequest(models.Model):
         index=True,
     )
 
+    reason_category = fields.Selection(
+        selection=[
+            ('single_parent',   'Single Parent'),
+            ('spouse_working',  'Spouse Working'),
+            ('medical_reasons', 'Medical Reasons'),
+            ('others',          'Others'),
+        ],
+        string='Reason Category',
+        index=True,
+    )
+
     transfer_reason = fields.Text(
         string='Transfer Reason',
         help='Reason provided by the employee for requesting the transfer.',
@@ -183,6 +194,21 @@ class TransferApprovalRequest(models.Model):
         string='Preference 3 — Sub Jail',
         domain=[('jail_type', '=', 'sub_jail'), ('active', '=', True)],
         ondelete='restrict',
+    )
+
+    # ── Swap transfer ─────────────────────────────────────────────────────────
+
+    swap_partner_id = fields.Many2one(
+        comodel_name='transfer.approval.request',
+        string='Swap Partner Request',
+        ondelete='set null',
+        index=True,
+    )
+
+    is_swap = fields.Boolean(
+        string='Is Swap Transfer',
+        default=False,
+        index=True,
     )
 
     # ── Workflow ──────────────────────────────────────────────────────────────
@@ -331,14 +357,66 @@ class TransferApprovalRequest(models.Model):
             'current_sub_jail':       self._lookup_jail('sub_jail', employee.x_sub_jail),
         }
 
+    # ── Swap detection ────────────────────────────────────────────────────────
+
+    def _find_swap_partner(self):
+        """
+        Look for a reciprocal transfer request that forms a valid swap pair.
+
+        A swap partner exists when:
+          - Partner is currently posted at the prison THIS officer wants to go to
+          - Partner wants to come to THIS officer's current prison
+          - Both officers share the same designation (grade)
+          - Partner request is pending and not already in a swap
+        """
+        self.ensure_one()
+        my_grade    = self.employee_id.x_designation
+        my_current  = (self.current_sub_jail or self.current_district_jail or self.current_central_prison)
+        my_target   = (self.requested_sub_jail or self.requested_district_jail or self.requested_central_prison)
+
+        if not my_grade or not my_current or not my_target:
+            return self.env['transfer.approval.request']
+
+        # Find pending requests where the employee is at my target prison
+        # and they want to come to my current prison, same grade, no swap yet
+        candidates = self.search([
+            ('id',              '!=', self.id),
+            ('state',           '=',  'pending'),
+            ('is_swap',         '=',  False),
+            ('swap_partner_id', '=',  False),
+            ('active',          '=',  True),
+        ])
+
+        for c in candidates:
+            c_grade   = c.employee_id.x_designation
+            c_current = (c.current_sub_jail or c.current_district_jail or c.current_central_prison)
+            c_target  = (c.requested_sub_jail or c.requested_district_jail or c.requested_central_prison)
+
+            if (c_grade == my_grade
+                    and c_current == my_target
+                    and c_target == my_current):
+                return c
+
+        return self.env['transfer.approval.request']
+
     # ── Actions: Submit / Cancel / Return ────────────────────────────────────
 
     def action_submit(self):
-        """Move draft → pending."""
+        """Move draft → pending, then attempt swap detection."""
         self.ensure_one()
         if self.state != 'draft':
             raise UserError('Only draft requests can be submitted.')
         self.write({'state': 'pending'})
+
+        # Auto-detect swap partner
+        partner = self._find_swap_partner()
+        if partner:
+            self.write({'swap_partner_id': partner.id, 'is_swap': True})
+            partner.write({'swap_partner_id': self.id, 'is_swap': True})
+            _logger.info(
+                'Swap pair detected: request %d ↔ request %d',
+                self.id, partner.id,
+            )
 
     def action_cancel(self):
         """Move draft/pending → cancelled."""
@@ -478,18 +556,9 @@ class TransferApprovalRequest(models.Model):
             if pv:
                 pv.recompute_from_designations()
 
-    def action_approve(self):
+    def _execute_approval(self, approved_by_user, now):
+        """Apply the approval — update employee posting, set state, notify."""
         self.ensure_one()
-        if self.approval_user_id != self.env.user:
-            raise UserError(
-                'Only the designated approver (%s) can approve this request.'
-                % self.approval_user_id.name
-            )
-        if self.state != 'pending':
-            raise UserError('Only pending requests can be approved.')
-
-        self._validate_vacancy_and_gender()
-
         self.employee_id.write({
             'x_central_jail_id':  self.requested_central_prison.id or False,
             'x_district_jail_id': self.requested_district_jail.id or False,
@@ -497,9 +566,9 @@ class TransferApprovalRequest(models.Model):
         })
         self._adjust_vacancy_on_approve()
         self.write({
-            'state': 'approved',
-            'approved_by': self.env.user.id,
-            'approved_date': fields.Datetime.now(),
+            'state':         'approved',
+            'approved_by':   approved_by_user.id,
+            'approved_date': now,
         })
         to_jail = (
             self.requested_sub_jail.name
@@ -511,8 +580,31 @@ class TransferApprovalRequest(models.Model):
             'transfer_approved',
             f'Your transfer request (Ref: TRF/{self.id}) has been approved. '
             f'You have been transferred to {to_jail}. '
-            f'Approved by: {self.env.user.name}.',
+            f'Approved by: {approved_by_user.name}.',
         )
+
+    def action_approve(self):
+        self.ensure_one()
+        if self.approval_user_id != self.env.user:
+            raise UserError(
+                'Only the designated approver (%s) can approve this request.'
+                % self.approval_user_id.name
+            )
+        if self.state != 'pending':
+            raise UserError('Only pending requests can be approved.')
+
+        self._validate_vacancy_and_gender()
+        now = fields.Datetime.now()
+        self._execute_approval(self.env.user, now)
+
+        # Atomic swap: auto-approve the partner in the same transaction
+        partner = self.swap_partner_id
+        if partner and partner.state == 'pending':
+            partner._execute_approval(self.env.user, now)
+            _logger.info(
+                'Swap auto-approval: request %d approved alongside request %d',
+                partner.id, self.id,
+            )
 
     def action_reject(self):
         self.ensure_one()

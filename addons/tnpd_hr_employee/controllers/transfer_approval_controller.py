@@ -174,10 +174,13 @@ class TransferApprovalController(http.Controller):
             'create_date':    str(rec.create_date) if rec.create_date else '',
             'request_date':   str(rec.create_date) if rec.create_date else '',
             # Extended fields
-            'transfer_type':   getattr(rec, 'transfer_type', '') or '',
-            'transfer_reason': getattr(rec, 'transfer_reason', '') or '',
-            'priority':        getattr(rec, 'priority', '') or '',
-            'tenure_years':    tenure_years,
+            'transfer_type':    getattr(rec, 'transfer_type', '') or '',
+            'reason_category':  getattr(rec, 'reason_category', '') or '',
+            'transfer_reason':  getattr(rec, 'transfer_reason', '') or '',
+            'priority':         getattr(rec, 'priority', '') or '',
+            'tenure_years':     tenure_years,
+            'is_swap':          bool(getattr(rec, 'is_swap', False)),
+            'swap_partner_id':  rec.swap_partner_id.id if getattr(rec, 'swap_partner_id', False) else None,
         }
 
     # ==================================================================
@@ -676,6 +679,58 @@ class TransferApprovalController(http.Controller):
                 'remarks':       approval_remarks,
             })
 
+            # --- Atomic swap: auto-approve the partner in the same transaction ---
+            swap_partner = tar.swap_partner_id
+            if swap_partner and swap_partner.exists() and swap_partner.state == 'pending':
+                swap_emp = swap_partner.employee_id.sudo()
+                self._apply_transfer_to_employee(
+                    swap_emp, swap_partner,
+                    approved_by_user=approved_by_user,
+                    approved_date_now=approved_date_now,
+                    note_prefix='Swap Transfer Approved',
+                )
+                swap_partner.sudo().write({
+                    'state':         'approved',
+                    'approved_by':   uid,
+                    'approved_date': approved_date_now,
+                    'remarks':       f'[Auto-approved as swap pair with TRF/{tar.id}] {approval_remarks}',
+                })
+                # Decrement vacancy for swap partner's target prison
+                swap_target_id = swap_partner.requested_sub_jail.id if swap_partner.requested_sub_jail else None
+                if swap_target_id:
+                    swap_vac = self._get_vacancy_record(env, swap_target_id)
+                    if swap_vac and swap_vac.exists():
+                        swap_vac.sudo().write({
+                            'vacancy_count':  max(0, swap_vac.vacancy_count - 1),
+                            'occupied_count': swap_vac.occupied_count + 1,
+                        })
+                # Notify swap partner's employee
+                try:
+                    swap_to_jail = (
+                        swap_partner.requested_sub_jail.name
+                        or swap_partner.requested_district_jail.name
+                        or swap_partner.requested_central_prison.name
+                        or 'the requested posting'
+                    )
+                    env['tnpd.notification'].sudo().create({
+                        'employee_id':         swap_emp.id,
+                        'transfer_request_id': swap_partner.id,
+                        'notification_type':   'transfer_approved',
+                        'action_type':         'transfer_approved',
+                        'message': (
+                            f'Your transfer request (Ref: TRF/{swap_partner.id}) has been approved as part of a swap transfer. '
+                            f'You have been transferred to {swap_to_jail}. '
+                            f'Approved by: {approved_by_user.name}.'
+                        ),
+                        'sent_by': approved_by_user.id,
+                    })
+                except Exception as notif_exc:
+                    _logger.warning('Failed to send swap partner notification: %s', notif_exc)
+                _logger.info(
+                    'Swap auto-approval: request %d approved alongside request %d by user=%d',
+                    swap_partner.id, tar.id, uid,
+                )
+
             # --- Decrement vacancy count at target prison ------------------
             if vacancy_rec is not None and vacancy_rec.exists():
                 new_count = max(0, vacancy_rec.vacancy_count - 1)
@@ -842,6 +897,16 @@ class TransferApprovalController(http.Controller):
 
             tar.sudo().write(update_vals)
 
+            # If this was part of a swap pair, break the link on the partner
+            if tar.swap_partner_id and tar.swap_partner_id.exists():
+                partner = tar.swap_partner_id
+                partner.sudo().write({'is_swap': False, 'swap_partner_id': False})
+                _logger.info(
+                    'Swap broken on rejection: partner request %d unlinked from rejected request %d',
+                    partner.id, tar.id,
+                )
+            tar.sudo().write({'is_swap': False, 'swap_partner_id': False})
+
             _logger.info(
                 'Transfer request %d rejected by user=%d (%s)',
                 tar.id, uid, rejecting_user.name,
@@ -876,6 +941,68 @@ class TransferApprovalController(http.Controller):
             _logger.exception(
                 'POST /api/transfer/reject-approval-request failed: %s', exc
             )
+            return self._err('Internal server error', status=500)
+
+    # ==================================================================
+    # API – Break Swap Transfer
+    # POST /api/transfer/break-swap
+    # ==================================================================
+
+    @http.route(
+        '/api/transfer/break-swap',
+        auth='none',
+        type='http',
+        methods=['POST'],
+        csrf=False,
+    )
+    def break_swap(self, **_kwargs):
+        """
+        Unlink a swap pair. Both requests revert to normal (is_swap=False,
+        swap_partner_id=False) and remain in 'pending' state so they can be
+        handled independently.
+
+        Body (JSON)
+        -----------
+        request_id  int  required   Either request in the swap pair.
+        """
+        try:
+            uid, err = self._require_auth()
+            if err:
+                return err
+
+            data, err = self._parse_json_body()
+            if err:
+                return err
+
+            if not data.get('request_id'):
+                return self._err('Missing required field: request_id')
+
+            env = request.env(user=uid)
+
+            tar = env['transfer.approval.request'].sudo().browse(int(data['request_id']))
+            if not tar.exists():
+                return self._err('Transfer request not found', status=404)
+
+            if not tar.is_swap:
+                return self._err('This request is not part of a swap pair')
+
+            partner = tar.swap_partner_id
+            tar.sudo().write({'is_swap': False, 'swap_partner_id': False})
+            if partner and partner.exists():
+                partner.sudo().write({'is_swap': False, 'swap_partner_id': False})
+                _logger.info(
+                    'Swap broken: request %d and request %d unlinked by user=%d',
+                    tar.id, partner.id, uid,
+                )
+
+            return self._ok(
+                'Swap transfer unlinked successfully',
+                request_id=tar.id,
+                partner_id=partner.id if partner and partner.exists() else None,
+            )
+
+        except Exception as exc:
+            _logger.exception('POST /api/transfer/break-swap failed: %s', exc)
             return self._err('Internal server error', status=500)
 
     # ==================================================================
@@ -933,6 +1060,16 @@ class TransferApprovalController(http.Controller):
 
             if kwargs.get('search'):
                 domain.append(('employee_id.name', 'ilike', kwargs['search']))
+
+            if kwargs.get('priority'):
+                valid_priorities = {'low', 'medium', 'high'}
+                if kwargs['priority'] in valid_priorities:
+                    domain.append(('priority', '=', kwargs['priority']))
+
+            if kwargs.get('reason'):
+                valid_cats = {'single_parent', 'spouse_working', 'medical_reasons', 'others'}
+                if kwargs['reason'] in valid_cats:
+                    domain.append(('reason_category', '=', kwargs['reason']))
 
             TransferRequest = env['transfer.approval.request'].sudo()
             total_count     = TransferRequest.search_count(domain)
@@ -1047,6 +1184,7 @@ class TransferApprovalController(http.Controller):
                 'requested_by':            uid,
                 'state':                   'draft',
                 'transfer_type':           'request',
+                'reason_category':         reason_category,
                 'transfer_reason':         data.get('transfer_reason', ''),
                 'priority':                data.get('priority', 'medium'),
                 **current_vals,

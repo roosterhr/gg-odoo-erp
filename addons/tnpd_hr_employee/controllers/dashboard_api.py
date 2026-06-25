@@ -98,6 +98,7 @@ class DashboardApiController(http.Controller):
 
         # Institutions — distinct jails from prison.jail master
         try:
+            env.cr.execute('SAVEPOINT dashboard_jail')
             Jail = env['prison.jail'].sudo()
             central_jails  = Jail.search([('jail_type', '=', 'central_jail'), ('active', '=', True)])
             district_jails = Jail.search([('jail_type', '=', 'district_jail'),  ('active', '=', True)])
@@ -105,7 +106,9 @@ class DashboardApiController(http.Controller):
             total_institutions = len(central_jails) + len(district_jails) + len(sub_jails)
             prison_categories  = len({j.jail_type for j in (central_jails | district_jails | sub_jails)})
             institution_list   = [{'id': j.id, 'name': j.name} for j in (central_jails | district_jails)]
+            env.cr.execute('RELEASE SAVEPOINT dashboard_jail')
         except Exception:
+            env.cr.execute('ROLLBACK TO SAVEPOINT dashboard_jail')
             central_jails = district_jails = sub_jails = env['res.users'].sudo().browse([])
             total_institutions = 0
             prison_categories  = 0

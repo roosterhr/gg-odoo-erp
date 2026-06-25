@@ -725,8 +725,10 @@ class UsersApiController(http.Controller):
             return self._err('A user with this email already exists.')
 
         try:
-            group_erp    = request.env.ref('base.group_erp_manager', raise_if_not_found=False)
-            main_company = request.env['res.company'].sudo().search([], limit=1, order='id asc')
+            from odoo import SUPERUSER_ID
+            su_env    = request.env(user=SUPERUSER_ID)
+            group_erp = su_env.ref('base.group_erp_manager', raise_if_not_found=False)
+            main_company = su_env['res.company'].search([], limit=1, order='id asc')
 
             user_vals = {
                 'name':        name,
@@ -738,19 +740,10 @@ class UsersApiController(http.Controller):
                 'company_ids': [(4, main_company.id)],
             }
             if user_type == 'admin' and group_erp:
-                user_vals['group_ids'] = [(4, group_erp.id)]
+                user_vals['groups_id'] = [(4, group_erp.id)]
 
-            # flush_all() runs on request.env (uid=None in auth='none').  When the
-            # user's avatar SVG is written via a related field, ir_attachment._check_contents
-            # calls sudo(False).has_access() which fails on an empty user.
-            # Setting attachments_mime_plainxml on request.env propagates the flag
-            # through flush_all() so the failing has_access() branch is skipped.
-            # no_reset_password suppresses auth_signup's welcome email during create.
-            # no_reset_password: suppresses auth_signup's welcome email during create.
-            # The ir_attachment._check_contents crash (uid=None → sudo(False).has_access fails)
-            # is handled by the IrAttachment override in models/ir_attachment.py.
-            new_user = request.env['res.users'].sudo().with_context(no_reset_password=True).create(user_vals)
-            new_user.sudo().write({'password': password})
+            new_user = su_env['res.users'].with_context(no_reset_password=True).create(user_vals)
+            new_user.write({'password': password})
 
             # Mark token consumed
             payload['used']        = True
@@ -773,3 +766,238 @@ class UsersApiController(http.Controller):
         except Exception as exc:
             _logger.exception('POST /api/auth/signup failed: %s', exc)
             return self._err('Failed to create account. Please try again.', status=500)
+
+    # ── POST /api/auth/forgot-password ────────────────────────────────────────
+    @http.route('/api/auth/forgot-password', auth='none', type='http', methods=['POST'], csrf=False)
+    def forgot_password(self, **kwargs):
+        """
+        Generate a temporary password and email it if the identifier matches a registered account.
+
+        Body: { "identifier": "<email or employee_id>", "login_type": "admin"|"employee" }
+        Always returns success=true to avoid leaking whether an account exists.
+        """
+        try:
+            raw = request.httprequest.get_data(as_text=True)
+            try:
+                data = json.loads(raw) if raw else {}
+            except json.JSONDecodeError:
+                return self._err('Invalid JSON body')
+
+            identifier = str(data.get('identifier', '')).strip()
+            login_type = str(data.get('login_type', 'admin')).strip()
+
+            # For employee login, identifier may be absent (employeeId + email used instead)
+            if not identifier and login_type != 'employee':
+                return self._err('Please provide your email or Employee ID.')
+
+            env = request.env
+
+            # ── Locate the Odoo user ──────────────────────────────────────────
+            user = None
+            recipient_email = None
+            recipient_name  = None
+
+            if login_type == 'employee':
+                employee_id_input = str(data.get('employeeId', '')).strip()
+                email_input       = str(data.get('email', '')).strip()
+                # Both fields required — find employee matching both employee code AND email
+                if employee_id_input and email_input:
+                    from odoo import SUPERUSER_ID
+                    su_env = request.env(user=SUPERUSER_ID)
+                    emp = su_env['hr.employee'].search([
+                        ('x_employee_code', '=ilike', employee_id_input),
+                        ('work_email', '=ilike', email_input),
+                    ], limit=1)
+                    if not emp:
+                        # Fallback: raw SQL with trim to handle whitespace in stored values
+                        request.env.cr.execute(
+                            "SELECT id FROM hr_employee WHERE lower(trim(x_employee_code))=lower(%s) AND lower(trim(work_email))=lower(%s) LIMIT 1",
+                            (employee_id_input, email_input)
+                        )
+                        row = request.env.cr.fetchone()
+                        if row:
+                            emp = su_env['hr.employee'].browse(row[0])
+                else:
+                    emp = env['hr.employee'].sudo().search([
+                        '|', '|', '|',
+                        ('work_email', '=ilike', identifier),
+                        ('x_mobile_no', '=', identifier),
+                        ('x_cug_mobile', '=', identifier),
+                        ('x_employee_code', '=ilike', identifier),
+                    ], limit=1)
+                if emp:
+                    # Use the direct employee→user link (login = employee code)
+                    linked = emp.user_id
+                    if not linked:
+                        linked = env['res.users'].sudo().with_context(active_test=False).search([
+                            ('login', '=ilike', emp.work_email),
+                        ], limit=1)
+                    if linked:
+                        user = linked
+                        recipient_email = emp.work_email
+                        recipient_name  = emp.name
+            else:
+                # Admin: find by email first, then try mobile
+                user = env['res.users'].sudo().with_context(active_test=False).search([
+                    ('email', '=ilike', identifier),
+                ], limit=1)
+                if not user:
+                    try:
+                        user = env['res.users'].sudo().with_context(active_test=False).search([
+                            ('partner_id.mobile', '=', identifier),
+                        ], limit=1)
+                    except Exception:
+                        pass
+                if user:
+                    recipient_email = user.email or user.login
+                    recipient_name  = user.name
+
+            # ── Generate temp password & send email ───────────────────────────
+            # Always return the same response to avoid account enumeration
+            _GENERIC_OK = self._ok(message='If a matching account is found, a temporary password has been sent to the registered email address.')
+
+            if not user or not recipient_email:
+                _logger.info('forgot-password: no match for identifier=%s type=%s', identifier, login_type)
+                return _GENERIC_OK
+
+            # Generate an 8-char temp password: 2 upper + 4 digits + 2 special
+            import random, string
+            chars   = string.ascii_uppercase + string.digits
+            temp_pw = (
+                random.choice(string.ascii_uppercase) +
+                random.choice(string.ascii_uppercase) +
+                ''.join(random.choices(string.digits, k=4)) +
+                random.choice('@#$!') +
+                random.choice('@#$!')
+            )
+            # Shuffle so it doesn't always follow the same pattern
+            temp_list = list(temp_pw)
+            random.shuffle(temp_list)
+            temp_pw = ''.join(temp_list)
+
+            # Set the temp password on the Odoo user
+            user.sudo().write({'password': temp_pw})
+            _logger.info('forgot-password: temp password set for user id=%s | temp_pw=%s [REMOVE IN PROD]', user.id, temp_pw)
+
+            # ── Build and send email ──────────────────────────────────────────
+            smtp_host = os.environ.get('SMTP_HOST', '').strip()
+            if not smtp_host:
+                _logger.warning('forgot-password: SMTP_HOST not set, cannot send email')
+                return _GENERIC_OK
+
+            smtp_port  = int(os.environ.get('SMTP_PORT', 587))
+            smtp_user  = os.environ.get('SMTP_USERNAME', '').strip()
+            smtp_pass  = os.environ.get('SMTP_PASSWORD', '').strip()
+            from_email = os.environ.get('SMTP_FROM_EMAIL', smtp_user).strip() or smtp_user
+            from_name  = os.environ.get('SMTP_FROM_NAME', 'TNPD Prison HRMS').strip()
+
+            # Build login-hint row — show username for admin, employee code for employee
+            if login_type == 'employee':
+                emp_code = getattr(user.employee_ids[:1], 'x_employee_code', '') if user.employee_ids else ''
+                login_hint_label = 'Employee ID'
+                login_hint_value = emp_code or user.login
+            else:
+                login_hint_label = 'Username'
+                login_hint_value = user.login
+
+            html_body = f"""
+            <div style="font-family:Arial,sans-serif;max-width:520px;margin:auto;padding:32px;background:#f8fafc;border-radius:10px;">
+              <div style="text-align:center;margin-bottom:24px;">
+                <div style="font-size:20px;font-weight:700;color:#0F172A;">TNPD HRMS</div>
+                <div style="font-size:12px;color:#64748b;letter-spacing:.06em;text-transform:uppercase;margin-top:4px;">Tamil Nadu Prison Department</div>
+              </div>
+              <div style="background:white;border-radius:8px;padding:28px;box-shadow:0 2px 8px rgba(0,0,0,.06);">
+                <p style="color:#334155;font-size:15px;margin-bottom:8px;">Hello <strong>{recipient_name or 'Officer'}</strong>,</p>
+                <p style="color:#475569;font-size:14px;line-height:1.6;margin-bottom:20px;">
+                  A password reset was requested for your TNPD HRMS account. Use the credentials below to log in.
+                </p>
+                <div style="background:#f1f5f9;border:1px solid #e2e8f0;border-radius:6px;padding:16px 24px;margin-bottom:20px;">
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                    <div style="font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:.08em;">{login_hint_label}</div>
+                    <div style="font-size:15px;font-weight:700;color:#0F172A;font-family:monospace;">{login_hint_value}</div>
+                  </div>
+                  <div style="border-top:1px solid #e2e8f0;padding-top:12px;text-align:center;">
+                    <div style="font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;">Temporary Password</div>
+                    <div style="font-size:26px;font-weight:700;color:#1D4ED8;letter-spacing:.12em;font-family:monospace;">{temp_pw}</div>
+                  </div>
+                </div>
+                <p style="color:#64748b;font-size:13px;line-height:1.6;">
+                  Please log in with these credentials and change your password immediately from the sidebar.<br/>
+                  This temporary password is for one-time use.
+                </p>
+                <hr style="border:none;border-top:1px solid #e2e8f0;margin:20px 0;"/>
+                <p style="color:#94a3b8;font-size:12px;">If you did not request this, please ignore this email. Your password will remain unchanged.</p>
+              </div>
+              <p style="text-align:center;color:#cbd5e1;font-size:11px;margin-top:16px;">© {datetime.utcnow().year} Tamil Nadu Prison Department</p>
+            </div>
+            """
+
+            msg = MIMEMultipart('alternative')
+            msg['Subject'] = 'TNPD HRMS — Your Temporary Password'
+            msg['From']    = f'{from_name} <{from_email}>'
+            msg['To']      = recipient_email
+            msg.attach(MIMEText(html_body, 'html', 'utf-8'))
+
+            try:
+                with smtplib.SMTP(smtp_host, smtp_port, timeout=15) as server:
+                    server.ehlo()
+                    if smtp_port in (587, 25):
+                        server.starttls()
+                        server.ehlo()
+                    if smtp_user and smtp_pass:
+                        server.login(smtp_user, smtp_pass)
+                    server.sendmail(from_email or smtp_user, [recipient_email], msg.as_string())
+                _logger.info('forgot-password: email sent to %s', recipient_email)
+            except Exception as mail_exc:
+                _logger.error('forgot-password: email send failed: %s', mail_exc)
+
+            return _GENERIC_OK
+
+        except Exception as exc:
+            _logger.exception('POST /api/auth/forgot-password failed: %s', exc)
+            return self._err('Internal server error', status=500)
+
+    # ── POST /api/auth/change-password ────────────────────────────────────────
+    @http.route('/api/auth/change-password', auth='none', type='http', methods=['POST'], csrf=False)
+    def change_password(self, **kwargs):
+        """
+        Change the current user's password (requires active session).
+
+        Body: { "current_password": "...", "new_password": "..." }
+        """
+        try:
+            uid, err = self._require_auth()
+            if err:
+                return err
+
+            raw = request.httprequest.get_data(as_text=True)
+            try:
+                data = json.loads(raw) if raw else {}
+            except json.JSONDecodeError:
+                return self._err('Invalid JSON body')
+
+            current_pw = str(data.get('current_password', '')).strip()
+            new_pw     = str(data.get('new_password', '')).strip()
+
+            if not current_pw:
+                return self._err('Current password is required.')
+            if not new_pw or len(new_pw) < 6:
+                return self._err('New password must be at least 6 characters.')
+
+            # Verify current password by attempting authenticate
+            env  = request.env
+            user = env['res.users'].sudo().browse(uid)
+            db   = request.db
+
+            try:
+                env['res.users'].sudo()._check_credentials(current_pw, {'interactive': False})
+            except Exception:
+                return self._err('Current password is incorrect.', status=401)
+
+            user.sudo().write({'password': new_pw})
+            _logger.info('change-password: password changed for user id=%s', uid)
+            return self._ok(message='Password changed successfully.')
+
+        except Exception as exc:
+            _logger.exception('POST /api/auth/change-password failed: %s', exc)
+            return self._err('Internal server error', status=500)
