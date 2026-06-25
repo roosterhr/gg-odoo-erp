@@ -636,6 +636,89 @@ class EmployeePortalAPI(http.Controller):
 
         return self._ok(history=reversed_history)
 
+    # ── GET /api/employee-portal/prisons ────────────────────────────────────
+
+    @http.route(
+        '/api/employee-portal/prisons',
+        auth='none', type='http', methods=['GET'], csrf=False,
+    )
+    def get_prisons(self, **_kw):
+        """
+        Return all active, non-closed prison.jail records with parent context.
+        Used to populate the single-dropdown preference selectors on the
+        Employee Transfer Request form.
+        """
+        emp, err = self._require_employee_session()
+        if err:
+            return err
+
+        Jail = request.env['prison.jail'].sudo()
+        jails = Jail.search([('active', '=', True), ('is_closed', '=', False)],
+                            order='sequence, jail_type, name')
+
+        prisons = []
+        for j in jails:
+            prisons.append({
+                'id':          j.id,
+                'name':        j.name or '',
+                'jail_type':   j.jail_type or '',
+                'parent_id':   j.parent_id.id if j.parent_id else None,
+                'parent_name': j.parent_id.name if j.parent_id else None,
+            })
+
+        return self._ok(prisons=prisons)
+
+    # ── GET /api/employee-portal/vacancy ─────────────────────────────────────
+
+    @http.route(
+        '/api/employee-portal/vacancy',
+        auth='none', type='http', methods=['GET'], csrf=False,
+    )
+    def get_vacancy_for_role(self, prison_id=None, role_id=None, **_kw):
+        """
+        Return designation-level vacancy for a given prison + role pair.
+        Falls back to a zero-vacancy response if no record exists.
+        """
+        emp, err = self._require_employee_session()
+        if err:
+            return err
+
+        if not prison_id or not role_id:
+            return self._err('prison_id and role_id are required')
+
+        try:
+            prison_id = int(prison_id)
+            role_id   = int(role_id)
+        except (ValueError, TypeError):
+            return self._err('Invalid prison_id or role_id')
+
+        vac = request.env['prison.designation.vacancy'].sudo().search([
+            ('prison_id', '=', prison_id),
+            ('role_id',   '=', role_id),
+        ], limit=1)
+
+        if vac:
+            return self._ok(vacancy=vac.as_api_dict())
+
+        # No designation-specific record — return zeros with metadata
+        jail = request.env['prison.jail'].sudo().browse(prison_id)
+        if not jail.exists():
+            return self._err('Prison not found', status=404)
+
+        role = request.env['prison.role'].sudo().browse(role_id)
+        return self._ok(vacancy={
+            'prison_id':           prison_id,
+            'prison_name':         jail.name,
+            'hierarchy_type':      jail.hierarchy_type or 'general',
+            'role_id':             role_id,
+            'role_name':           role.name if role.exists() else '',
+            'sanctioned_strength': 0,
+            'filled_strength':     0,
+            'vacancy_count':       0,
+            'vacancy_available':   False,
+            'no_record':           True,
+        })
+
     # ── GET /api/employee-portal/transfers ───────────────────────────────────
 
     @http.route(
@@ -712,26 +795,40 @@ class EmployeePortalAPI(http.Controller):
             return self._err('Please select a reason category')
         if reason_category == 'others' and not reason:
             return self._err('Please describe your reason when selecting "Others"')
+
+        # All 3 preferences are mandatory
         if not p1_central:
-            return self._err('Preference 1 — Central Prison is required')
+            return self._err('Preference 1 — Parent Institution is required')
         if not p1_sub:
-            return self._err('Preference 1 — Sub Jail is required')
+            return self._err('Preference 1 — Prison Location is required')
+        if not p2_central:
+            return self._err('Preference 2 — Parent Institution is required')
+        if not p2_sub:
+            return self._err('Preference 2 — Prison Location is required')
+        if not p3_central:
+            return self._err('Preference 3 — Parent Institution is required')
+        if not p3_sub:
+            return self._err('Preference 3 — Prison Location is required')
+
+        # No duplicate prisons across preferences (compare at sub-jail level)
+        selected = [p1_sub, p2_sub, p3_sub]
+        if len(set(selected)) != 3:
+            return self._err('Each preference must select a different prison location')
 
         Jail = request.env['prison.jail'].sudo()
-        if not Jail.browse(p1_central).exists():
-            return self._err('Central Prison not found')
-        if not Jail.browse(p1_sub).exists():
-            return self._err('Sub Jail not found')
+        for jid, label in [(p1_sub, 'Preference 1'), (p2_sub, 'Preference 2'), (p3_sub, 'Preference 3')]:
+            if not Jail.browse(jid).exists():
+                return self._err(f'{label} — Prison Location not found')
 
-        # Prevent duplicate pending requests
+        # Prevent duplicate active requests (draft or pending)
         existing = request.env['transfer.approval.request'].sudo().search([
             ('employee_id', '=', emp.id),
-            ('state', '=', 'pending'),
+            ('state', 'in', ['draft', 'pending']),
             ('active', '=', True),
         ], limit=1)
         if existing:
             return self._err(
-                f'You already have a pending transfer request (Ref: TRF/{existing.id}). '
+                f'You already have an active transfer request (Ref: TRF/{existing.id}). '
                 f'Please wait for it to be processed before submitting a new one.'
             )
 
