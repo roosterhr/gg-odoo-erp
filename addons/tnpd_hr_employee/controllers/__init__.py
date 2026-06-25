@@ -9,3 +9,4 @@ from . import employee_portal_api
 from . import cors_middleware
 from . import users_api
 from . import analytics_api
+from . import role_migration_api
