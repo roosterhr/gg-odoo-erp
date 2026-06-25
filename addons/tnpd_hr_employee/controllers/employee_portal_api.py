@@ -664,6 +664,45 @@ class EmployeePortalAPI(http.Controller):
             'limit':     limit,
         })
 
+    # ── GET /api/employee-portal/prisons ─────────────────────────────────────
+
+    @http.route(
+        '/api/employee-portal/prisons',
+        auth='none', type='http', methods=['GET'], csrf=False,
+    )
+    def get_portal_prisons(self, **_kw):
+        """Return all active prisons from Prison Information master, grouped by type."""
+        emp, err = self._require_employee_session()
+        if err:
+            return err
+
+        LABEL = {
+            'central_jail':   'Central Prison',
+            'spw':            'Special Prison for Women',
+            'district_jail':  'District Jail',
+            'sub_jail':       'Sub Jail',
+            'women_sub_jail': 'Women Sub Jail',
+            'special_sub_jail': 'Special Sub Jail',
+            'open_air_jail':  'Open Air Jail',
+            'farm_jail':      'Farm Jail',
+            'transit_yard':   'Transit Yard',
+        }
+
+        prisons = request.env['prison.jail'].sudo().search(
+            [('active', '=', True)], order='sequence, name'
+        )
+
+        return self._ok(prisons=[{
+            'id':             j.id,
+            'name':           j.name,
+            'jail_type':      j.jail_type,
+            'jail_type_label': LABEL.get(j.jail_type, j.jail_type),
+            'hierarchy_type': j.hierarchy_type,
+            'parent_id':      j.parent_id.id if j.parent_id else None,
+            'parent_name':    j.parent_id.name if j.parent_id else None,
+            'sequence':       j.sequence,
+        } for j in prisons])
+
     # ── POST /api/employee-portal/transfers ──────────────────────────────────
 
     @http.route(
@@ -681,6 +720,8 @@ class EmployeePortalAPI(http.Controller):
 
         reason = (data.get('transfer_reason') or '').strip()
 
+        Jail = request.env['prison.jail'].sudo()
+
         def _jail_id(key):
             v = data.get(key)
             if not v:
@@ -690,31 +731,67 @@ class EmployeePortalAPI(http.Controller):
             except (TypeError, ValueError):
                 return False
 
-        # Preference 1 (required)
-        p1_central  = _jail_id('to_central_jail_id')
-        p1_district = _jail_id('to_district_jail_id')
-        p1_sub      = _jail_id('to_sub_jail_id')
-        # Preference 2 (optional)
-        p2_central  = _jail_id('p2_central_jail_id')
-        p2_district = _jail_id('p2_district_jail_id')
-        p2_sub      = _jail_id('p2_sub_jail_id')
-        # Preference 3 (optional)
-        p3_central  = _jail_id('p3_central_jail_id')
-        p3_district = _jail_id('p3_district_jail_id')
-        p3_sub      = _jail_id('p3_sub_jail_id')
+        def _resolve_jail(jail_id):
+            """Map a single prison ID to (central_id, district_id, sub_id) based on jail_type."""
+            if not jail_id:
+                return False, False, False
+            jail = Jail.browse(jail_id)
+            if not jail.exists():
+                return False, False, False
+            jtype = jail.jail_type
+            if jtype in ('central_jail', 'spw'):
+                return jail.id, False, False
+            elif jtype == 'district_jail':
+                return (jail.parent_id.id if jail.parent_id else False), jail.id, False
+            else:
+                return (jail.parent_id.id if jail.parent_id else False), False, jail.id
+
+        # Support new single-prison-id format (pref_X_prison_id) or legacy format
+        use_new_format = any(data.get(k) for k in ('pref_1_prison_id', 'pref_2_prison_id', 'pref_3_prison_id'))
+
+        if use_new_format:
+            p1_id = _jail_id('pref_1_prison_id')
+            p2_id = _jail_id('pref_2_prison_id')
+            p3_id = _jail_id('pref_3_prison_id')
+
+            if not p1_id:
+                return self._err('Preference 1 is required')
+            if not p2_id:
+                return self._err('Preference 2 is required')
+            if not p3_id:
+                return self._err('Preference 3 is required')
+            if len({p1_id, p2_id, p3_id}) != 3:
+                return self._err('Each preference must be a different prison')
+
+            p1_central, p1_district, p1_sub = _resolve_jail(p1_id)
+            p2_central, p2_district, p2_sub = _resolve_jail(p2_id)
+            p3_central, p3_district, p3_sub = _resolve_jail(p3_id)
+
+            if not p1_central and not p1_district and not p1_sub:
+                return self._err('Preference 1 — prison not found')
+        else:
+            # Legacy format: separate central/district/sub IDs
+            p1_central  = _jail_id('to_central_jail_id')
+            p1_district = _jail_id('to_district_jail_id')
+            p1_sub      = _jail_id('to_sub_jail_id')
+            p2_central  = _jail_id('p2_central_jail_id')
+            p2_district = _jail_id('p2_district_jail_id')
+            p2_sub      = _jail_id('p2_sub_jail_id')
+            p3_central  = _jail_id('p3_central_jail_id')
+            p3_district = _jail_id('p3_district_jail_id')
+            p3_sub      = _jail_id('p3_sub_jail_id')
+
+            if not p1_central:
+                return self._err('Preference 1 — Central Prison is required')
+            if not p1_sub:
+                return self._err('Preference 1 — Sub Jail is required')
+            if not Jail.browse(p1_central).exists():
+                return self._err('Central Prison not found')
+            if not Jail.browse(p1_sub).exists():
+                return self._err('Sub Jail not found')
 
         if not reason:
             return self._err('Transfer reason is required')
-        if not p1_central:
-            return self._err('Preference 1 — Central Prison is required')
-        if not p1_sub:
-            return self._err('Preference 1 — Sub Jail is required')
-
-        Jail = request.env['prison.jail'].sudo()
-        if not Jail.browse(p1_central).exists():
-            return self._err('Central Prison not found')
-        if not Jail.browse(p1_sub).exists():
-            return self._err('Sub Jail not found')
 
         # Prevent duplicate pending requests
         existing = request.env['transfer.approval.request'].sudo().search([
