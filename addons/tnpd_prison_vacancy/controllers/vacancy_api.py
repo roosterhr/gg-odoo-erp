@@ -120,7 +120,7 @@ class VacancyApiController(http.Controller):
         if not prison_id:
             return self._err('prison_id is required.')
 
-        domain = [('prison_id', '=', prison_id)]
+        domain = [('prison_id', '=', prison_id), ('role_id.active', '=', True)]
         role_id = self._int(kwargs.get('role_id'))
         if role_id:
             domain.append(('role_id', '=', role_id))
@@ -142,16 +142,26 @@ class VacancyApiController(http.Controller):
         csrf=False,
     )
     def get_dashboard(self, **kwargs):
-        Vacancy = request.env['prison.vacancy'].sudo()
-        Desig = request.env['prison.designation.vacancy'].sudo()
+        # Canonical role IDs: the only 6 official roles
+        CANONICAL_IDS = (1, 2, 3, 4, 5, 6)
 
-        # Prison-level summary
-        all_vacancy = Vacancy.search([('active', '=', True)])
-        total_sanctioned = sum(all_vacancy.mapped('sanctioned_strength'))
-        total_filled     = sum(all_vacancy.mapped('occupied_count'))
-        total_vacancy    = sum(all_vacancy.mapped('vacancy_count'))
+        # Stat cards — totals scoped to the 6 canonical roles only
+        request.env.cr.execute("""
+            SELECT
+                SUM(dv.sanctioned_strength) AS sanctioned,
+                SUM(dv.filled_strength)     AS filled,
+                SUM(dv.vacancy_count)       AS vacancy,
+                COUNT(DISTINCT dv.prison_id) AS prison_count
+              FROM prison_designation_vacancy dv
+             WHERE dv.role_id IN %s
+        """, [CANONICAL_IDS])
+        row = request.env.cr.fetchone()
+        total_sanctioned = int(row[0] or 0)
+        total_filled     = int(row[1] or 0)
+        total_vacancy    = int(row[2] or 0)
+        prison_count     = int(row[3] or 0)
 
-        # Role-wise top vacancies (aggregate across all prisons)
+        # Role-wise breakdown — canonical roles only, aggregate across all prisons
         request.env.cr.execute("""
             SELECT r.name AS role_name, r.gender_type,
                    SUM(dv.sanctioned_strength) AS sanctioned,
@@ -159,10 +169,10 @@ class VacancyApiController(http.Controller):
                    SUM(dv.vacancy_count) AS vacancy
               FROM prison_designation_vacancy dv
               JOIN prison_role r ON r.id = dv.role_id
+             WHERE dv.role_id IN %s
              GROUP BY r.id, r.name, r.gender_type
              ORDER BY vacancy DESC
-             LIMIT 20
-        """)
+        """, [CANONICAL_IDS])
         role_summary = [
             {
                 'role_name':   row[0],
@@ -179,7 +189,7 @@ class VacancyApiController(http.Controller):
                 'total_sanctioned': total_sanctioned,
                 'total_filled':     total_filled,
                 'total_vacancy':    total_vacancy,
-                'prison_count':     len(all_vacancy),
+                'prison_count':     prison_count,
             },
             'role_summary': role_summary,
         })
