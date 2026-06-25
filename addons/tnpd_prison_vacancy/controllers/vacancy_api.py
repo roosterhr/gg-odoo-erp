@@ -161,28 +161,33 @@ class VacancyApiController(http.Controller):
         total_vacancy    = int(row[2] or 0)
         prison_count     = int(row[3] or 0)
 
-        # Role-wise breakdown — canonical roles only, aggregate across all prisons
-        request.env.cr.execute("""
-            SELECT r.name AS role_name, r.gender_type,
-                   SUM(dv.sanctioned_strength) AS sanctioned,
-                   SUM(dv.filled_strength) AS filled,
-                   SUM(dv.vacancy_count) AS vacancy
-              FROM prison_designation_vacancy dv
-              JOIN prison_role r ON r.id = dv.role_id
-             WHERE dv.role_id IN %s
-             GROUP BY r.id, r.name, r.gender_type
-             ORDER BY vacancy DESC
-        """, [CANONICAL_IDS])
-        role_summary = [
-            {
-                'role_name':   row[0],
-                'gender_type': row[1],
-                'sanctioned':  int(row[2] or 0),
-                'filled':      int(row[3] or 0),
-                'vacancy':     int(row[4] or 0),
-            }
-            for row in request.env.cr.fetchall()
-        ]
+        def _role_rows(hierarchy_filter=None):
+            sql = """
+                SELECT r.name AS role_name, r.gender_type,
+                       SUM(dv.sanctioned_strength) AS sanctioned,
+                       SUM(dv.filled_strength) AS filled,
+                       SUM(dv.vacancy_count) AS vacancy
+                  FROM prison_designation_vacancy dv
+                  JOIN prison_role r ON r.id = dv.role_id
+                  JOIN prison_jail j ON j.id = dv.prison_id
+                 WHERE dv.role_id IN %s
+            """
+            params = [CANONICAL_IDS]
+            if hierarchy_filter:
+                sql += " AND j.hierarchy_type = %s"
+                params.append(hierarchy_filter)
+            sql += " GROUP BY r.id, r.name, r.gender_type ORDER BY vacancy DESC"
+            request.env.cr.execute(sql, params)
+            return [
+                {
+                    'role_name':  row[0],
+                    'gender_type': row[1],
+                    'sanctioned': int(row[2] or 0),
+                    'filled':     int(row[3] or 0),
+                    'vacancy':    int(row[4] or 0),
+                }
+                for row in request.env.cr.fetchall()
+            ]
 
         return self._ok({
             'prison_summary': {
@@ -191,7 +196,9 @@ class VacancyApiController(http.Controller):
                 'total_vacancy':    total_vacancy,
                 'prison_count':     prison_count,
             },
-            'role_summary': role_summary,
+            'role_summary':       _role_rows(),
+            'role_summary_men':   _role_rows('general'),
+            'role_summary_women': _role_rows('women'),
         })
 
     # ── POST /api/transfer/check-availability (backward-compat) ──────────────
