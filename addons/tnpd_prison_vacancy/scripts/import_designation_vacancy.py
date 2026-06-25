@@ -56,13 +56,28 @@ def _find_prison(env, prison_name, prison_type, parent_name):
     Jail = env['prison.jail'].sudo()
     name = PRISON_NAME_OVERRIDES.get(prison_name.strip(), prison_name.strip())
 
-    # Exact match first
-    jail = Jail.search([('name', '=', name), ('active', '=', True)], limit=1)
+    base_domain = [('active', '=', True)]
+    type_domain = [('jail_type', '=', prison_type)] if prison_type else []
+
+    # Exact match with type first (most specific)
+    if prison_type:
+        jail = Jail.search([('name', '=', name)] + type_domain + base_domain, limit=1)
+        if jail:
+            return jail
+
+    # Exact match without type
+    jail = Jail.search([('name', '=', name)] + base_domain, limit=1)
     if jail:
         return jail
 
-    # Case-insensitive match
-    jail = Jail.search([('name', 'ilike', name), ('active', '=', True)], limit=1)
+    # Case-insensitive match with type
+    if prison_type:
+        jail = Jail.search([('name', 'ilike', name)] + type_domain + base_domain, limit=1)
+        if jail:
+            return jail
+
+    # Case-insensitive match without type (last resort)
+    jail = Jail.search([('name', 'ilike', name)] + base_domain, limit=1)
     if jail:
         return jail
 
