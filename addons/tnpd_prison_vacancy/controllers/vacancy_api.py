@@ -48,6 +48,20 @@ from odoo.http import request
 _logger = logging.getLogger(__name__)
 
 
+_CANONICAL_ROLE_NAMES = [
+    'Jailer', 'Deputy Jailer', 'Assistant Jailer',
+    'Chief Head Warder', 'Grade I Warder', 'Grade II Warder',
+]
+
+
+def _clear_canonical_roles(env):
+    """Delete all designation.vacancy records for the 6 canonical executive roles."""
+    roles = env['prison.role'].sudo().search([('name', 'in', _CANONICAL_ROLE_NAMES)])
+    recs = env['prison.designation.vacancy'].sudo().search([('role_id', 'in', roles.ids)])
+    recs.unlink()
+    env.cr.commit()
+
+
 class VacancyApiController(http.Controller):
 
     # ── Helpers ───────────────────────────────────────────────────────────────
@@ -406,8 +420,12 @@ class VacancyApiController(http.Controller):
         if not csv_text:
             return self._err('"csv" field with CSV content is required.')
 
+        clear_roles = body.get('clear_roles', False)
+
         try:
             from ..scripts.import_designation_vacancy import import_from_csv_string
+            if clear_roles:
+                _clear_canonical_roles(request.env)
             result = import_from_csv_string(request.env, csv_text)
         except Exception as e:
             _logger.exception('CSV import failed')
