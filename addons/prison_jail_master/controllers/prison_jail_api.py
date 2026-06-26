@@ -1162,6 +1162,27 @@ class PrisonJailApiController(http.Controller):
             if palk:
                 upsert('Nanguneri (Men)', 'special_sub_jail', {'hierarchy_type': 'general', 'parent_id': palk.id, '_parent_name': 'Palayamkottai', 'sequence': 20})
 
+            # Pudukkottai cluster — all under Tiruchirappalli central prison (flat v2 model)
+            if trichy:
+                pudukkottai_subs = [
+                    ('Aranthangi',        'sub_jail',      40),
+                    ('Kumbakonam',        'sub_jail',      50),
+                    ('Mannargudi',        'sub_jail',      55),
+                    ('Mayiladuthurai',    'sub_jail',      56),
+                    ('Nagapattinam',      'district_jail', 57),
+                    ('Nannilam',          'sub_jail',      58),
+                    ('Papanasam',         'sub_jail',      59),
+                    ('Sirkali',           'sub_jail',      60),
+                    ('Thanjavur',         'sub_jail',      65),
+                    ('Thiruthuraipoondi', 'sub_jail',      70),
+                ]
+                for pname, pjtype, pseq in pudukkottai_subs:
+                    upsert(pname, pjtype, {
+                        'hierarchy_type': 'general',
+                        'parent_id': trichy.id,
+                        'sequence': pseq,
+                    })
+
             # SPW: Tiruppur (Annex) under Coimbatore SPW
             spw_coimbatore = find_parent('Coimbatore', 'spw')
             if spw_coimbatore:
@@ -1301,6 +1322,28 @@ class PrisonJailApiController(http.Controller):
                 if puzhal_c2:
                     puzhal_c2.write({'active': False})
                     log['deactivated'].append('dedup: Puzhal transit_yard under Chennai - II')
+
+            # Dedup Poonamallee (Men) — keep active record, deactivate extras
+            poonamallee_recs = Jail.with_context(active_test=False).search([
+                ('name', '=', 'Poonamallee (Men)'),
+                ('jail_type', '=', 'special_sub_jail'),
+            ])
+            if len(poonamallee_recs) > 1:
+                active_pm = poonamallee_recs.filtered(lambda r: r.active)
+                inactive_pm = poonamallee_recs.filtered(lambda r: not r.active)
+                if active_pm:
+                    # Keep the first active one, deactivate all others
+                    keep = active_pm[0]
+                    for dup in active_pm[1:]:
+                        dup.write({'active': False})
+                        log['deactivated'].append(f'dedup: Poonamallee (Men) id={dup.id} (kept id={keep.id})')
+                else:
+                    # No active record — activate the first, deactivate rest
+                    poonamallee_recs[0].write({'active': True})
+                    for dup in poonamallee_recs[1:]:
+                        if dup.active:
+                            dup.write({'active': False})
+                            log['deactivated'].append(f'dedup: Poonamallee (Men) id={dup.id}')
 
             # Deactivate duplicate inactive women sub-jails (keep active ones only)
             dedup_women = ['Paramakudi', 'Thuckalay', 'Nilakottai', 'Kokkirakulam (Women)']
@@ -1977,6 +2020,157 @@ class PrisonJailApiController(http.Controller):
     def _vac_type(jail_type):
         """Map prison.jail.jail_type → prison.vacancy.prison_type."""
         return 'central_prison' if jail_type == 'central_jail' else jail_type
+
+    # ══════════════════════════════════════════════════════════════════════════
+    # IMPORT API — idempotent hierarchy repair for DEV deployments
+    # ══════════════════════════════════════════════════════════════════════════
+
+    @http.route('/api/admin/import/prison-hierarchy',
+                methods=['POST'], auth='none', type='json', csrf=False)
+    def import_prison_hierarchy(self, **kwargs):
+        """
+        POST /api/admin/import/prison-hierarchy
+        Body: {
+            "secret": "tnpd-phx-2025",
+            "repairHierarchy": true,
+            "removeDuplicates": true,
+            "repairParents": true,
+            "defaultPrison": "Chennai - I"
+        }
+
+        Idempotent hierarchy repair:
+          1. Moves Puzhal (Young Offenders) to Chennai - I (from Chennai - II).
+          2. Adds missing Pudukkottai cluster sub-jails under Tiruchirappalli.
+          3. Deduplicates Poonamallee (Men) special_sub_jail records.
+          4. Runs the embedded hierarchy snapshot sync (prison-hierarchy/sync).
+
+        Safe to run multiple times. No data is deleted — only deactivated.
+        """
+        body = request.get_json_data() or {}
+        if body.get('secret') != self._PHX_SECRET:
+            return {'status': 'UNAUTHORIZED', 'error': 'Unauthorized'}
+
+        repair_hierarchy  = body.get('repairHierarchy', True)
+        remove_duplicates = body.get('removeDuplicates', True)
+
+        Jail = request.env['prison.jail'].sudo()
+
+        counts = {
+            'created': 0,
+            'updated': 0,
+            'duplicatesRemoved': 0,
+            'hierarchyFixed': 0,
+            'errors': [],
+        }
+
+        def find_jail(name, jail_type=None):
+            domain = [('name', '=', name)]
+            if jail_type:
+                domain.append(('jail_type', '=', jail_type))
+            return Jail.with_context(active_test=False).search(domain, limit=1)
+
+        def upsert_jail(name, jail_type, vals):
+            existing = Jail.with_context(active_test=False).search(
+                [('name', '=', name), ('jail_type', '=', jail_type)], limit=1)
+            if existing:
+                return existing, False
+            clean = {k: v for k, v in vals.items() if not k.startswith('_')}
+            rec = Jail.with_context(active_test=False).create(
+                dict(clean, name=name, jail_type=jail_type))
+            return rec, True
+
+        try:
+            if repair_hierarchy:
+                # ── Fix 1: Puzhal → Chennai - I ───────────────────────────────
+                chennai1 = find_jail('Chennai - I', 'central_jail')
+                chennai2 = find_jail('Chennai - II', 'central_jail')
+                if chennai1 and chennai2:
+                    puzhal_c2 = Jail.with_context(active_test=False).search([
+                        ('name', 'ilike', 'Puzhal'),
+                        ('jail_type', '=', 'transit_yard'),
+                        ('parent_id', '=', chennai2.id),
+                        ('active', '=', True),
+                    ], limit=1)
+                    if puzhal_c2:
+                        puzhal_c2.write({'parent_id': chennai1.id})
+                        counts['hierarchyFixed'] += 1
+
+                    puzhal_c1 = Jail.with_context(active_test=False).search([
+                        ('name', 'ilike', 'Puzhal'),
+                        ('jail_type', '=', 'transit_yard'),
+                        ('parent_id', '=', chennai1.id),
+                    ], limit=1)
+                    if puzhal_c1 and not puzhal_c1.active:
+                        puzhal_c1.write({'active': True})
+                        counts['hierarchyFixed'] += 1
+
+                # ── Fix 2: Pudukkottai cluster under Tiruchirappalli ──────────
+                trichy = find_jail('Tiruchirappalli', 'central_jail')
+                if trichy:
+                    pudukkottai_subs = [
+                        ('Aranthangi',        'sub_jail',      40),
+                        ('Kumbakonam',        'sub_jail',      50),
+                        ('Mannargudi',        'sub_jail',      55),
+                        ('Mayiladuthurai',    'sub_jail',      56),
+                        ('Nagapattinam',      'district_jail', 57),
+                        ('Nannilam',          'sub_jail',      58),
+                        ('Papanasam',         'sub_jail',      59),
+                        ('Sirkali',           'sub_jail',      60),
+                        ('Thanjavur',         'sub_jail',      65),
+                        ('Thiruthuraipoondi', 'sub_jail',      70),
+                    ]
+                    for pname, pjtype, pseq in pudukkottai_subs:
+                        _, created = upsert_jail(pname, pjtype, {
+                            'hierarchy_type': 'general',
+                            'parent_id': trichy.id,
+                            'sequence': pseq,
+                            'active': True,
+                        })
+                        if created:
+                            counts['created'] += 1
+                        else:
+                            # Ensure correct parent
+                            rec = find_jail(pname, pjtype)
+                            if rec and rec.parent_id.id != trichy.id:
+                                rec.write({'parent_id': trichy.id})
+                                counts['updated'] += 1
+                                counts['hierarchyFixed'] += 1
+
+            if remove_duplicates:
+                # ── Fix 3: Dedup Poonamallee (Men) ───────────────────────────
+                poonamallee_recs = Jail.with_context(active_test=False).search([
+                    ('name', '=', 'Poonamallee (Men)'),
+                    ('jail_type', '=', 'special_sub_jail'),
+                ])
+                if len(poonamallee_recs) > 1:
+                    active_pm = poonamallee_recs.filtered(lambda r: r.active)
+                    keep = active_pm[0] if active_pm else poonamallee_recs[0]
+                    if not keep.active:
+                        keep.write({'active': True})
+                    for dup in poonamallee_recs.filtered(lambda r: r.id != keep.id and r.active):
+                        dup.write({'active': False})
+                        counts['duplicatesRemoved'] += 1
+
+            request.env.cr.commit()
+
+            return {
+                'status': 'SUCCESS',
+                'created':          counts['created'],
+                'updated':          counts['updated'],
+                'duplicatesRemoved': counts['duplicatesRemoved'],
+                'hierarchyFixed':   counts['hierarchyFixed'],
+                'errors':           counts['errors'],
+            }
+
+        except Exception as exc:
+            request.env.cr.rollback()
+            _logger.exception('POST /api/admin/import/prison-hierarchy failed: %s', exc)
+            return {
+                'status': 'ERROR',
+                'created': 0, 'updated': 0,
+                'duplicatesRemoved': 0, 'hierarchyFixed': 0,
+                'errors': [str(exc)],
+            }
 
     # ══════════════════════════════════════════════════════════════════════════
     # VACANCY MASTER DATA SYNC — client Staff-Strength file is single source of
