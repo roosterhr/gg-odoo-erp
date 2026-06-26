@@ -2292,6 +2292,206 @@ class PrisonJailApiController(http.Controller):
             }
 
     # ══════════════════════════════════════════════════════════════════════════
+    # SYNC DEV → LOCAL CANONICAL STRUCTURE
+    # ══════════════════════════════════════════════════════════════════════════
+
+    _LOCAL_CANONICAL = {
+        'Chennai - I': [
+            'Chengalpattu', 'Kancheepuram', 'Ponneri', 'Poonamallee (Men)',
+            'Puzhal (Young Offenders Correctional Facility)', 'Saidapet',
+            'Tiruthani', 'Tiruvallur',
+        ],
+        'Chennai - II': [],
+        'Coimbatore': [
+            'Avinashi', 'Bhavani', 'Coonoor', 'Dharapuram', 'Erode',
+            'Erode @ Gobichettipalayam', 'Gudalur', 'Ooty', 'Palladam',
+            'Perundhurai', 'Pollachi', 'Sathiamangalam', 'Singanallur',
+            'Tiruppur', 'Udumalaipettai',
+        ],
+        'Cuddalore': [
+            'Chidambaram', 'Gingee', 'Kallakurichi', 'Panruti', 'Thindivanam',
+            'Thirukovilur', 'Ulundurpet', 'Villupuram', 'Virudhachalam',
+        ],
+        'Madurai': [
+            'Aruppukottai', 'Dindigul', 'Kodaikanal', 'Melur', 'Mudukulathur',
+            'Palani', 'Periakulam', 'Purasaraidaiudaippu', 'Ramanathapuram',
+            'Sivagangai', 'Srivilliputhur', 'Theni', 'Thirumangalam',
+            'Tiruppathur', 'Usilampatti', 'Uthamapalayam', 'Vedasandur',
+            'Virudhunagar',
+        ],
+        'Palayamkottai': [
+            'Ambasamuthiram', 'Kanniyakumari @ Nagercoil', 'Kovilpatti',
+            'Kuzhithurai', 'Nanguneri (Men)', 'Sankarankoil', 'Srivaikundam',
+            'Tenkasi', 'Thoothukudi @ Perurani',
+        ],
+        'Salem': [
+            'Dharmapuri', 'Harur', 'Hosur', 'Krishnagiri', 'Namakkal',
+            'Omalur', 'Salem', 'Sankagiri', 'Thiruchengodu', 'Uthangarai',
+        ],
+        'Tiruchirappalli': [
+            'Ariyalur', 'Jeyankondam', 'Karur', 'Kulithalai', 'Lalgudi',
+            'Perambalur', 'Thuraiyur',
+        ],
+        'Vellore': [
+            'Ambur', 'Arakkonam', 'Chengam', 'Cheyyar', 'Gudiyatham',
+            'Polur', 'Tirupathur', 'Tiruvannamalai', 'Vandavasi', 'Vaniyambadi',
+            'Vellore (Annex)', 'Walajah',
+        ],
+    }
+
+    # DEV name → LOCAL canonical name (None = just deactivate)
+    _DEV_RENAMES = {
+        'D.J. Erode @ Gobichettipalayam': 'Erode @ Gobichettipalayam',
+        'D.J. Tiruppur':                  'Tiruppur',
+        'D.J. Villuppuram':               'Villupuram',
+        'D.J. Villupuram':                'Villupuram',
+        'D.J. Kanniyakumari @ Nagercoil': 'Kanniyakumari @ Nagercoil',
+        'D.J. Dharmapuri':                'Dharmapuri',
+        'D.J. Dindigul':                  None,
+        'D.J. Ramanathapuram':            None,
+        'D.J. Theni':                     None,
+        'D.J. Virudhunagar':              None,
+    }
+
+    # district_jail records incorrectly surfacing as district_parents — deactivate
+    _EXTRA_DISTRICT_PARENTS = [
+        'Cuddalore District', 'Tiruchirappalli District', 'Namakkal District',
+        'Thanjavur District', 'Tiruppur', 'Dharmapuri', 'Mayiladuthurai District',
+        'Thoothukudi District', 'Thiruvarur District',
+    ]
+
+    @http.route(
+        '/api/admin/sync-local-canonical',
+        type='json', auth='none', methods=['POST'], csrf=False,
+    )
+    def sync_local_canonical(self, **kwargs):
+        """
+        POST /api/admin/sync-local-canonical
+        Body: { "secret": "tnpd-phx-2025" }
+
+        Makes DEV hierarchy match LOCAL canonical structure.
+        Idempotent — safe to run multiple times.
+        """
+        body = request.get_json_data() or {}
+        if body.get('secret') != self._PHX_SECRET:
+            return {'status': 'UNAUTHORIZED', 'error': 'Unauthorized'}
+
+        Jail = request.env['prison.jail'].sudo()
+        log = {'renamed': [], 'deactivated': [], 'fixed': [], 'errors': []}
+
+        try:
+            # ── Step 1: Rename D.J. records to canonical names ────────────────
+            for dev_name, canonical_name in self._DEV_RENAMES.items():
+                dev_recs = Jail.with_context(active_test=False).search(
+                    [('name', '=', dev_name), ('active', '=', True)])
+                for rec in dev_recs:
+                    if canonical_name is None:
+                        rec.write({'active': False})
+                        log['deactivated'].append(f'extra DJ: {dev_name} id={rec.id}')
+                    else:
+                        existing = Jail.search([('name', '=', canonical_name),
+                                                ('parent_id', '=', rec.parent_id.id)])
+                        if existing:
+                            rec.write({'active': False})
+                            log['deactivated'].append(
+                                f'dup DJ: {dev_name} id={rec.id} (kept {existing.id})')
+                        else:
+                            rec.write({'name': canonical_name})
+                            log['renamed'].append(f'{dev_name} -> {canonical_name} id={rec.id}')
+
+            # ── Step 2: Per central prison — deactivate non-canonical children ─
+            for central_name, canonical_children in self._LOCAL_CANONICAL.items():
+                central = Jail.search([('name', '=', central_name),
+                                       ('jail_type', '=', 'central_jail')], limit=1)
+                if not central:
+                    log['errors'].append(f'Central not found: {central_name}')
+                    continue
+
+                canonical_set = {c.lower() for c in canonical_children}
+                for child in Jail.search([('parent_id', '=', central.id),
+                                          ('active', '=', True)]):
+                    if child.name.lower() not in canonical_set:
+                        child.write({'active': False})
+                        log['deactivated'].append(
+                            f'non-canonical: {child.name} (under {central_name})')
+
+                # Reactivate any canonical children that were accidentally deactivated
+                for cname in canonical_children:
+                    existing = Jail.with_context(active_test=False).search(
+                        [('name', '=', cname), ('parent_id', '=', central.id)], limit=1)
+                    if existing and not existing.active:
+                        existing.write({'active': True})
+                        log['fixed'].append(f'reactivated: {cname}')
+                    elif not existing:
+                        log['errors'].append(f'Missing in DEV: {cname} under {central_name}')
+
+            # ── Step 3: Fix Puzhal → Chennai-I ───────────────────────────────
+            chennai1 = Jail.search([('name', '=', 'Chennai - I'),
+                                    ('jail_type', '=', 'central_jail')], limit=1)
+            if chennai1:
+                for pz in Jail.with_context(active_test=False).search([
+                    ('name', 'ilike', 'Puzhal'), ('jail_type', '=', 'transit_yard'),
+                    ('parent_id', '!=', chennai1.id), ('active', '=', True),
+                ]):
+                    pz.write({'parent_id': chennai1.id})
+                    log['fixed'].append(f'Puzhal moved to Chennai-I id={pz.id}')
+
+            # ── Step 4: Deactivate extra district_parents ─────────────────────
+            for dname in self._EXTRA_DISTRICT_PARENTS:
+                for rec in Jail.with_context(active_test=False).search(
+                        [('name', '=', dname), ('active', '=', True)]):
+                    child_count = Jail.search_count([('parent_id', '=', rec.id)])
+                    if child_count == 0:
+                        rec.write({'active': False})
+                        log['deactivated'].append(f'extra district: {dname} id={rec.id}')
+                    else:
+                        # Re-parent children to the matching central prison, then deactivate
+                        parent_central = Jail.search([
+                            ('jail_type', '=', 'central_jail'),
+                            ('name', 'in', list(self._LOCAL_CANONICAL.keys())),
+                        ], limit=1)
+                        children = Jail.search([('parent_id', '=', rec.id)])
+                        # Move children to the central prison they belong under
+                        for child in children:
+                            # Find the right central prison from canonical data
+                            for cp_name, cp_children in self._LOCAL_CANONICAL.items():
+                                if child.name in cp_children:
+                                    cp = Jail.search([('name', '=', cp_name),
+                                                      ('jail_type', '=', 'central_jail')], limit=1)
+                                    if cp:
+                                        child.write({'parent_id': cp.id})
+                                        log['fixed'].append(
+                                            f'reparented {child.name} to {cp_name}')
+                                    break
+                        rec.write({'active': False})
+                        log['deactivated'].append(
+                            f'extra district (reparented children): {dname} id={rec.id}')
+
+            # ── Step 5: Dedup Poonamallee (Men) ──────────────────────────────
+            pm_recs = Jail.with_context(active_test=False).search(
+                [('name', '=', 'Poonamallee (Men)'), ('active', '=', True)])
+            if len(pm_recs) > 1:
+                keep = pm_recs[0]
+                for dup in pm_recs[1:]:
+                    dup.write({'active': False})
+                    log['deactivated'].append(f'dup Poonamallee id={dup.id}')
+
+            request.env.cr.commit()
+            return {
+                'status':      'SUCCESS',
+                'renamed':     len(log['renamed']),
+                'deactivated': len(log['deactivated']),
+                'fixed':       len(log['fixed']),
+                'errors':      log['errors'],
+                'detail':      log,
+            }
+
+        except Exception as exc:
+            request.env.cr.rollback()
+            _logger.exception('POST /api/admin/sync-local-canonical failed: %s', exc)
+            return {'status': 'ERROR', 'error': str(exc)}
+
+    # ══════════════════════════════════════════════════════════════════════════
     # VACANCY MASTER DATA SYNC — client Staff-Strength file is single source of
     # truth. Upserts roles + per-role designation vacancy + per-prison aggregate,
     # prunes stale designations on matched prisons, and reports everything.
