@@ -2125,6 +2125,27 @@ class PrisonJailApiController(http.Controller):
             return rec, True
 
         try:
+            # ── Always: ensure canonical central jails are active ────────────
+            CANONICAL_CENTRAL = ['Chennai - I', 'Chennai - II', 'Coimbatore',
+                                  'Cuddalore', 'Madurai', 'Palayamkottai',
+                                  'Salem', 'Tiruchirappalli', 'Vellore']
+            for cname in CANONICAL_CENTRAL:
+                # Find the best candidate: active, or the one with children/data
+                recs = Jail.with_context(active_test=False).search([
+                    ('name', '=', cname), ('jail_type', '=', 'central_jail')
+                ], order='id asc')
+                if not recs:
+                    continue
+                # Pick the one with the most children; if tie, pick lowest id
+                best = max(recs, key=lambda r: len(r.child_ids))
+                if not best.active:
+                    best.write({'active': True})
+                    counts['hierarchyFixed'] += 1
+                # Deactivate all others that are still active
+                for r in recs.filtered(lambda x: x.id != best.id and x.active):
+                    r.write({'active': False})
+                    counts['duplicatesRemoved'] += 1
+
             if repair_hierarchy:
                 # ── Fix 1: Puzhal → Chennai - I ───────────────────────────────
                 chennai1 = find_jail('Chennai - I', 'central_jail')
@@ -2222,7 +2243,7 @@ class PrisonJailApiController(http.Controller):
                                     counts['hierarchyFixed'] += 1
 
             if remove_duplicates:
-                # ── Fix 3: Dedup Poonamallee (Men) ───────────────────────────
+                # ── Fix 3b: Dedup Poonamallee (Men) ──────────────────────────
                 poonamallee_recs = Jail.with_context(active_test=False).search([
                     ('name', '=', 'Poonamallee (Men)'),
                     ('jail_type', '=', 'special_sub_jail'),
