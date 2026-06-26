@@ -551,7 +551,6 @@ class PrisonJailApiController(http.Controller):
 
             child_domain_base = [
                 ('active', '=', True),
-                ('jail_type', '!=', 'district_jail'),  # district_jails are legacy nodes, excluded from flat hierarchy
             ]
             if not include_closed:
                 child_domain_base.append(('is_closed', '=', False))
@@ -2107,6 +2106,38 @@ class PrisonJailApiController(http.Controller):
                 # ── Fix 2: Pudukkottai cluster under Tiruchirappalli ──────────
                 trichy = find_jail('Tiruchirappalli', 'central_jail')
                 if trichy:
+                    # Fix Pudukkottai district_jail itself — must be under Tiruchirappalli
+                    pudukkottai_dj = Jail.with_context(active_test=False).search([
+                        ('name', '=', 'Pudukkottai'),
+                        ('jail_type', '=', 'district_jail'),
+                        ('active', '=', True),
+                    ], limit=1)
+                    if pudukkottai_dj:
+                        updates = {}
+                        if not pudukkottai_dj.parent_id or pudukkottai_dj.parent_id.id != trichy.id:
+                            updates['parent_id'] = trichy.id
+                        if updates:
+                            pudukkottai_dj.write(updates)
+                            counts['updated'] += 1
+                            counts['hierarchyFixed'] += 1
+
+                    # Re-parent Thiruthuraipoondi directly to Tiruchirappalli
+                    # (it may be under Pudukkottai district_jail — flatten to 2-level)
+                    thiruth = Jail.with_context(active_test=False).search([
+                        ('name', '=', 'Thiruthuraipoondi'),
+                        ('jail_type', '=', 'sub_jail'),
+                    ], order='active desc', limit=1)
+                    if thiruth:
+                        updates = {}
+                        if thiruth.parent_id.id != trichy.id:
+                            updates['parent_id'] = trichy.id
+                        if not thiruth.active:
+                            updates['active'] = True
+                        if updates:
+                            thiruth.write(updates)
+                            counts['updated'] += 1
+                            counts['hierarchyFixed'] += 1
+
                     pudukkottai_subs = [
                         ('Aranthangi',        'sub_jail',      40),
                         ('Kumbakonam',        'sub_jail',      50),
@@ -2129,12 +2160,17 @@ class PrisonJailApiController(http.Controller):
                         if created:
                             counts['created'] += 1
                         else:
-                            # Ensure correct parent
                             rec = find_jail(pname, pjtype)
-                            if rec and rec.parent_id.id != trichy.id:
-                                rec.write({'parent_id': trichy.id})
-                                counts['updated'] += 1
-                                counts['hierarchyFixed'] += 1
+                            if rec:
+                                updates = {}
+                                if rec.parent_id.id != trichy.id:
+                                    updates['parent_id'] = trichy.id
+                                if not rec.active:
+                                    updates['active'] = True
+                                if updates:
+                                    rec.write(updates)
+                                    counts['updated'] += 1
+                                    counts['hierarchyFixed'] += 1
 
             if remove_duplicates:
                 # ── Fix 3: Dedup Poonamallee (Men) ───────────────────────────
@@ -2148,6 +2184,19 @@ class PrisonJailApiController(http.Controller):
                     if not keep.active:
                         keep.write({'active': True})
                     for dup in poonamallee_recs.filtered(lambda r: r.id != keep.id and r.active):
+                        dup.write({'active': False})
+                        counts['duplicatesRemoved'] += 1
+
+                # ── Fix 4: Dedup Thiruthuraipoondi ────────────────────────────
+                thiruth_recs = Jail.with_context(active_test=False).search([
+                    ('name', '=', 'Thiruthuraipoondi'),
+                    ('jail_type', '=', 'sub_jail'),
+                    ('active', '=', True),
+                ])
+                if len(thiruth_recs) > 1:
+                    # Keep the one with the highest sequence or first found; deactivate rest
+                    keep_t = thiruth_recs[0]
+                    for dup in thiruth_recs[1:]:
                         dup.write({'active': False})
                         counts['duplicatesRemoved'] += 1
 
