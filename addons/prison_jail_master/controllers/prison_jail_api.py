@@ -555,23 +555,28 @@ class PrisonJailApiController(http.Controller):
             if not include_closed:
                 child_domain_base.append(('is_closed', '=', False))
 
-            general_data = []
-            women_data   = []
+            general_data    = []
+            women_data      = []
+            district_parents = []
 
-            for parent in all_parents:
+            # Track district_jails that have active children — they become
+            # their own parent sections in the dropdown.
+            district_jails_with_children = set()
+
+            def _build_parent(parent):
                 p_data = self._format_jail(parent)
-
-                children = Jail.search(
-                    [('parent_id', '=', parent.id)] + child_domain_base,
-                    order='sequence, name',
-                )
+                # Exclude district_jails that are shown as separate parents
+                # from the central prison's flat children list.
+                child_domain = [('parent_id', '=', parent.id)] + child_domain_base
+                children = Jail.search(child_domain, order='sequence, name')
                 children_formatted = []
                 for c in children:
+                    if c.id in district_jails_with_children:
+                        continue  # shown as its own parent section
                     c_data = self._format_jail(c)
                     c_data.update(_strength(c.id))
                     children_formatted.append(c_data)
 
-                # Parent totals: aggregate all children
                 if children_formatted:
                     agg_s = sum(c['sanctioned_strength'] for c in children_formatted)
                     agg_f = sum(c['occupied_count']      for c in children_formatted)
@@ -586,15 +591,55 @@ class PrisonJailApiController(http.Controller):
                     p_data.update(_strength(parent.id))
 
                 p_data['children'] = children_formatted
-
-                # backward compat keys
                 p_data['district_jails'] = [
                     c for c in children_formatted if c['jail_type'] == 'district_jail'
                 ]
                 p_data['direct_sub_jails'] = [
                     c for c in children_formatted if c['jail_type'] == 'sub_jail'
                 ]
+                return p_data
 
+            # Pass 1: find district_jails with active children → promote to parents
+            all_dj = Jail.search(
+                [('jail_type', '=', 'district_jail'), ('active', '=', True)],
+                order='sequence, name',
+            )
+            for dj in all_dj:
+                child_count = Jail.search_count(
+                    [('parent_id', '=', dj.id)] + child_domain_base)
+                if child_count > 0:
+                    district_jails_with_children.add(dj.id)
+
+            # Pass 2: build district parent entries with their own children
+            for dj in all_dj:
+                if dj.id not in district_jails_with_children:
+                    continue
+                dj_data = self._format_jail(dj)
+                dj_children = Jail.search(
+                    [('parent_id', '=', dj.id)] + child_domain_base,
+                    order='sequence, name',
+                )
+                dj_children_fmt = []
+                for c in dj_children:
+                    c_data = self._format_jail(c)
+                    c_data.update(_strength(c.id))
+                    dj_children_fmt.append(c_data)
+
+                if dj_children_fmt:
+                    dj_data.update({
+                        'sanctioned_strength': sum(c['sanctioned_strength'] for c in dj_children_fmt),
+                        'occupied_count':      sum(c['occupied_count']      for c in dj_children_fmt),
+                        'vacancy_count':       sum(c['vacancy_count']       for c in dj_children_fmt),
+                        'vacancy_available':   sum(c['vacancy_count']       for c in dj_children_fmt) > 0,
+                    })
+                else:
+                    dj_data.update(_strength(dj.id))
+                dj_data['children'] = dj_children_fmt
+                district_parents.append(dj_data)
+
+            # Pass 3: build central / SPW parents
+            for parent in all_parents:
+                p_data = _build_parent(parent)
                 if parent.hierarchy_type == 'women':
                     women_data.append(p_data)
                 else:
@@ -609,12 +654,13 @@ class PrisonJailApiController(http.Controller):
                 'stats': {
                     'central_prisons':  sum(1 for p in all_parents if p.jail_type == 'central_jail'),
                     'spw':              sum(1 for p in all_parents if p.jail_type == 'spw'),
+                    'district_parents': len(district_parents),
                     'total_children':   total_children,
                     'total':            len(all_parents) + total_children,
                 },
-                'data':           general_data,
-                'women_prisons':  women_data,
-                # backward compat key
+                'data':            general_data,
+                'district_parents': district_parents,
+                'women_prisons':   women_data,
                 'special_women_prisons': women_data,
             })
 
@@ -2121,23 +2167,24 @@ class PrisonJailApiController(http.Controller):
                             counts['updated'] += 1
                             counts['hierarchyFixed'] += 1
 
-                    # Re-parent Thiruthuraipoondi directly to Tiruchirappalli
-                    # (it may be under Pudukkottai district_jail — flatten to 2-level)
-                    thiruth = Jail.with_context(active_test=False).search([
-                        ('name', '=', 'Thiruthuraipoondi'),
-                        ('jail_type', '=', 'sub_jail'),
-                    ], order='active desc', limit=1)
-                    if thiruth:
-                        updates = {}
-                        if thiruth.parent_id.id != trichy.id:
-                            updates['parent_id'] = trichy.id
-                        if not thiruth.active:
-                            updates['active'] = True
-                        if updates:
-                            thiruth.write(updates)
-                            counts['updated'] += 1
-                            counts['hierarchyFixed'] += 1
+                    # Thiruthuraipoondi belongs under Pudukkottai district_jail
+                    if pudukkottai_dj:
+                        thiruth = Jail.with_context(active_test=False).search([
+                            ('name', '=', 'Thiruthuraipoondi'),
+                            ('jail_type', '=', 'sub_jail'),
+                        ], order='active desc', limit=1)
+                        if thiruth:
+                            updates = {}
+                            if thiruth.parent_id.id != pudukkottai_dj.id:
+                                updates['parent_id'] = pudukkottai_dj.id
+                            if not thiruth.active:
+                                updates['active'] = True
+                            if updates:
+                                thiruth.write(updates)
+                                counts['updated'] += 1
+                                counts['hierarchyFixed'] += 1
 
+                    # Sub-jails belong under Pudukkottai district_jail (not directly under Tiruchirappalli)
                     pudukkottai_subs = [
                         ('Aranthangi',        'sub_jail',      40),
                         ('Kumbakonam',        'sub_jail',      50),
@@ -2150,10 +2197,12 @@ class PrisonJailApiController(http.Controller):
                         ('Thanjavur',         'sub_jail',      65),
                         ('Thiruthuraipoondi', 'sub_jail',      70),
                     ]
+                    # Use Pudukkottai district_jail as the direct parent
+                    target_parent = pudukkottai_dj if pudukkottai_dj else trichy
                     for pname, pjtype, pseq in pudukkottai_subs:
                         _, created = upsert_jail(pname, pjtype, {
                             'hierarchy_type': 'general',
-                            'parent_id': trichy.id,
+                            'parent_id': target_parent.id,
                             'sequence': pseq,
                             'active': True,
                         })
@@ -2163,8 +2212,8 @@ class PrisonJailApiController(http.Controller):
                             rec = find_jail(pname, pjtype)
                             if rec:
                                 updates = {}
-                                if rec.parent_id.id != trichy.id:
-                                    updates['parent_id'] = trichy.id
+                                if rec.parent_id.id != target_parent.id:
+                                    updates['parent_id'] = target_parent.id
                                 if not rec.active:
                                     updates['active'] = True
                                 if updates:

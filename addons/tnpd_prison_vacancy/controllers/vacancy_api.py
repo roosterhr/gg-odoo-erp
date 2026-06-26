@@ -140,10 +140,29 @@ class VacancyApiController(http.Controller):
             domain.append(('role_id', '=', role_id))
 
         recs = request.env['prison.designation.vacancy'].sudo().search(domain)
+        records = [r.as_api_dict() for r in recs]
+
+        # Fallback: when no designation records exist, return aggregate from prison.vacancy
+        if not records:
+            pv = request.env['prison.vacancy'].sudo().search(
+                [('prison_id', '=', prison_id)], limit=1)
+            if pv and pv.sanctioned_strength:
+                jail = request.env['prison.jail'].sudo().browse(prison_id)
+                records = [{
+                    'role_id':            0,
+                    'role_name':          'Total Strength',
+                    'prison_id':          prison_id,
+                    'prison_name':        jail.name if jail.exists() else '',
+                    'sanctioned_strength': pv.sanctioned_strength,
+                    'filled_strength':    pv.occupied_count,
+                    'vacancy_count':      pv.vacancy_count,
+                    'gender_type':        'both',
+                }]
+
         return self._ok({
             'prison_id': prison_id,
-            'records': [r.as_api_dict() for r in recs],
-            'total': len(recs),
+            'records': records,
+            'total': len(records),
         })
 
     # ── GET /api/vacancy/dashboard ────────────────────────────────────────────
