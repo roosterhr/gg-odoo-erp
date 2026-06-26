@@ -1656,6 +1656,14 @@ class PrisonJailApiController(http.Controller):
                 matches = dev_by_key.get(k, [])
 
                 if not matches:
+                    # Skip orphan child records: child types require a parent.
+                    # Inactive historical records with no parent should not be
+                    # created in DEV — they'd fail the model constraint.
+                    if jtype not in PARENT_TYPES and not expected_parent:
+                        report.setdefault('skipped_orphans', []).append(
+                            {'record': name, 'jail_type': jtype,
+                             'reason': 'no_parent_resolved'})
+                        continue
                     # CREATE missing record
                     if not dry_run:
                         vals = {
