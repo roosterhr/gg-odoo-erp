@@ -1622,6 +1622,16 @@ class PrisonJailApiController(http.Controller):
                 active_one = cands.filtered(lambda c: c.active)
                 return (active_one[0] if active_one else cands[0])
 
+            # Pre-compute canonical active state per key: active if ANY ref is
+            # active or closed (so an inactive duplicate doesn't clobber a good one).
+            ref_active_by_key = {}
+            for _r in ref_records:
+                _k = key(_r.get('name'), _r.get('jail_type'),
+                         _r.get('hierarchy_type') or 'general')
+                _rc = bool(_r.get('is_closed'))
+                _ra = True if _rc else bool(_r.get('active', True))
+                ref_active_by_key[_k] = ref_active_by_key.get(_k, False) or _ra
+
             # ── PASS 1: ensure every reference record exists & is correct ─────
             for ref in ref_records:
                 name = ref.get('name')
@@ -1629,8 +1639,8 @@ class PrisonJailApiController(http.Controller):
                 htype = ref.get('hierarchy_type') or 'general'
                 k = key(name, jtype, htype)
                 ref_closed = bool(ref.get('is_closed'))
-                # Closed prisons stay active in DB so they remain visible.
-                ref_active = True if ref_closed else bool(ref.get('active', True))
+                # Closed prisons stay active; use canonical active across all dups.
+                ref_active = True if ref_closed else ref_active_by_key.get(k, True)
 
                 expected_parent = None
                 if jtype not in PARENT_TYPES:
