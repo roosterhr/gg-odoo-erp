@@ -373,7 +373,7 @@ class PrisonJailApiController(http.Controller):
         Query params: page, limit
         """
         try:
-            domain = [('is_closed', '=', True), ('active', '=', True)]
+            domain = [('is_closed', '=', True), ('active', '=', True), ('jail_type', '=', 'sub_jail')]
             data, total, page, limit = self._fetch_list(domain, kwargs)
             return self._ok(data, total, page, limit)
         except ValueError as exc:
