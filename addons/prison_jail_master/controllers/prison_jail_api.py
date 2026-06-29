@@ -646,7 +646,7 @@ class PrisonJailApiController(http.Controller):
                     general_data.append(p_data)
 
             total_children = Jail.search_count(
-                [('jail_type', 'not in', list(_PARENT_TYPES)), ('active', '=', True)]
+                [('jail_type', 'not in', list(_PARENT_TYPES)), ('active', '=', True), ('is_closed', '=', False)]
             )
 
             return self._json_response({
