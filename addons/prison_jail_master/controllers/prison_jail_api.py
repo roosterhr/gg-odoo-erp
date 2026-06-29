@@ -646,7 +646,7 @@ class PrisonJailApiController(http.Controller):
                     general_data.append(p_data)
 
             total_children = Jail.search_count(
-                [('jail_type', 'not in', list(_PARENT_TYPES)), ('active', '=', True)]
+                [('jail_type', 'not in', list(_PARENT_TYPES)), ('active', '=', True), ('is_closed', '=', False)]
             )
 
             return self._json_response({
@@ -1633,6 +1633,12 @@ class PrisonJailApiController(http.Controller):
                 ref_active_by_key[_k] = ref_active_by_key.get(_k, False) or _ra
 
             # ── PASS 1: ensure every reference record exists & is correct ─────
+            # Process parents (central_jail, spw) before children so parent
+            # lookups succeed even when local names differ from canonical names.
+            _SORT_ORDER = {'central_jail': 0, 'spw': 0, 'district_jail': 1}
+            ref_records = sorted(
+                ref_records,
+                key=lambda r: _SORT_ORDER.get(r.get('jail_type'), 2))
             for ref in ref_records:
                 name = ref.get('name')
                 jtype = ref.get('jail_type')
@@ -1656,8 +1662,30 @@ class PrisonJailApiController(http.Controller):
                 matches = dev_by_key.get(k, [])
 
                 if not matches:
-                    # CREATE missing record
+                    # Skip creation of child-type records that have no resolvable
+                    # parent — creating them would trip the model constraint and
+                    # abort the entire sync transaction.
+                    if jtype not in PARENT_TYPES and not expected_parent:
+                        report['missing_parent_mappings'].append({
+                            'record': name, 'jail_type': jtype,
+                            'wanted_parent': ref.get('parent_name'),
+                            'wanted_parent_type': ref.get('parent_type'),
+                            'skipped': True,
+                        })
+                        continue
+                    # CREATE missing record — skip if (name, hierarchy_type) is
+                    # already taken by a different jail_type (unique constraint).
                     if not dry_run:
+                        name_slot_taken = Jail.with_context(active_test=False).search_count(
+                            [('name', '=', name), ('hierarchy_type', '=', htype),
+                             ('jail_type', '!=', jtype)]) > 0
+                        if name_slot_taken:
+                            report['missing_parent_mappings'].append({
+                                'record': name, 'jail_type': jtype,
+                                'skipped': True,
+                                'reason': 'name+hierarchy already used by different jail_type',
+                            })
+                            continue
                         vals = {
                             'name': name, 'jail_type': jtype,
                             'hierarchy_type': htype,
@@ -2716,3 +2744,4 @@ class PrisonJailApiController(http.Controller):
                 request.env.cr.rollback()
             _logger.exception('POST /api/vacancy/sync-master-data failed: %s', exc)
             return {'status': 'ERROR', 'error': str(exc)}
+
