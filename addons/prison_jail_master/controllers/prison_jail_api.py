@@ -1633,6 +1633,12 @@ class PrisonJailApiController(http.Controller):
                 ref_active_by_key[_k] = ref_active_by_key.get(_k, False) or _ra
 
             # ── PASS 1: ensure every reference record exists & is correct ─────
+            # Process parents (central_jail, spw) before children so parent
+            # lookups succeed even when local names differ from canonical names.
+            _SORT_ORDER = {'central_jail': 0, 'spw': 0, 'district_jail': 1}
+            ref_records = sorted(
+                ref_records,
+                key=lambda r: _SORT_ORDER.get(r.get('jail_type'), 2))
             for ref in ref_records:
                 name = ref.get('name')
                 jtype = ref.get('jail_type')
@@ -1656,8 +1662,30 @@ class PrisonJailApiController(http.Controller):
                 matches = dev_by_key.get(k, [])
 
                 if not matches:
-                    # CREATE missing record
+                    # Skip creation of child-type records that have no resolvable
+                    # parent — creating them would trip the model constraint and
+                    # abort the entire sync transaction.
+                    if jtype not in PARENT_TYPES and not expected_parent:
+                        report['missing_parent_mappings'].append({
+                            'record': name, 'jail_type': jtype,
+                            'wanted_parent': ref.get('parent_name'),
+                            'wanted_parent_type': ref.get('parent_type'),
+                            'skipped': True,
+                        })
+                        continue
+                    # CREATE missing record — skip if (name, hierarchy_type) is
+                    # already taken by a different jail_type (unique constraint).
                     if not dry_run:
+                        name_slot_taken = Jail.with_context(active_test=False).search_count(
+                            [('name', '=', name), ('hierarchy_type', '=', htype),
+                             ('jail_type', '!=', jtype)]) > 0
+                        if name_slot_taken:
+                            report['missing_parent_mappings'].append({
+                                'record': name, 'jail_type': jtype,
+                                'skipped': True,
+                                'reason': 'name+hierarchy already used by different jail_type',
+                            })
+                            continue
                         vals = {
                             'name': name, 'jail_type': jtype,
                             'hierarchy_type': htype,
@@ -2716,3 +2744,91 @@ class PrisonJailApiController(http.Controller):
                 request.env.cr.rollback()
             _logger.exception('POST /api/vacancy/sync-master-data failed: %s', exc)
             return {'status': 'ERROR', 'error': str(exc)}
+
+    # ------------------------------------------------------------------
+    # TEMPORARY ONE-SHOT MIGRATION  (remove after applying to all envs)
+    # POST /api/admin/migrate/closed-subjails-go-2025
+    # ------------------------------------------------------------------
+
+    @http.route('/api/admin/migrate/closed-subjails-go-2025',
+                type='json', auth='none', methods=['POST'], csrf=False)
+    def migrate_closed_subjails_go_2025(self, **kw):
+        """
+        One-shot migration for GO-2025 closed sub-jails.
+        Apply once to each environment, then this endpoint can be removed.
+
+        Payload: {"secret": "tnpd-phx-2025"}
+        """
+        body = request.get_json_data() or {}
+        if body.get('secret') != 'tnpd-phx-2025':
+            return {'status': 'ERROR', 'error': 'Unauthorized'}
+
+        Jail = request.env['prison.jail'].sudo().with_context(active_test=False)
+        report = {
+            'renamed': [],
+            'deactivated': [],
+            'marked_closed': [],
+            'not_found': [],
+        }
+
+        # 1. Rename legacy spelling
+        renames = [
+            ('Portonovo @ Parangipettai', 'Portnovo at Parangipettai'),
+        ]
+        for old_name, new_name in renames:
+            rec = Jail.search([('name', '=', old_name)], limit=1)
+            if rec:
+                rec.write({'name': new_name})
+                report['renamed'].append({'from': old_name, 'to': new_name, 'id': rec.id})
+            else:
+                report['not_found'].append({'name': old_name, 'reason': 'rename source not found'})
+
+        # 2. Deactivate old-named duplicates
+        deactivate_names = ['S.J. Mettupalayam', 'S.J. Rasipuram']
+        for name in deactivate_names:
+            recs = Jail.search([('name', '=', name)])
+            if recs:
+                recs.write({'active': False})
+                report['deactivated'].append({'name': name, 'ids': recs.ids})
+            else:
+                report['not_found'].append({'name': name, 'reason': 'deactivate target not found'})
+
+        # 3. Mark the 14 official closed sub-jails (GO 2025)
+        closed_subjail_names = [
+            'Madurantagam',
+            'Mettupalayam',
+            'Portnovo at Parangipettai',
+            'Cuddalore',
+            'Rasipuram',
+            'Paramathivelur',
+            'Manaparai',
+            'Musiri',
+            'Keeranur',
+            'Thiruvadanai',
+            'Pattukottai',
+            # Already closed in dev — included so the sync is idempotent:
+            'Arani',
+            'Sattur',
+            'Thiruchendur',
+        ]
+        for name in closed_subjail_names:
+            rec = Jail.search([
+                ('name', '=', name),
+                ('jail_type', '=', 'sub_jail'),
+            ], limit=1)
+            if rec:
+                rec.write({'is_closed': True, 'active': True})
+                report['marked_closed'].append({'name': name, 'id': rec.id})
+            else:
+                report['not_found'].append({'name': name, 'reason': 'sub_jail not found'})
+
+        return {
+            'status': 'OK',
+            'report': report,
+            'summary': {
+                'renamed': len(report['renamed']),
+                'deactivated': len(report['deactivated']),
+                'marked_closed': len(report['marked_closed']),
+                'not_found': len(report['not_found']),
+            },
+        }
