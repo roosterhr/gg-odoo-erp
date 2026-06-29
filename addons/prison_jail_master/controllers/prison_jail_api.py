@@ -648,6 +648,9 @@ class PrisonJailApiController(http.Controller):
             total_children = Jail.search_count(
                 [('jail_type', 'not in', list(_PARENT_TYPES)), ('active', '=', True), ('is_closed', '=', False)]
             )
+            closed_subjails = Jail.search_count(
+                [('jail_type', '=', 'sub_jail'), ('is_closed', '=', True), ('active', '=', True)]
+            )
 
             return self._json_response({
                 'success': True,
@@ -657,6 +660,7 @@ class PrisonJailApiController(http.Controller):
                     'district_parents': len(district_parents),
                     'total_children':   total_children,
                     'total':            len(all_parents) + total_children,
+                    'closed_subjails':  closed_subjails,
                 },
                 'data':            general_data,
                 'district_parents': district_parents,
