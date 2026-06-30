@@ -739,10 +739,10 @@ class UsersApiController(http.Controller):
                 'company_id':  main_company.id,
                 'company_ids': [(4, main_company.id)],
             }
-            if user_type == 'admin' and group_erp:
-                user_vals['groups_id'] = [(4, group_erp.id)]
 
             new_user = su_env['res.users'].with_context(no_reset_password=True).create(user_vals)
+            if user_type == 'admin' and group_erp:
+                new_user.write({'groups_id': [(4, group_erp.id)]})
             new_user.write({'password': password})
 
             # Mark token consumed
