@@ -720,8 +720,9 @@ class UsersApiController(http.Controller):
         if not email:
             return self._err('Invite token is missing email.', status=400)
 
-        existing = request.env['res.users'].sudo().search([('login', '=ilike', email)], limit=1)
-        if existing:
+        existing = request.env['res.users'].sudo().with_context(active_test=False).search(
+            [('login', '=ilike', email)], limit=1)
+        if existing and existing.password:
             return self._err('A user with this email already exists.')
 
         try:
@@ -730,17 +731,24 @@ class UsersApiController(http.Controller):
             group_erp = su_env.ref('base.group_erp_manager', raise_if_not_found=False)
             main_company = su_env['res.company'].search([], limit=1, order='id asc')
 
-            user_vals = {
-                'name':        name,
-                'login':       email,
-                'email':       email,
-                'active':      True,
-                'share':       False,
-                'company_id':  main_company.id,
-                'company_ids': [(4, main_company.id)],
-            }
+            # Reuse a partial user left over from a previously failed signup
+            partial = su_env['res.users'].with_context(active_test=False).search(
+                [('login', '=ilike', email)], limit=1)
+            if partial:
+                partial.write({'name': name, 'active': True})
+                new_user = partial
+            else:
+                user_vals = {
+                    'name':        name,
+                    'login':       email,
+                    'email':       email,
+                    'active':      True,
+                    'share':       False,
+                    'company_id':  main_company.id,
+                    'company_ids': [(4, main_company.id)],
+                }
+                new_user = su_env['res.users'].with_context(no_reset_password=True).create(user_vals)
 
-            new_user = su_env['res.users'].with_context(no_reset_password=True).create(user_vals)
             if user_type == 'admin' and group_erp:
                 new_user.write({'groups_id': [(4, group_erp.id)]})
             new_user.write({'password': password})
