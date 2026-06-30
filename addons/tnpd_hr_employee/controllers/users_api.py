@@ -402,9 +402,9 @@ class UsersApiController(http.Controller):
                 group_erp = env.ref('base.group_erp_manager', raise_if_not_found=False)
                 if group_erp:
                     if user_type == 'admin':
-                        user.write({'groups_id': [(4, group_erp.id)]})
+                        group_erp.write({'users': [(4, user.id)]})
                     elif user_type == 'user':
-                        user.write({'groups_id': [(3, group_erp.id)]})
+                        group_erp.write({'users': [(3, user.id)]})
 
             return self._json({'success': True, 'message': 'User updated successfully.', 'user': self._format_user(user)})
 
@@ -751,7 +751,7 @@ class UsersApiController(http.Controller):
                 new_user = su_env['res.users'].with_context(no_reset_password=True).create(user_vals)
 
             if user_type == 'admin' and group_erp:
-                new_user.write({'groups_id': [(4, group_erp.id)]})
+                group_erp.write({'users': [(4, new_user.id)]})
             new_user.write({'password': password})
 
             # Mark token consumed
