@@ -511,9 +511,10 @@ class UsersApiController(http.Controller):
             except Exception:
                 pass
 
-        # Check email not already a user
-        existing_user = request.env['res.users'].sudo().search([('login', '=ilike', email)], limit=1)
-        if existing_user:
+        # Check email not already a fully activated user (partial users without password are reusable)
+        existing_user = request.env['res.users'].sudo().with_context(active_test=False).search(
+            [('login', '=ilike', email)], limit=1)
+        if existing_user and existing_user.password:
             return self._err('A user with this email already exists.')
 
         token   = secrets.token_urlsafe(32)
