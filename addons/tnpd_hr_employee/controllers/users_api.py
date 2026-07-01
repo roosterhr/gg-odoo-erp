@@ -402,15 +402,9 @@ class UsersApiController(http.Controller):
                 group_erp = env.ref('base.group_erp_manager', raise_if_not_found=False)
                 if group_erp:
                     if user_type == 'admin':
-                        request.env.cr.execute(
-                            "INSERT INTO res_groups_users_rel (gid, uid) VALUES (%s, %s) ON CONFLICT DO NOTHING",
-                            (group_erp.id, user.id),
-                        )
+                        group_erp.write({'users': [(4, user.id)]})
                     elif user_type == 'user':
-                        request.env.cr.execute(
-                            "DELETE FROM res_groups_users_rel WHERE gid = %s AND uid = %s",
-                            (group_erp.id, user.id),
-                        )
+                        group_erp.write({'users': [(3, user.id)]})
 
             return self._json({'success': True, 'message': 'User updated successfully.', 'user': self._format_user(user)})
 
@@ -757,11 +751,8 @@ class UsersApiController(http.Controller):
                 new_user = su_env['res.users'].with_context(no_reset_password=True).create(user_vals)
 
             if user_type == 'admin' and group_erp:
-                request.env.cr.execute(
-                    "INSERT INTO res_groups_users_rel (gid, uid) VALUES (%s, %s) ON CONFLICT DO NOTHING",
-                    (group_erp.id, new_user.id),
-                )
-            new_user._set_password(password)
+                group_erp.write({'users': [(4, new_user.id)]})
+            new_user.write({'password': password})
 
             # Mark token consumed
             payload['used']        = True
