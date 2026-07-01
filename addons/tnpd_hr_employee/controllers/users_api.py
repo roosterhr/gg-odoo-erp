@@ -160,6 +160,13 @@ class UsersApiController(http.Controller):
     def _err(self, message, status=400):
         return self._json({'success': False, 'message': message}, status=status)
 
+    def _ensure_password_reset_table(self, cr):
+        cr.execute("""
+            CREATE TABLE IF NOT EXISTS tnpd_password_reset_required (
+                user_id INTEGER PRIMARY KEY
+            )
+        """)
+
     def _require_auth(self):
         uid = request.session.uid
         if not uid:
@@ -899,8 +906,20 @@ class UsersApiController(http.Controller):
             random.shuffle(temp_list)
             temp_pw = ''.join(temp_list)
 
-            # Set the temp password on the Odoo user
-            user.sudo().write({'password': temp_pw})
+            # Set the temp password via passlib SQL (ORM _set_password is broken in Odoo 19)
+            from passlib.context import CryptContext
+            _crypt_ctx = CryptContext(schemes=['pbkdf2_sha512'], deprecated=['auto'])
+            hashed_temp = _crypt_ctx.hash(temp_pw)
+            request.env.cr.execute(
+                "UPDATE res_users SET password = %s WHERE id = %s",
+                (hashed_temp, user.id),
+            )
+            # Flag user must change password on next login (no schema change needed)
+            self._ensure_password_reset_table(request.env.cr)
+            request.env.cr.execute(
+                "INSERT INTO tnpd_password_reset_required (user_id) VALUES (%s) ON CONFLICT DO NOTHING",
+                (user.id,),
+            )
             _logger.info('forgot-password: temp password set for user id=%s | temp_pw=%s [REMOVE IN PROD]', user.id, temp_pw)
 
             # ── Build and send email ──────────────────────────────────────────
@@ -1003,25 +1022,78 @@ class UsersApiController(http.Controller):
             current_pw = str(data.get('current_password', '')).strip()
             new_pw     = str(data.get('new_password', '')).strip()
 
-            if not current_pw:
-                return self._err('Current password is required.')
             if not new_pw or len(new_pw) < 6:
                 return self._err('New password must be at least 6 characters.')
 
-            # Verify current password by attempting authenticate
             env  = request.env
             user = env['res.users'].sudo().browse(uid)
-            db   = request.db
 
-            try:
-                env['res.users'].sudo()._check_credentials(current_pw, {'interactive': False})
-            except Exception:
-                return self._err('Current password is incorrect.', status=401)
+            # Check if this is a forced password change (came via forgot-password).
+            # If so, skip current password verification — the user already proved identity by logging in.
+            self._ensure_password_reset_table(request.env.cr)
+            request.env.cr.execute(
+                "SELECT 1 FROM tnpd_password_reset_required WHERE user_id = %s",
+                (uid,),
+            )
+            is_forced_change = request.env.cr.fetchone() is not None
 
-            user.sudo().write({'password': new_pw})
+            if not is_forced_change:
+                if not current_pw:
+                    return self._err('Current password is required.')
+                try:
+                    env['res.users'].sudo()._check_credentials(current_pw, {'interactive': False})
+                except Exception:
+                    return self._err('Current password is incorrect.', status=401)
+
+            # Set new password via passlib SQL (ORM _set_password is broken in Odoo 19)
+            from passlib.context import CryptContext
+            _crypt_ctx = CryptContext(schemes=['pbkdf2_sha512'], deprecated=['auto'])
+            hashed_new = _crypt_ctx.hash(new_pw)
+            request.env.cr.execute(
+                "UPDATE res_users SET password = %s WHERE id = %s",
+                (hashed_new, uid),
+            )
+            # Clear the force-change flag if it was set
+            self._ensure_password_reset_table(request.env.cr)
+            request.env.cr.execute(
+                "DELETE FROM tnpd_password_reset_required WHERE user_id = %s",
+                (uid,),
+            )
             _logger.info('change-password: password changed for user id=%s', uid)
             return self._ok(message='Password changed successfully.')
 
         except Exception as exc:
             _logger.exception('POST /api/auth/change-password failed: %s', exc)
+            return self._err('Internal server error', status=500)
+
+    @http.route('/api/auth/me', auth='none', type='http', methods=['GET'], csrf=False)
+    def me(self, **kwargs):
+        """
+        Returns current session user info including must_change_password flag.
+        Frontend calls this after login to decide whether to show change-password prompt.
+        """
+        try:
+            uid, err = self._require_auth()
+            if err:
+                return err
+
+            env  = request.env
+            user = env['res.users'].sudo().browse(uid)
+
+            self._ensure_password_reset_table(request.env.cr)
+            request.env.cr.execute(
+                "SELECT 1 FROM tnpd_password_reset_required WHERE user_id = %s",
+                (uid,),
+            )
+            must_change = request.env.cr.fetchone() is not None
+
+            return self._ok(
+                id=user.id,
+                name=user.name,
+                login=user.login,
+                must_change_password=must_change,
+            )
+
+        except Exception as exc:
+            _logger.exception('GET /api/auth/me failed: %s', exc)
             return self._err('Internal server error', status=500)
