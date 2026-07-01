@@ -761,7 +761,7 @@ class UsersApiController(http.Controller):
                     "INSERT INTO res_groups_users_rel (gid, uid) VALUES (%s, %s) ON CONFLICT DO NOTHING",
                     (group_erp.id, new_user.id),
                 )
-            new_user._set_password(password)
+            new_user.write({'password': password})
 
             # Mark token consumed
             payload['used']        = True
