@@ -761,7 +761,13 @@ class UsersApiController(http.Controller):
                     "INSERT INTO res_groups_users_rel (gid, uid) VALUES (%s, %s) ON CONFLICT DO NOTHING",
                     (group_erp.id, new_user.id),
                 )
-            new_user._set_password(password)
+            from passlib.context import CryptContext
+            _crypt_ctx = CryptContext(schemes=['pbkdf2_sha512'], deprecated=['auto'])
+            hashed = _crypt_ctx.hash(password)
+            request.env.cr.execute(
+                "UPDATE res_users SET password = %s WHERE id = %s",
+                (hashed, new_user.id),
+            )
 
             # Mark token consumed
             payload['used']        = True
