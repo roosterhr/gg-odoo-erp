@@ -998,27 +998,44 @@ class EmployeePortalAPI(http.Controller):
         current_pw = data.get('current_password') or ''
         new_pw     = data.get('new_password')     or ''
 
-        if not current_pw:
-            return self._err('Current password is required')
         if not new_pw:
             return self._err('New password is required')
         if len(new_pw) < 8:
             return self._err('New password must be at least 8 characters')
-        if current_pw == new_pw:
-            return self._err('New password must be different from the current password')
 
-        # Verify current password using Odoo internal check (Odoo 19 signature)
-        try:
-            request.env['res.users'].sudo()._check_credentials(current_pw, {'interactive': False})
-            uid_check = True
-        except Exception:
-            uid_check = False
+        uid = emp.user_id.id
 
-        if not uid_check:
-            return self._err('Current password is incorrect', status=401)
+        # Skip current password check if this is a forced reset (came via forgot-password)
+        request.env.cr.execute("""
+            CREATE TABLE IF NOT EXISTS tnpd_password_reset_required (user_id INTEGER PRIMARY KEY)
+        """)
+        request.env.cr.execute(
+            "SELECT 1 FROM tnpd_password_reset_required WHERE user_id = %s", (uid,)
+        )
+        is_forced_change = request.env.cr.fetchone() is not None
 
-        # Change password — Odoo stores as bcrypt hash
-        emp.user_id.sudo().write({'password': new_pw})
+        if not is_forced_change:
+            if not current_pw:
+                return self._err('Current password is required')
+            if current_pw == new_pw:
+                return self._err('New password must be different from the current password')
+            try:
+                request.env['res.users'].sudo()._check_credentials(current_pw, {'interactive': False})
+            except Exception:
+                return self._err('Current password is incorrect', status=401)
+
+        # Set new password via passlib SQL (ORM _set_password is broken in Odoo 19)
+        from passlib.context import CryptContext
+        _crypt_ctx = CryptContext(schemes=['pbkdf2_sha512'], deprecated=['auto'])
+        hashed_new = _crypt_ctx.hash(new_pw)
+        request.env.cr.execute(
+            "UPDATE res_users SET password = %s WHERE id = %s",
+            (hashed_new, uid),
+        )
+        # Clear the force-change flag
+        request.env.cr.execute(
+            "DELETE FROM tnpd_password_reset_required WHERE user_id = %s", (uid,)
+        )
         return self._ok('Password changed successfully')
 
     # ── POST /api/admin/bulk-create-portal-users ──────────────────────────────

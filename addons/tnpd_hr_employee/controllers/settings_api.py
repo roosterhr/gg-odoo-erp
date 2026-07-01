@@ -218,8 +218,6 @@ class SettingsApiController(http.Controller):
         current_pw = body.get('current_password', '')
         new_pw     = body.get('new_password', '')
 
-        if not current_pw:
-            return self._err('Current password is required.')
         if not new_pw:
             return self._err('New password is required.')
 
@@ -234,40 +232,55 @@ class SettingsApiController(http.Controller):
             return self._err('Password must contain at least one number.')
         if not _PW_SPECIAL.search(new_pw):
             return self._err('Password must contain at least one special character.')
-        if current_pw == new_pw:
-            return self._err('New password must be different from the current password.')
 
         try:
             user = request.env['res.users'].sudo().browse(uid)
 
-            # ── Verify current password ───────────────────────────────────────
-            # Read the stored password hash directly from the DB and verify
-            # using Odoo's own _crypt_context (passlib).  This avoids the
-            # fragile _check_credentials / authenticate API which changed
-            # signature across Odoo 16 → 19.
+            # Skip current password check if this is a forced reset (came via forgot-password)
+            request.env.cr.execute("""
+                CREATE TABLE IF NOT EXISTS tnpd_password_reset_required (user_id INTEGER PRIMARY KEY)
+            """)
             request.env.cr.execute(
-                "SELECT COALESCE(password, '') FROM res_users WHERE id = %s AND active = true",
-                (uid,),
+                "SELECT 1 FROM tnpd_password_reset_required WHERE user_id = %s", (uid,)
             )
-            row = request.env.cr.fetchone()
-            if not row:
-                return self._err('User not found.', status=404)
+            is_forced_change = request.env.cr.fetchone() is not None
 
-            stored_hash = row[0]
-            if not stored_hash:
-                return self._err('No password is set for this account.')
-
-            try:
-                crypt_ctx = request.env['res.users'].sudo()._crypt_context()
-                valid, _ = crypt_ctx.verify_and_update(current_pw, stored_hash)
-                if not valid:
+            if not is_forced_change:
+                if not current_pw:
+                    return self._err('Current password is required.')
+                if current_pw == new_pw:
+                    return self._err('New password must be different from the current password.')
+                # Verify current password using stored hash
+                request.env.cr.execute(
+                    "SELECT COALESCE(password, '') FROM res_users WHERE id = %s AND active = true",
+                    (uid,),
+                )
+                row = request.env.cr.fetchone()
+                if not row:
+                    return self._err('User not found.', status=404)
+                stored_hash = row[0]
+                if not stored_hash:
+                    return self._err('No password is set for this account.')
+                try:
+                    crypt_ctx = request.env['res.users'].sudo()._crypt_context()
+                    valid, _ = crypt_ctx.verify_and_update(current_pw, stored_hash)
+                    if not valid:
+                        return self._err('Current password is incorrect.')
+                except Exception as exc:
+                    _logger.exception('Password hash verification failed for uid=%s: %s', uid, exc)
                     return self._err('Current password is incorrect.')
-            except Exception as exc:
-                _logger.exception('Password hash verification failed for uid=%s: %s', uid, exc)
-                return self._err('Current password is incorrect.')
 
-            # ── Update password ───────────────────────────────────────────────
-            user.write({'password': new_pw})
+            # ── Update password via passlib SQL (ORM _set_password broken in Odoo 19) ──
+            from passlib.context import CryptContext
+            _crypt_ctx = CryptContext(schemes=['pbkdf2_sha512'], deprecated=['auto'])
+            hashed_new = _crypt_ctx.hash(new_pw)
+            request.env.cr.execute(
+                "UPDATE res_users SET password = %s WHERE id = %s", (hashed_new, uid)
+            )
+            # Clear the force-change flag
+            request.env.cr.execute(
+                "DELETE FROM tnpd_password_reset_required WHERE user_id = %s", (uid,)
+            )
 
             # ── Audit log ─────────────────────────────────────────────────────
             try:
