@@ -134,7 +134,12 @@ class VacancyApiController(http.Controller):
         if not prison_id:
             return self._err('prison_id is required.')
 
-        domain = [('prison_id', '=', prison_id), ('role_id.active', '=', True)]
+        CANONICAL_IDS = (1, 2, 3, 4, 5, 6)
+        domain = [
+            ('prison_id', '=', prison_id),
+            ('role_id', 'in', list(CANONICAL_IDS)),
+            ('role_id.active', '=', True),
+        ]
         role_id = self._int(kwargs.get('role_id'))
         if role_id:
             domain.append(('role_id', '=', role_id))
@@ -187,6 +192,7 @@ class VacancyApiController(http.Controller):
                 COUNT(DISTINCT dv.prison_id) AS prison_count
               FROM prison_designation_vacancy dv
              WHERE dv.role_id IN %s
+               AND dv.hierarchy_type != 'general_mirror'
         """, [CANONICAL_IDS])
         row = request.env.cr.fetchone()
         total_sanctioned = int(row[0] or 0)
@@ -203,6 +209,7 @@ class VacancyApiController(http.Controller):
                   FROM prison_designation_vacancy dv
                   JOIN prison_role r ON r.id = dv.role_id
                  WHERE dv.role_id IN %s
+                   AND dv.hierarchy_type != 'general_mirror'
             """
             params = [CANONICAL_IDS]
             if hierarchy_filter:
