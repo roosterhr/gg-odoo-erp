@@ -202,12 +202,11 @@ class VacancyApiController(http.Controller):
                        SUM(dv.vacancy_count) AS vacancy
                   FROM prison_designation_vacancy dv
                   JOIN prison_role r ON r.id = dv.role_id
-                  JOIN prison_jail j ON j.id = dv.prison_id
                  WHERE dv.role_id IN %s
             """
             params = [CANONICAL_IDS]
             if hierarchy_filter:
-                sql += " AND j.hierarchy_type = %s"
+                sql += " AND dv.hierarchy_type = %s"
                 params.append(hierarchy_filter)
             sql += " GROUP BY r.id, r.name, r.gender_type ORDER BY vacancy DESC"
             request.env.cr.execute(sql, params)
