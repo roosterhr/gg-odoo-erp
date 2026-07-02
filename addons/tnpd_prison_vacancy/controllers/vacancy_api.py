@@ -183,7 +183,7 @@ class VacancyApiController(http.Controller):
             SELECT
                 SUM(dv.sanctioned_strength) AS sanctioned,
                 SUM(dv.filled_strength)     AS filled,
-                SUM(dv.vacancy_count)       AS vacancy,
+                SUM(dv.sanctioned_strength) - SUM(dv.filled_strength) AS vacancy,
                 COUNT(DISTINCT dv.prison_id) AS prison_count
               FROM prison_designation_vacancy dv
              WHERE dv.role_id IN %s
@@ -199,7 +199,7 @@ class VacancyApiController(http.Controller):
                 SELECT r.name AS role_name, r.gender_type,
                        SUM(dv.sanctioned_strength) AS sanctioned,
                        SUM(dv.filled_strength) AS filled,
-                       SUM(dv.vacancy_count) AS vacancy
+                       SUM(dv.sanctioned_strength) - SUM(dv.filled_strength) AS vacancy
                   FROM prison_designation_vacancy dv
                   JOIN prison_role r ON r.id = dv.role_id
                  WHERE dv.role_id IN %s
