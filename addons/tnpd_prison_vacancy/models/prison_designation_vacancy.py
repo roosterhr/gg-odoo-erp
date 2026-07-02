@@ -83,7 +83,7 @@ class PrisonDesignationVacancy(models.Model):
 
     _uniq_prison_role = models.Constraint(
         'UNIQUE(prison_id, role_id, hierarchy_type)',
-        'A vacancy record already exists for this prison + role + gender combination.',
+        'A vacancy record already exists for this prison + role + hierarchy_type combination.',
     )
 
     # ── Computed ──────────────────────────────────────────────────────────────
