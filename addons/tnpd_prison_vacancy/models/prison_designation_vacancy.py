@@ -82,8 +82,8 @@ class PrisonDesignationVacancy(models.Model):
     # ── SQL uniqueness ────────────────────────────────────────────────────────
 
     _uniq_prison_role = models.Constraint(
-        'UNIQUE(prison_id, role_id)',
-        'A vacancy record already exists for this prison + role combination.',
+        'UNIQUE(prison_id, role_id, hierarchy_type)',
+        'A vacancy record already exists for this prison + role + hierarchy_type combination.',
     )
 
     # ── Computed ──────────────────────────────────────────────────────────────

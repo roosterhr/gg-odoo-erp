@@ -53,13 +53,19 @@ _CANONICAL_ROLE_NAMES = [
     'Chief Head Warder', 'Grade I Warder', 'Grade II Warder',
 ]
 
+# Stable IDs for the 6 canonical executive roles — verified against seed data.
+# If these ever change, update here and re-verify against the prison_role table.
+_CANONICAL_IDS = (1, 2, 3, 4, 5, 6)
+
+# Hierarchy types that count toward dashboard totals (excludes general_mirror).
+_COUNTED_HIERARCHY_TYPES = ('general', 'women')
+
 
 def _clear_canonical_roles(env):
     """Delete all designation.vacancy records for the 6 canonical executive roles."""
     roles = env['prison.role'].sudo().search([('name', 'in', _CANONICAL_ROLE_NAMES)])
     recs = env['prison.designation.vacancy'].sudo().search([('role_id', 'in', roles.ids)])
     recs.unlink()
-    env.cr.commit()
 
 
 class VacancyApiController(http.Controller):
@@ -134,7 +140,11 @@ class VacancyApiController(http.Controller):
         if not prison_id:
             return self._err('prison_id is required.')
 
-        domain = [('prison_id', '=', prison_id), ('role_id.active', '=', True)]
+        domain = [
+            ('prison_id', '=', prison_id),
+            ('role_id', 'in', list(_CANONICAL_IDS)),
+            ('role_id.active', '=', True),
+        ]
         role_id = self._int(kwargs.get('role_id'))
         if role_id:
             domain.append(('role_id', '=', role_id))
@@ -175,19 +185,17 @@ class VacancyApiController(http.Controller):
         csrf=False,
     )
     def get_dashboard(self, **kwargs):
-        # Canonical role IDs: the only 6 official roles
-        CANONICAL_IDS = (1, 2, 3, 4, 5, 6)
-
         # Stat cards — totals scoped to the 6 canonical roles only
         request.env.cr.execute("""
             SELECT
                 SUM(dv.sanctioned_strength) AS sanctioned,
                 SUM(dv.filled_strength)     AS filled,
-                SUM(dv.vacancy_count)       AS vacancy,
+                SUM(dv.sanctioned_strength) - SUM(dv.filled_strength) AS vacancy,
                 COUNT(DISTINCT dv.prison_id) AS prison_count
               FROM prison_designation_vacancy dv
              WHERE dv.role_id IN %s
-        """, [CANONICAL_IDS])
+               AND dv.hierarchy_type IN %s
+        """, [_CANONICAL_IDS, _COUNTED_HIERARCHY_TYPES])
         row = request.env.cr.fetchone()
         total_sanctioned = int(row[0] or 0)
         total_filled     = int(row[1] or 0)
@@ -199,15 +207,15 @@ class VacancyApiController(http.Controller):
                 SELECT r.name AS role_name, r.gender_type,
                        SUM(dv.sanctioned_strength) AS sanctioned,
                        SUM(dv.filled_strength) AS filled,
-                       SUM(dv.vacancy_count) AS vacancy
+                       SUM(dv.sanctioned_strength) - SUM(dv.filled_strength) AS vacancy
                   FROM prison_designation_vacancy dv
                   JOIN prison_role r ON r.id = dv.role_id
-                  JOIN prison_jail j ON j.id = dv.prison_id
                  WHERE dv.role_id IN %s
+                   AND dv.hierarchy_type IN %s
             """
-            params = [CANONICAL_IDS]
+            params = [_CANONICAL_IDS, _COUNTED_HIERARCHY_TYPES]
             if hierarchy_filter:
-                sql += " AND j.hierarchy_type = %s"
+                sql += " AND dv.hierarchy_type = %s"
                 params.append(hierarchy_filter)
             sql += " GROUP BY r.id, r.name, r.gender_type ORDER BY vacancy DESC"
             request.env.cr.execute(sql, params)
