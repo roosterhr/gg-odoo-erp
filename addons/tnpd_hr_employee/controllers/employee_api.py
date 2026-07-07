@@ -418,24 +418,26 @@ class EmployeeAPI(http.Controller):
                 jail_id = int(kwargs['jail_id'])
                 jail = request.env['prison.jail'].sudo().browse(jail_id)
                 if jail.exists():
-                    # Match both M2O (properly linked) and legacy text fields so that
-                    # employees imported before the Prison Master linkage still appear.
+                    # Match the jail at whichever posting tier the employee is
+                    # linked to (central / district / sub), regardless of the
+                    # jail's type. jail_type-specific branches missed women
+                    # institutions (spw, women_sub_jail, special_sub_jail) and
+                    # other types (open_air_jail, farm_jail, transit_yard),
+                    # which caused the filter to be silently ignored.
+                    # Prison IDs are globally unique, so an id can only appear
+                    # in the correct tier's M2O field. Legacy text fields are
+                    # matched too for employees imported before Prison Master
+                    # linkage.
                     name = jail.name
-                    if jail.jail_type == 'central_jail':
-                        domain += ['|',
-                            ('x_central_jail_id', '=', jail_id),
-                            ('x_central_prison', 'ilike', name),
-                        ]
-                    elif jail.jail_type == 'district_jail':
-                        domain += ['|',
-                            ('x_district_jail_id', '=', jail_id),
-                            ('x_district_jail', 'ilike', name),
-                        ]
-                    elif jail.jail_type == 'sub_jail':
-                        domain += ['|',
-                            ('x_sub_jail_id', '=', jail_id),
-                            ('x_sub_jail', 'ilike', name),
-                        ]
+                    domain += [
+                        '|', '|', '|', '|', '|',
+                        ('x_central_jail_id', '=', jail_id),
+                        ('x_district_jail_id', '=', jail_id),
+                        ('x_sub_jail_id', '=', jail_id),
+                        ('x_central_prison', 'ilike', name),
+                        ('x_district_jail', 'ilike', name),
+                        ('x_sub_jail', 'ilike', name),
+                    ]
             except (ValueError, TypeError):
                 pass
         elif kwargs.get('central_jail_id'):
