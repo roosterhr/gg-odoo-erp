@@ -427,16 +427,18 @@ class EmployeeAPI(http.Controller):
                     # Prison IDs are globally unique, so an id can only appear
                     # in the correct tier's M2O field. Legacy text fields are
                     # matched too for employees imported before Prison Master
-                    # linkage.
+                    # linkage — with exact (case-insensitive) equality, since a
+                    # substring match on short names like "Madurai" would pull
+                    # in every "..., Madurai" institution.
                     name = jail.name
                     domain += [
                         '|', '|', '|', '|', '|',
                         ('x_central_jail_id', '=', jail_id),
                         ('x_district_jail_id', '=', jail_id),
                         ('x_sub_jail_id', '=', jail_id),
-                        ('x_central_prison', 'ilike', name),
-                        ('x_district_jail', 'ilike', name),
-                        ('x_sub_jail', 'ilike', name),
+                        ('x_central_prison', '=ilike', name),
+                        ('x_district_jail', '=ilike', name),
+                        ('x_sub_jail', '=ilike', name),
                     ]
             except (ValueError, TypeError):
                 pass
@@ -447,7 +449,7 @@ class EmployeeAPI(http.Controller):
                 name = jail.name if jail.exists() else ''
                 domain += ['|',
                     ('x_central_jail_id', '=', cid),
-                    ('x_central_prison', 'ilike', name),
+                    ('x_central_prison', '=ilike', name),
                 ]
             except (ValueError, TypeError):
                 pass
