@@ -452,6 +452,16 @@ class TransferApprovalRequest(models.Model):
         eligibility list (they exceed the threshold and have not applied);
         the notification is additionally flagged there via 'vacancy_prompted'.
 
+        Called from three creation paths (employee portal, admin
+        save-approval-request, and action_submit for the draft->pending
+        flow) because the first two write state='pending' directly and never
+        invoke action_submit — there's no single choke point today that
+        covers every path. _prompt_tenure_candidates() self-guards against
+        redundant re-scans for the same request (see the early-exit there),
+        so calling this more than once for the same record — now or after a
+        future refactor — is a cheap no-op rather than a duplicate occupant
+        scan.
+
         Never raises — failures are logged and ignored so request submission
         is never blocked by this convenience flow.
         """
@@ -464,6 +474,17 @@ class TransferApprovalRequest(models.Model):
 
     def _prompt_tenure_candidates(self):
         self.ensure_one()
+
+        # Idempotency guard: skip the full occupant scan if this specific
+        # request already triggered prompts (covers the multiple call sites
+        # noted above, and safe re-runs in general).
+        already_ran = self.env['tnpd.notification'].sudo().search_count([
+            ('transfer_request_id', '=', self.id),
+            ('action_type', '=', 'tenure_transfer_prompt'),
+        ])
+        if already_ran:
+            return
+
         dest = self._get_destination_prison()
         if not dest:
             return
@@ -543,12 +564,27 @@ class TransferApprovalRequest(models.Model):
                 emp.id, emp.x_employee_code, dest.name, self.id,
             )
 
+    def _clear_tenure_prompts(self):
+        """
+        Mark this request's tenure-vacancy prompts as read.
+
+        Called when the triggering request is cancelled or rejected so
+        occupants at the (now moot) destination stop seeing a "please
+        vacate" notice for a request that no longer exists.
+        """
+        self.env['tnpd.notification'].sudo().search([
+            ('transfer_request_id', 'in', self.ids),
+            ('action_type', '=', 'tenure_transfer_prompt'),
+            ('is_read', '=', False),
+        ]).write({'is_read': True, 'read_date': fields.Datetime.now()})
+
     def action_cancel(self):
         """Move draft/pending → cancelled."""
         self.ensure_one()
         if self.state not in ('draft', 'pending'):
             raise UserError('Only draft or pending requests can be cancelled.')
         self.write({'state': 'cancelled'})
+        self._clear_tenure_prompts()
 
     def action_return(self):
         """Move pending → returned (for correction). Approver only."""
@@ -750,6 +786,7 @@ class TransferApprovalRequest(models.Model):
             f'Your transfer request (Ref: TRF/{self.id}) has been rejected. '
             f'Please contact your administrator for more information.',
         )
+        self._clear_tenure_prompts()
 
     @api.model
     def _lookup_jail(self, jail_type, name):

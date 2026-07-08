@@ -694,30 +694,51 @@ class PrisonJailApiController(http.Controller):
             Jail = request.env['prison.jail'].sudo()
             all_jails = Jail.search([('active', '=', True)], order='sequence, name')
 
-            # Officers posted per prison, counted at every tier the prison
-            # appears in — mirrors how the /api/employees jail_id filter matches.
+            # Officers posted per prison. Mirrors the exact OR-domain used by
+            # the /api/employees jail_id filter (employee_api.py
+            # _build_filter_domain): matches the M2O field at any posting
+            # tier OR the legacy text field (exact, case-insensitive) at any
+            # tier. UNION (not UNION ALL) on (jail_id, employee_id) pairs plus
+            # COUNT(DISTINCT employee_id) ensures an employee whose M2O and
+            # legacy text both resolve to the same prison — or who has links
+            # set on more than one tier — is counted once, not once per branch.
             emp_counts = {}
             try:
                 request.env.cr.execute("""
-                    SELECT pid, SUM(cnt) FROM (
-                        SELECT x_central_jail_id AS pid, COUNT(*) AS cnt
+                    SELECT jail_id, COUNT(DISTINCT employee_id) AS cnt FROM (
+                        SELECT x_central_jail_id AS jail_id, id AS employee_id
                           FROM hr_employee
                          WHERE active AND x_employee_code IS NOT NULL AND x_employee_code != ''
                            AND x_central_jail_id IS NOT NULL
-                         GROUP BY 1
-                        UNION ALL
-                        SELECT x_district_jail_id, COUNT(*)
+                        UNION
+                        SELECT x_district_jail_id, id
                           FROM hr_employee
                          WHERE active AND x_employee_code IS NOT NULL AND x_employee_code != ''
                            AND x_district_jail_id IS NOT NULL
-                         GROUP BY 1
-                        UNION ALL
-                        SELECT x_sub_jail_id, COUNT(*)
+                        UNION
+                        SELECT x_sub_jail_id, id
                           FROM hr_employee
                          WHERE active AND x_employee_code IS NOT NULL AND x_employee_code != ''
                            AND x_sub_jail_id IS NOT NULL
-                         GROUP BY 1
-                    ) t GROUP BY pid
+                        UNION
+                        SELECT pj.id, e.id
+                          FROM hr_employee e
+                          JOIN prison_jail pj ON lower(e.x_central_prison) = lower(pj.name)
+                         WHERE e.active AND e.x_employee_code IS NOT NULL AND e.x_employee_code != ''
+                           AND e.x_central_prison IS NOT NULL AND e.x_central_prison != ''
+                        UNION
+                        SELECT pj.id, e.id
+                          FROM hr_employee e
+                          JOIN prison_jail pj ON lower(e.x_district_jail) = lower(pj.name)
+                         WHERE e.active AND e.x_employee_code IS NOT NULL AND e.x_employee_code != ''
+                           AND e.x_district_jail IS NOT NULL AND e.x_district_jail != ''
+                        UNION
+                        SELECT pj.id, e.id
+                          FROM hr_employee e
+                          JOIN prison_jail pj ON lower(e.x_sub_jail) = lower(pj.name)
+                         WHERE e.active AND e.x_employee_code IS NOT NULL AND e.x_employee_code != ''
+                           AND e.x_sub_jail IS NOT NULL AND e.x_sub_jail != ''
+                    ) t GROUP BY jail_id
                 """)
                 emp_counts = {row[0]: int(row[1]) for row in request.env.cr.fetchall()}
             except Exception:
