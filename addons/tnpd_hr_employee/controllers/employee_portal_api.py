@@ -863,10 +863,9 @@ class EmployeePortalAPI(http.Controller):
 
         try:
             TAR = request.env['transfer.approval.request'].sudo()
+            # create() triggers prompt_tenure_candidates_if_no_vacancy() automatically
+            # (see the model's create()/write() hooks) since vals has state='pending'.
             rec = TAR.with_context(mail_notrack=True).create(vals)
-
-            # No vacancy at the destination? Prompt long-tenured occupants
-            rec.prompt_tenure_candidates_if_no_vacancy()
 
             request.env['tnpd.notification'].sudo().create({
                 'employee_id':         emp.id,

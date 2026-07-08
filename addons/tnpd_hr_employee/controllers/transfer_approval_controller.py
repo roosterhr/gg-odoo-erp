@@ -433,8 +433,8 @@ class TransferApprovalController(http.Controller):
                 new_request.id, employee.id, uid,
             )
 
-            # No vacancy at the destination? Prompt long-tenured occupants
-            new_request.prompt_tenure_candidates_if_no_vacancy()
+            # create() triggers prompt_tenure_candidates_if_no_vacancy() automatically
+            # (see the model's create()/write() hooks) since state='pending' above.
 
             return self._ok(
                 'Transfer approval request created successfully',

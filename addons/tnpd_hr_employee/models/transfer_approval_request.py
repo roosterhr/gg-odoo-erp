@@ -404,6 +404,33 @@ class TransferApprovalRequest(models.Model):
 
         return self.env['transfer.approval.request']
 
+    # ── ORM hooks: centralised trigger for entering 'pending' ─────────────────
+    #
+    # Some callers (employee portal, admin save-approval-request) create a
+    # record with state='pending' directly rather than going through
+    # action_submit()'s draft->pending transition. Rather than requiring
+    # every such call site to remember to also call
+    # prompt_tenure_candidates_if_no_vacancy() — which is exactly how this
+    # got spread across three places — hook it into create()/write() so
+    # ANY path that results in a record being in 'pending' state triggers it
+    # automatically, including future ones nobody wires up explicitly.
+    # _prompt_tenure_candidates()'s own idempotency guard makes it safe for
+    # both hooks to potentially fire for the same record.
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        records = super().create(vals_list)
+        records.filtered(lambda r: r.state == 'pending').prompt_tenure_candidates_if_no_vacancy()
+        return records
+
+    def write(self, vals):
+        newly_pending = self.env['transfer.approval.request']
+        if vals.get('state') == 'pending':
+            newly_pending = self.filtered(lambda r: r.state != 'pending')
+        res = super().write(vals)
+        newly_pending.prompt_tenure_candidates_if_no_vacancy()
+        return res
+
     # ── Actions: Submit / Cancel / Return ────────────────────────────────────
 
     def action_submit(self):
@@ -411,7 +438,7 @@ class TransferApprovalRequest(models.Model):
         self.ensure_one()
         if self.state != 'draft':
             raise UserError('Only draft requests can be submitted.')
-        self.write({'state': 'pending'})
+        self.write({'state': 'pending'})  # triggers the tenure prompt via write() above
 
         # Auto-detect swap partner
         partner = self._find_swap_partner()
@@ -422,9 +449,6 @@ class TransferApprovalRequest(models.Model):
                 'Swap pair detected: request %d ↔ request %d',
                 self.id, partner.id,
             )
-
-        # If the destination has no vacancy, prompt long-tenured occupants
-        self.prompt_tenure_candidates_if_no_vacancy()
 
     # ── Tenure-vacancy prompting ──────────────────────────────────────────────
 
@@ -452,15 +476,10 @@ class TransferApprovalRequest(models.Model):
         eligibility list (they exceed the threshold and have not applied);
         the notification is additionally flagged there via 'vacancy_prompted'.
 
-        Called from three creation paths (employee portal, admin
-        save-approval-request, and action_submit for the draft->pending
-        flow) because the first two write state='pending' directly and never
-        invoke action_submit — there's no single choke point today that
-        covers every path. _prompt_tenure_candidates() self-guards against
-        redundant re-scans for the same request (see the early-exit there),
-        so calling this more than once for the same record — now or after a
-        future refactor — is a cheap no-op rather than a duplicate occupant
-        scan.
+        Triggered automatically by the create()/write() hooks above whenever
+        a record's state becomes 'pending' — no controller needs to call
+        this directly. _prompt_tenure_candidates() is additionally
+        idempotent per-request (see its early-exit) as defense in depth.
 
         Never raises — failures are logged and ignored so request submission
         is never blocked by this convenience flow.
