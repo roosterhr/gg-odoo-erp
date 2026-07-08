@@ -433,6 +433,9 @@ class TransferApprovalController(http.Controller):
                 new_request.id, employee.id, uid,
             )
 
+            # No vacancy at the destination? Prompt long-tenured occupants
+            new_request.prompt_tenure_candidates_if_no_vacancy()
+
             return self._ok(
                 'Transfer approval request created successfully',
                 request_id=new_request.id,
@@ -1375,6 +1378,7 @@ class TransferApprovalController(http.Controller):
                     search=kwargs.get('search', ''),
                     exclude_applied=False,
                     is_hill_filter=is_hill_filter,
+                    prompted_only=kwargs.get('vacancy_prompted') == 'true',
                 )
             )
 
@@ -1431,6 +1435,7 @@ class TransferApprovalController(http.Controller):
                     search=kwargs.get('search', ''),
                     exclude_applied=True,
                     is_hill_filter=is_hill_filter,
+                    prompted_only=kwargs.get('vacancy_prompted') == 'true',
                 )
             )
 
@@ -1438,7 +1443,7 @@ class TransferApprovalController(http.Controller):
             _logger.exception('GET /api/transfer/eligible-admin failed: %s', exc)
             return self._err('Internal server error', status=500)
 
-    def _get_eligible_employees(self, uid, page, limit, search, exclude_applied, is_hill_filter=None):
+    def _get_eligible_employees(self, uid, page, limit, search, exclude_applied, is_hill_filter=None, prompted_only=False):
         """
         Shared logic for eligible-tenure and eligible-admin endpoints.
 
@@ -1503,6 +1508,25 @@ class TransferApprovalController(http.Controller):
             has_any_vacancy = bool(Vacancy.search([('vacancy_count', '>', 0)], limit=1))
         except Exception:
             pass  # prison.vacancy may not be installed
+
+        # Officers with a live "please vacate" prompt (sent when an incoming
+        # transfer request found no vacancy for their position at their prison)
+        prompted_ids = set()
+        try:
+            all_ids = [emp.id for emp, _d, _h in eligible]
+            if all_ids:
+                notes = env['tnpd.notification'].sudo().search_read([
+                    ('employee_id', 'in', all_ids),
+                    ('action_type', '=', 'tenure_transfer_prompt'),
+                    ('is_read', '=', False),
+                ], ['employee_id'])
+                prompted_ids = {n['employee_id'][0] for n in notes}
+        except Exception:
+            pass
+        prompted_count = sum(1 for emp, _d, _h in eligible if emp.id in prompted_ids)
+
+        if prompted_only:
+            eligible = [t for t in eligible if t[0].id in prompted_ids]
 
         # Paginate
         total_count = len(eligible)
@@ -1607,18 +1631,21 @@ class TransferApprovalController(http.Controller):
                 'tenure_years':           tenure_years,
                 'is_eligible':            True,
                 'has_vacancy_elsewhere':  emp_vacancy,
+                # An incoming transfer request is waiting for this officer's post
+                'vacancy_prompted':       emp.id in prompted_ids,
                 # Vacancy details for current posting (None if prison.vacancy not installed)
                 'current_prison_vacancy': vacancy_detail,
             })
 
         return {
-            'success':     True,
-            'page':        page,
-            'limit':       limit,
-            'total_count': total_count,
-            'total':       total_count,
-            'employees':   data,
-            'data':        data,
+            'success':        True,
+            'page':           page,
+            'limit':          limit,
+            'total_count':    total_count,
+            'total':          total_count,
+            'prompted_count': prompted_count,
+            'employees':      data,
+            'data':           data,
         }
 
     # ==================================================================

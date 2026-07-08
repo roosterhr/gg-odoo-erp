@@ -865,6 +865,9 @@ class EmployeePortalAPI(http.Controller):
             TAR = request.env['transfer.approval.request'].sudo()
             rec = TAR.with_context(mail_notrack=True).create(vals)
 
+            # No vacancy at the destination? Prompt long-tenured occupants
+            rec.prompt_tenure_candidates_if_no_vacancy()
+
             request.env['tnpd.notification'].sudo().create({
                 'employee_id':         emp.id,
                 'transfer_request_id': rec.id,

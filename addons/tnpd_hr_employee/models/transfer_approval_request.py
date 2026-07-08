@@ -2,12 +2,17 @@
 # License: LGPL-3
 
 import logging
-from datetime import date
+import re
+from datetime import date, timedelta
 
 from odoo import api, fields, models
 from odoo.exceptions import UserError, ValidationError
 
 _logger = logging.getLogger(__name__)
+
+# Tenure thresholds (days) used when prompting destination occupants to vacate.
+_TENURE_DAYS_STANDARD = 1095  # 36 months
+_TENURE_DAYS_HILL     = 547   # 18 months
 
 
 class TransferApprovalRequest(models.Model):
@@ -416,6 +421,126 @@ class TransferApprovalRequest(models.Model):
             _logger.info(
                 'Swap pair detected: request %d ↔ request %d',
                 self.id, partner.id,
+            )
+
+        # If the destination has no vacancy, prompt long-tenured occupants
+        self.prompt_tenure_candidates_if_no_vacancy()
+
+    # ── Tenure-vacancy prompting ──────────────────────────────────────────────
+
+    def _resolve_role(self):
+        """Requester's prison.role — via x_role_id, else designation name."""
+        self.ensure_one()
+        role = self.employee_id.x_role_id
+        if role:
+            return role
+        designation = (self.employee_id.x_designation or '').strip()
+        if not designation:
+            return self.env['prison.role']
+        base = re.sub(r'\s*\((?:women|men)\)\s*$', '', designation, flags=re.I).strip()
+        return self.env['prison.role'].sudo().search([('name', '=ilike', base)], limit=1)
+
+    def prompt_tenure_candidates_if_no_vacancy(self):
+        """
+        When this request targets a prison with NO vacancy for the requester's
+        position, find officers at that prison holding the same position who
+        have completed their tenure (3 years standard / 18 months hill station)
+        and have no open transfer request of their own, and notify each of them
+        to apply for their tenure transfer — so a post can be vacated.
+
+        The same officers automatically appear in the admin's Tenure Transfer
+        eligibility list (they exceed the threshold and have not applied);
+        the notification is additionally flagged there via 'vacancy_prompted'.
+
+        Never raises — failures are logged and ignored so request submission
+        is never blocked by this convenience flow.
+        """
+        for rec in self:
+            try:
+                rec._prompt_tenure_candidates()
+            except Exception:
+                _logger.exception(
+                    'tenure-vacancy prompt failed for transfer request %d', rec.id)
+
+    def _prompt_tenure_candidates(self):
+        self.ensure_one()
+        dest = self._get_destination_prison()
+        if not dest:
+            return
+
+        role = self._resolve_role()
+        if not role:
+            return
+
+        desig_vac = self.env['prison.designation.vacancy'].sudo().search([
+            ('prison_id', '=', dest.id),
+            ('role_id', '=', role.id),
+        ], limit=1)
+        # Only act when we positively know there is no vacancy
+        if not desig_vac or desig_vac.vacancy_count > 0:
+            return
+
+        threshold = _TENURE_DAYS_HILL if dest.is_hill_station else _TENURE_DAYS_STANDARD
+        cutoff = date.today() - timedelta(days=threshold)
+
+        occupants = self.env['hr.employee'].sudo().search([
+            ('active', '=', True),
+            ('x_employee_code', '!=', False),
+            ('x_employee_code', '!=', ''),
+            ('id', '!=', self.employee_id.id),
+            ('x_date_present_station', '!=', False),
+            ('x_date_present_station', '<=', str(cutoff)),
+            '|', '|',
+            ('x_central_jail_id', '=', dest.id),
+            ('x_district_jail_id', '=', dest.id),
+            ('x_sub_jail_id', '=', dest.id),
+        ])
+
+        # Same position: compare designation with the (Women)/(Men) suffix removed
+        def _base(desig):
+            return re.sub(r'\s*\((?:women|men)\)\s*$', '', (desig or '').strip(), flags=re.I).lower()
+
+        role_base = role.name.strip().lower()
+        occupants = occupants.filtered(lambda e: _base(e.x_designation) == role_base)
+        if not occupants:
+            return
+
+        # Skip occupants who already have an open transfer request of any type
+        open_reqs = self.env['transfer.approval.request'].sudo().search([
+            ('employee_id', 'in', occupants.ids),
+            ('state', 'in', ['draft', 'pending']),
+            ('active', '=', True),
+        ])
+        occupants = occupants - open_reqs.mapped('employee_id')
+        if not occupants:
+            return
+
+        Notification = self.env['tnpd.notification'].sudo()
+        years_label = '18 months' if dest.is_hill_station else '3 years'
+        for emp in occupants:
+            # One live prompt per officer — do not spam on every new request
+            existing = Notification.search([
+                ('employee_id', '=', emp.id),
+                ('action_type', '=', 'tenure_transfer_prompt'),
+                ('is_read', '=', False),
+            ], limit=1)
+            if existing:
+                continue
+            Notification.create({
+                'employee_id':         emp.id,
+                'transfer_request_id': self.id,
+                'notification_type':   'general',
+                'action_type':         'tenure_transfer_prompt',
+                'message': (
+                    f'You have served more than {years_label} at {dest.name}. '
+                    f'An incoming transfer request for your position is waiting '
+                    f'for a vacancy. Please apply for your tenure transfer at '
+                    f'the earliest.'
+                ),
+            })
+            _logger.info(
+                'Tenure prompt sent to employee %d (%s) at %s for request %d',
+                emp.id, emp.x_employee_code, dest.name, self.id,
             )
 
     def action_cancel(self):
