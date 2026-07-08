@@ -493,9 +493,17 @@ class TransferApprovalRequest(models.Model):
         if not role:
             return
 
+        # Exclude general_mirror rows: a prison can carry both a real
+        # ('general'/'women') row and a mirrored display-only row for the
+        # same (prison_id, role_id) pair (see PR #75). Without this filter,
+        # limit=1 can non-deterministically return the mirror row, whose
+        # vacancy_count doesn't reflect the real filled/sanctioned figures —
+        # firing a false "please vacate" prompt even when the real row has
+        # an open vacancy.
         desig_vac = self.env['prison.designation.vacancy'].sudo().search([
             ('prison_id', '=', dest.id),
             ('role_id', '=', role.id),
+            ('hierarchy_type', '!=', 'general_mirror'),
         ], limit=1)
         # Only act when we positively know there is no vacancy
         if not desig_vac or desig_vac.vacancy_count > 0:
