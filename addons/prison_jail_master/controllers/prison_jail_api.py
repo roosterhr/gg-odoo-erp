@@ -694,6 +694,35 @@ class PrisonJailApiController(http.Controller):
             Jail = request.env['prison.jail'].sudo()
             all_jails = Jail.search([('active', '=', True)], order='sequence, name')
 
+            # Officers posted per prison, counted at every tier the prison
+            # appears in — mirrors how the /api/employees jail_id filter matches.
+            emp_counts = {}
+            try:
+                request.env.cr.execute("""
+                    SELECT pid, SUM(cnt) FROM (
+                        SELECT x_central_jail_id AS pid, COUNT(*) AS cnt
+                          FROM hr_employee
+                         WHERE active AND x_employee_code IS NOT NULL AND x_employee_code != ''
+                           AND x_central_jail_id IS NOT NULL
+                         GROUP BY 1
+                        UNION ALL
+                        SELECT x_district_jail_id, COUNT(*)
+                          FROM hr_employee
+                         WHERE active AND x_employee_code IS NOT NULL AND x_employee_code != ''
+                           AND x_district_jail_id IS NOT NULL
+                         GROUP BY 1
+                        UNION ALL
+                        SELECT x_sub_jail_id, COUNT(*)
+                          FROM hr_employee
+                         WHERE active AND x_employee_code IS NOT NULL AND x_employee_code != ''
+                           AND x_sub_jail_id IS NOT NULL
+                         GROUP BY 1
+                    ) t GROUP BY pid
+                """)
+                emp_counts = {row[0]: int(row[1]) for row in request.env.cr.fetchall()}
+            except Exception:
+                _logger.exception('filter-list: employee count query failed')
+
             groups_map = {
                 'women':   {'label': "Women's Institutions",  'jails': []},
                 'central': {'label': 'Central Prisons',        'jails': []},
@@ -711,6 +740,9 @@ class PrisonJailApiController(http.Controller):
                     'institution_type': j.jail_type,
                     'hierarchy_type':   j.hierarchy_type,
                     'is_closed':        j.is_closed,
+                    'parent_id':        j.parent_id.id if j.parent_id else None,
+                    'parent_name':      j.parent_id.name if j.parent_id else '',
+                    'employee_count':   emp_counts.get(j.id, 0),
                 }
                 if j.is_closed:
                     groups_map['closed']['jails'].append(item)
