@@ -152,12 +152,17 @@ class VacancyApiController(http.Controller):
         recs = request.env['prison.designation.vacancy'].sudo().search(domain)
         records = [r.as_api_dict() for r in recs]
 
-        # Fallback: when no designation records exist, return aggregate from prison.vacancy
+        # Fallback: when no designation records exist, return aggregate from
+        # prison.vacancy. Flag it explicitly so callers can detect that
+        # grade-level data is absent (rather than silently showing a
+        # "Total Strength" row indistinguishable from real designation data).
+        is_fallback = False
         if not records:
             pv = request.env['prison.vacancy'].sudo().search(
                 [('prison_id', '=', prison_id)], limit=1)
             if pv and pv.sanctioned_strength:
                 jail = request.env['prison.jail'].sudo().browse(prison_id)
+                is_fallback = True
                 records = [{
                     'role_id':            0,
                     'role_name':          'Total Strength',
@@ -173,6 +178,7 @@ class VacancyApiController(http.Controller):
             'prison_id': prison_id,
             'records': records,
             'total': len(records),
+            'fallback': is_fallback,
         })
 
     # ── GET /api/vacancy/dashboard ────────────────────────────────────────────
@@ -242,7 +248,14 @@ class VacancyApiController(http.Controller):
             'role_summary_women': _role_rows('women'),
         })
 
-    # ── POST /api/transfer/check-availability (backward-compat) ──────────────
+    # ── POST /api/transfer/check-availability (DEPRECATED, backward-compat) ──
+    #
+    # This checks aggregate prison.vacancy only — it has no awareness of
+    # designation/grade. It does NOT gate transfer approval (see
+    # transfer.approval.request._validate_vacancy_and_gender, which checks
+    # prison.designation.vacancy per role). Confirmed unused by both the
+    # employee portal and admin frontends — kept only for external/legacy
+    # API compatibility. Do not wire this into the transfer approval flow.
 
     @http.route(
         '/api/transfer/check-availability',

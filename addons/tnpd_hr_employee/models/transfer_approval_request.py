@@ -2,12 +2,17 @@
 # License: LGPL-3
 
 import logging
-from datetime import date
+import re
+from datetime import date, timedelta
 
 from odoo import api, fields, models
 from odoo.exceptions import UserError, ValidationError
 
 _logger = logging.getLogger(__name__)
+
+# Tenure thresholds (days) used when prompting destination occupants to vacate.
+_TENURE_DAYS_STANDARD = 1095  # 36 months
+_TENURE_DAYS_HILL     = 547   # 18 months
 
 
 class TransferApprovalRequest(models.Model):
@@ -399,6 +404,33 @@ class TransferApprovalRequest(models.Model):
 
         return self.env['transfer.approval.request']
 
+    # ── ORM hooks: centralised trigger for entering 'pending' ─────────────────
+    #
+    # Some callers (employee portal, admin save-approval-request) create a
+    # record with state='pending' directly rather than going through
+    # action_submit()'s draft->pending transition. Rather than requiring
+    # every such call site to remember to also call
+    # prompt_tenure_candidates_if_no_vacancy() — which is exactly how this
+    # got spread across three places — hook it into create()/write() so
+    # ANY path that results in a record being in 'pending' state triggers it
+    # automatically, including future ones nobody wires up explicitly.
+    # _prompt_tenure_candidates()'s own idempotency guard makes it safe for
+    # both hooks to potentially fire for the same record.
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        records = super().create(vals_list)
+        records.filtered(lambda r: r.state == 'pending').prompt_tenure_candidates_if_no_vacancy()
+        return records
+
+    def write(self, vals):
+        newly_pending = self.env['transfer.approval.request']
+        if vals.get('state') == 'pending':
+            newly_pending = self.filtered(lambda r: r.state != 'pending')
+        res = super().write(vals)
+        newly_pending.prompt_tenure_candidates_if_no_vacancy()
+        return res
+
     # ── Actions: Submit / Cancel / Return ────────────────────────────────────
 
     def action_submit(self):
@@ -406,7 +438,7 @@ class TransferApprovalRequest(models.Model):
         self.ensure_one()
         if self.state != 'draft':
             raise UserError('Only draft requests can be submitted.')
-        self.write({'state': 'pending'})
+        self.write({'state': 'pending'})  # triggers the tenure prompt via write() above
 
         # Auto-detect swap partner
         partner = self._find_swap_partner()
@@ -418,12 +450,168 @@ class TransferApprovalRequest(models.Model):
                 self.id, partner.id,
             )
 
+    # ── Tenure-vacancy prompting ──────────────────────────────────────────────
+
+    def _resolve_role(self):
+        """Requester's prison.role — via x_role_id, else designation name."""
+        self.ensure_one()
+        role = self.employee_id.x_role_id
+        if role:
+            return role
+        designation = (self.employee_id.x_designation or '').strip()
+        if not designation:
+            return self.env['prison.role']
+        base = re.sub(r'\s*\((?:women|men)\)\s*$', '', designation, flags=re.I).strip()
+        return self.env['prison.role'].sudo().search([('name', '=ilike', base)], limit=1)
+
+    def prompt_tenure_candidates_if_no_vacancy(self):
+        """
+        When this request targets a prison with NO vacancy for the requester's
+        position, find officers at that prison holding the same position who
+        have completed their tenure (3 years standard / 18 months hill station)
+        and have no open transfer request of their own, and notify each of them
+        to apply for their tenure transfer — so a post can be vacated.
+
+        The same officers automatically appear in the admin's Tenure Transfer
+        eligibility list (they exceed the threshold and have not applied);
+        the notification is additionally flagged there via 'vacancy_prompted'.
+
+        Triggered automatically by the create()/write() hooks above whenever
+        a record's state becomes 'pending' — no controller needs to call
+        this directly. _prompt_tenure_candidates() is additionally
+        idempotent per-request (see its early-exit) as defense in depth.
+
+        Never raises — failures are logged and ignored so request submission
+        is never blocked by this convenience flow.
+        """
+        for rec in self:
+            try:
+                rec._prompt_tenure_candidates()
+            except Exception:
+                _logger.exception(
+                    'tenure-vacancy prompt failed for transfer request %d', rec.id)
+
+    def _prompt_tenure_candidates(self):
+        self.ensure_one()
+
+        # Idempotency guard: skip the full occupant scan if this specific
+        # request already triggered prompts (covers the multiple call sites
+        # noted above, and safe re-runs in general).
+        already_ran = self.env['tnpd.notification'].sudo().search_count([
+            ('transfer_request_id', '=', self.id),
+            ('action_type', '=', 'tenure_transfer_prompt'),
+        ])
+        if already_ran:
+            return
+
+        dest = self._get_destination_prison()
+        if not dest:
+            return
+
+        role = self._resolve_role()
+        if not role:
+            return
+
+        # Exclude general_mirror rows: a prison can carry both a real
+        # ('general'/'women') row and a mirrored display-only row for the
+        # same (prison_id, role_id) pair (see PR #75). Without this filter,
+        # limit=1 can non-deterministically return the mirror row, whose
+        # vacancy_count doesn't reflect the real filled/sanctioned figures —
+        # firing a false "please vacate" prompt even when the real row has
+        # an open vacancy.
+        desig_vac = self.env['prison.designation.vacancy'].sudo().search([
+            ('prison_id', '=', dest.id),
+            ('role_id', '=', role.id),
+            ('hierarchy_type', '!=', 'general_mirror'),
+        ], limit=1)
+        # Only act when we positively know there is no vacancy
+        if not desig_vac or desig_vac.vacancy_count > 0:
+            return
+
+        threshold = _TENURE_DAYS_HILL if dest.is_hill_station else _TENURE_DAYS_STANDARD
+        cutoff = date.today() - timedelta(days=threshold)
+
+        occupants = self.env['hr.employee'].sudo().search([
+            ('active', '=', True),
+            ('x_employee_code', '!=', False),
+            ('x_employee_code', '!=', ''),
+            ('id', '!=', self.employee_id.id),
+            ('x_date_present_station', '!=', False),
+            ('x_date_present_station', '<=', str(cutoff)),
+            '|', '|',
+            ('x_central_jail_id', '=', dest.id),
+            ('x_district_jail_id', '=', dest.id),
+            ('x_sub_jail_id', '=', dest.id),
+        ])
+
+        # Same position: compare designation with the (Women)/(Men) suffix removed
+        def _base(desig):
+            return re.sub(r'\s*\((?:women|men)\)\s*$', '', (desig or '').strip(), flags=re.I).lower()
+
+        role_base = role.name.strip().lower()
+        occupants = occupants.filtered(lambda e: _base(e.x_designation) == role_base)
+        if not occupants:
+            return
+
+        # Skip occupants who already have an open transfer request of any type
+        open_reqs = self.env['transfer.approval.request'].sudo().search([
+            ('employee_id', 'in', occupants.ids),
+            ('state', 'in', ['draft', 'pending']),
+            ('active', '=', True),
+        ])
+        occupants = occupants - open_reqs.mapped('employee_id')
+        if not occupants:
+            return
+
+        Notification = self.env['tnpd.notification'].sudo()
+        years_label = '18 months' if dest.is_hill_station else '3 years'
+        for emp in occupants:
+            # One live prompt per officer — do not spam on every new request
+            existing = Notification.search([
+                ('employee_id', '=', emp.id),
+                ('action_type', '=', 'tenure_transfer_prompt'),
+                ('is_read', '=', False),
+            ], limit=1)
+            if existing:
+                continue
+            Notification.create({
+                'employee_id':         emp.id,
+                'transfer_request_id': self.id,
+                'notification_type':   'general',
+                'action_type':         'tenure_transfer_prompt',
+                'message': (
+                    f'You have served more than {years_label} at {dest.name}. '
+                    f'An incoming transfer request for your position is waiting '
+                    f'for a vacancy. Please apply for your tenure transfer at '
+                    f'the earliest.'
+                ),
+            })
+            _logger.info(
+                'Tenure prompt sent to employee %d (%s) at %s for request %d',
+                emp.id, emp.x_employee_code, dest.name, self.id,
+            )
+
+    def _clear_tenure_prompts(self):
+        """
+        Mark this request's tenure-vacancy prompts as read.
+
+        Called when the triggering request is cancelled or rejected so
+        occupants at the (now moot) destination stop seeing a "please
+        vacate" notice for a request that no longer exists.
+        """
+        self.env['tnpd.notification'].sudo().search([
+            ('transfer_request_id', 'in', self.ids),
+            ('action_type', '=', 'tenure_transfer_prompt'),
+            ('is_read', '=', False),
+        ]).write({'is_read': True, 'read_date': fields.Datetime.now()})
+
     def action_cancel(self):
         """Move draft/pending → cancelled."""
         self.ensure_one()
         if self.state not in ('draft', 'pending'):
             raise UserError('Only draft or pending requests can be cancelled.')
         self.write({'state': 'cancelled'})
+        self._clear_tenure_prompts()
 
     def action_return(self):
         """Move pending → returned (for correction). Approver only."""
@@ -625,6 +813,7 @@ class TransferApprovalRequest(models.Model):
             f'Your transfer request (Ref: TRF/{self.id}) has been rejected. '
             f'Please contact your administrator for more information.',
         )
+        self._clear_tenure_prompts()
 
     @api.model
     def _lookup_jail(self, jail_type, name):

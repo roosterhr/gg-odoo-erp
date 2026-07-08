@@ -694,6 +694,56 @@ class PrisonJailApiController(http.Controller):
             Jail = request.env['prison.jail'].sudo()
             all_jails = Jail.search([('active', '=', True)], order='sequence, name')
 
+            # Officers posted per prison. Mirrors the exact OR-domain used by
+            # the /api/employees jail_id filter (employee_api.py
+            # _build_filter_domain): matches the M2O field at any posting
+            # tier OR the legacy text field (exact, case-insensitive) at any
+            # tier. UNION (not UNION ALL) on (jail_id, employee_id) pairs plus
+            # COUNT(DISTINCT employee_id) ensures an employee whose M2O and
+            # legacy text both resolve to the same prison — or who has links
+            # set on more than one tier — is counted once, not once per branch.
+            emp_counts = {}
+            try:
+                request.env.cr.execute("""
+                    SELECT jail_id, COUNT(DISTINCT employee_id) AS cnt FROM (
+                        SELECT x_central_jail_id AS jail_id, id AS employee_id
+                          FROM hr_employee
+                         WHERE active AND x_employee_code IS NOT NULL AND x_employee_code != ''
+                           AND x_central_jail_id IS NOT NULL
+                        UNION
+                        SELECT x_district_jail_id, id
+                          FROM hr_employee
+                         WHERE active AND x_employee_code IS NOT NULL AND x_employee_code != ''
+                           AND x_district_jail_id IS NOT NULL
+                        UNION
+                        SELECT x_sub_jail_id, id
+                          FROM hr_employee
+                         WHERE active AND x_employee_code IS NOT NULL AND x_employee_code != ''
+                           AND x_sub_jail_id IS NOT NULL
+                        UNION
+                        SELECT pj.id, e.id
+                          FROM hr_employee e
+                          JOIN prison_jail pj ON lower(e.x_central_prison) = lower(pj.name)
+                         WHERE e.active AND e.x_employee_code IS NOT NULL AND e.x_employee_code != ''
+                           AND e.x_central_prison IS NOT NULL AND e.x_central_prison != ''
+                        UNION
+                        SELECT pj.id, e.id
+                          FROM hr_employee e
+                          JOIN prison_jail pj ON lower(e.x_district_jail) = lower(pj.name)
+                         WHERE e.active AND e.x_employee_code IS NOT NULL AND e.x_employee_code != ''
+                           AND e.x_district_jail IS NOT NULL AND e.x_district_jail != ''
+                        UNION
+                        SELECT pj.id, e.id
+                          FROM hr_employee e
+                          JOIN prison_jail pj ON lower(e.x_sub_jail) = lower(pj.name)
+                         WHERE e.active AND e.x_employee_code IS NOT NULL AND e.x_employee_code != ''
+                           AND e.x_sub_jail IS NOT NULL AND e.x_sub_jail != ''
+                    ) t GROUP BY jail_id
+                """)
+                emp_counts = {row[0]: int(row[1]) for row in request.env.cr.fetchall()}
+            except Exception:
+                _logger.exception('filter-list: employee count query failed')
+
             groups_map = {
                 'women':   {'label': "Women's Institutions",  'jails': []},
                 'central': {'label': 'Central Prisons',        'jails': []},
@@ -711,6 +761,9 @@ class PrisonJailApiController(http.Controller):
                     'institution_type': j.jail_type,
                     'hierarchy_type':   j.hierarchy_type,
                     'is_closed':        j.is_closed,
+                    'parent_id':        j.parent_id.id if j.parent_id else None,
+                    'parent_name':      j.parent_id.name if j.parent_id else '',
+                    'employee_count':   emp_counts.get(j.id, 0),
                 }
                 if j.is_closed:
                     groups_map['closed']['jails'].append(item)
