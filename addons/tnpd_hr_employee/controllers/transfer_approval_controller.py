@@ -3,7 +3,7 @@
 
 import json
 import logging
-from datetime import date
+from datetime import date, timedelta
 
 from odoo import fields, http
 from odoo.http import request
@@ -90,8 +90,12 @@ class TransferApprovalController(http.Controller):
     def _format_jail(self, jail_record):
         """Serialize a prison.jail Many2one value."""
         if not jail_record:
-            return {'id': None, 'name': ''}
-        return {'id': jail_record.id, 'name': jail_record.name}
+            return {'id': None, 'name': '', 'hierarchy_type': ''}
+        return {
+            'id': jail_record.id,
+            'name': jail_record.name,
+            'hierarchy_type': jail_record.hierarchy_type or 'general',
+        }
 
     def _format_request(self, rec):
         """Serialize a transfer.approval.request record for API responses."""
@@ -1964,6 +1968,93 @@ class TransferApprovalController(http.Controller):
 
         except Exception as exc:
             _logger.exception('GET /api/transfer/vacancy-check failed: %s', exc)
+            return self._err('Internal server error', status=500)
+
+    # ==================================================================
+    # API 13b – Over-tenure occupants of a prison
+    # GET /api/transfer/overstay-occupants
+    # ==================================================================
+
+    @http.route(
+        '/api/transfer/overstay-occupants',
+        auth='none',
+        type='http',
+        methods=['GET'],
+        csrf=False,
+    )
+    def overstay_occupants(self, **kwargs):
+        """
+        List employees posted at a prison who have completed their tenure
+        transfer period there (3 years standard / 18 months hill station).
+
+        Used by the approval UI to show, for a no-vacancy preference, which
+        occupants could vacate a post via tenure transfer.
+
+        Query params
+        ------------
+        prison_id  int  required  (prison.jail id)
+        """
+        try:
+            uid, err = self._require_auth()
+            if err:
+                return err
+
+            try:
+                prison_id = int(kwargs.get('prison_id', 0))
+            except (TypeError, ValueError):
+                prison_id = 0
+            if not prison_id:
+                return self._err('Missing or invalid prison_id')
+
+            env = request.env(user=uid)
+            jail = env['prison.jail'].sudo().browse(prison_id)
+            if not jail.exists():
+                return self._err('Prison not found', status=404)
+
+            threshold_days = 547 if jail.is_hill_station else 1095
+            cutoff = date.today() - timedelta(days=threshold_days)
+
+            occupants = env['hr.employee'].sudo().search([
+                ('active', '=', True),
+                ('x_employee_code', '!=', False),
+                ('x_date_present_station', '!=', False),
+                ('x_date_present_station', '<=', str(cutoff)),
+                '|', '|',
+                ('x_central_jail_id', '=', jail.id),
+                ('x_district_jail_id', '=', jail.id),
+                ('x_sub_jail_id', '=', jail.id),
+            ], order='x_date_present_station asc')
+
+            open_reqs = env['transfer.approval.request'].sudo().search([
+                ('employee_id', 'in', occupants.ids),
+                ('state', 'in', ['draft', 'pending']),
+                ('active', '=', True),
+            ])
+            emp_with_open = set(open_reqs.mapped('employee_id').ids)
+
+            today = date.today()
+            records = [{
+                'employee_id':      e.id,
+                'name':             e.name or '',
+                'employee_code':    e.x_employee_code or '',
+                'designation':      e.x_designation or '',
+                'posting_date':     str(e.x_date_present_station),
+                'tenure_years':     round((today - e.x_date_present_station).days / 365.25, 1),
+                'has_open_request': e.id in emp_with_open,
+            } for e in occupants]
+
+            return self._json_response({
+                'success':         True,
+                'prison_id':       jail.id,
+                'prison_name':     jail.name or '',
+                'is_hill_station': bool(jail.is_hill_station),
+                'threshold_label': '18 months' if jail.is_hill_station else '3 years',
+                'count':           len(records),
+                'records':         records,
+            })
+
+        except Exception as exc:
+            _logger.exception('GET /api/transfer/overstay-occupants failed: %s', exc)
             return self._err('Internal server error', status=500)
 
     # ==================================================================
