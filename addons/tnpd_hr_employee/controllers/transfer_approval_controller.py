@@ -1460,7 +1460,7 @@ class TransferApprovalController(http.Controller):
         # Find employees with tenure >= 3 years
         emp_domain = [('x_date_present_station', '!=', False)]
         if search:
-            emp_domain.append(('name', 'ilike', search))
+            emp_domain.extend(['|', ('name', 'ilike', search), ('x_employee_code', 'ilike', search)])
 
         all_employees = env['hr.employee'].sudo().search(emp_domain)
 
@@ -2055,6 +2055,117 @@ class TransferApprovalController(http.Controller):
 
         except Exception as exc:
             _logger.exception('GET /api/transfer/overstay-occupants failed: %s', exc)
+            return self._err('Internal server error', status=500)
+
+    # ==================================================================
+    # API 13c – Notify over-tenure occupants to apply for tenure transfer
+    # POST /api/transfer/notify-overstay
+    # ==================================================================
+
+    @http.route(
+        '/api/transfer/notify-overstay',
+        auth='none',
+        type='http',
+        methods=['POST'],
+        csrf=False,
+    )
+    def notify_overstay(self, **_kwargs):
+        """
+        Send a "please apply for your tenure transfer" notification to every
+        over-tenure occupant of the given prison who does not already have an
+        open transfer request or an unread prompt.
+
+        Body (JSON)
+        -----------
+        prison_id   int  required  (prison.jail id)
+        request_id  int  optional  (transfer request that triggered this)
+        """
+        try:
+            uid, err = self._require_auth()
+            if err:
+                return err
+
+            data, err = self._parse_json_body()
+            if err:
+                return err
+
+            try:
+                prison_id = int(data.get('prison_id', 0))
+            except (TypeError, ValueError):
+                prison_id = 0
+            if not prison_id:
+                return self._err('Missing or invalid prison_id')
+
+            request_id = data.get('request_id') or False
+
+            env = request.env(user=uid)
+            jail = env['prison.jail'].sudo().browse(prison_id)
+            if not jail.exists():
+                return self._err('Prison not found', status=404)
+
+            threshold_days = 547 if jail.is_hill_station else 1095
+            cutoff = date.today() - timedelta(days=threshold_days)
+            years_label = '18 months' if jail.is_hill_station else '3 years'
+
+            occupants = env['hr.employee'].sudo().search([
+                ('active', '=', True),
+                ('x_employee_code', '!=', False),
+                ('x_date_present_station', '!=', False),
+                ('x_date_present_station', '<=', str(cutoff)),
+                '|', '|',
+                ('x_central_jail_id', '=', jail.id),
+                ('x_district_jail_id', '=', jail.id),
+                ('x_sub_jail_id', '=', jail.id),
+            ])
+
+            # Skip occupants with an open transfer request of their own
+            open_reqs = env['transfer.approval.request'].sudo().search([
+                ('employee_id', 'in', occupants.ids),
+                ('state', 'in', ['draft', 'pending']),
+                ('active', '=', True),
+            ])
+            candidates = occupants - open_reqs.mapped('employee_id')
+
+            Notification = env['tnpd.notification'].sudo()
+            sent, skipped = 0, len(occupants) - len(candidates)
+            for emp in candidates:
+                # One live prompt per officer — do not spam
+                existing = Notification.search([
+                    ('employee_id', '=', emp.id),
+                    ('action_type', '=', 'tenure_transfer_prompt'),
+                    ('is_read', '=', False),
+                ], limit=1)
+                if existing:
+                    skipped += 1
+                    continue
+                Notification.create({
+                    'employee_id':         emp.id,
+                    'transfer_request_id': int(request_id) if request_id else False,
+                    'notification_type':   'general',
+                    'action_type':         'tenure_transfer_prompt',
+                    'message': (
+                        f'You have served more than {years_label} at {jail.name}. '
+                        f'An incoming transfer request for your position is waiting '
+                        f'for a vacancy. Please apply for your tenure transfer at '
+                        f'the earliest.'
+                    ),
+                    'sent_by': uid,
+                })
+                sent += 1
+
+            _logger.info(
+                'notify-overstay: prison=%d sent=%d skipped=%d by user=%d',
+                jail.id, sent, skipped, uid,
+            )
+            return self._json_response({
+                'success': True,
+                'prison_id': jail.id,
+                'sent': sent,
+                'skipped': skipped,
+            })
+
+        except Exception as exc:
+            _logger.exception('POST /api/transfer/notify-overstay failed: %s', exc)
             return self._err('Internal server error', status=500)
 
     # ==================================================================
