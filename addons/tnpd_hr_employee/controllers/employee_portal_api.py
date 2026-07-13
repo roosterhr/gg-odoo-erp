@@ -636,12 +636,6 @@ class EmployeePortalAPI(http.Controller):
 
         return self._ok(history=reversed_history)
 
-    # ── GET /api/employee-portal/prisons ────────────────────────────────────
-
-    @http.route(
-        '/api/employee-portal/prisons',
-        auth='none', type='http', methods=['GET'], csrf=False,
-    )
     def _employee_hierarchy_type(self, emp):
         """
         Return the hierarchy_type ('general' | 'women') of the employee's
@@ -652,6 +646,12 @@ class EmployeePortalAPI(http.Controller):
             return None
         return current.hierarchy_type or 'general'
 
+    # ── GET /api/employee-portal/prisons ────────────────────────────────────
+
+    @http.route(
+        '/api/employee-portal/prisons',
+        auth='none', type='http', methods=['GET'], csrf=False,
+    )
     def get_prisons(self, **_kw):
         """
         Return active, non-closed prison.jail records with parent context.
