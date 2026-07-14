@@ -517,9 +517,19 @@ class PrisonJailApiController(http.Controller):
                     'vacancy_count':       v.vacancy_count,
                 }
 
-            # prison.designation.vacancy — role-level aggregated per prison (secondary source)
+            # prison.designation.vacancy — role-level aggregated per prison (secondary source).
+            # Must use the EXACT filter of vacancy_api.get_designation_vacancy
+            # (the Prison Breakdown panel): canonical role ids + active role,
+            # NO hierarchy filter. Otherwise the dropdown badge and the
+            # breakdown disagree (e.g. non-canonical Cook/Cleanliness rows
+            # inflating the badge while the breakdown shows canonical roles
+            # only — or mirror rows counted by one but not the other).
+            canonical_ids = [1, 2, 3, 4, 5, 6]  # keep in sync with vacancy_api._CANONICAL_IDS
             dv_map = {}
-            for d in Desig.search([]):
+            for d in Desig.search([
+                ('role_id', 'in', canonical_ids),
+                ('role_id.active', '=', True),
+            ]):
                 pid = d.prison_id.id
                 if pid not in dv_map:
                     dv_map[pid] = {'sanctioned_strength': 0, 'occupied_count': 0, 'vacancy_count': 0}
