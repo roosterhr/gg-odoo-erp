@@ -2011,18 +2011,25 @@ class TransferApprovalController(http.Controller):
             if not jail.exists():
                 return self._err('Prison not found', status=404)
 
-            threshold_days = 547 if jail.is_hill_station else 1095
+            threshold_days = _TENURE_DAYS_HILL if jail.is_hill_station else _TENURE_DAYS_STANDARD
             cutoff = date.today() - timedelta(days=threshold_days)
 
+            # Match by M2O jail ids AND legacy text fields — long-tenured
+            # officers are the most likely cohort still linked via the
+            # pre-migration Char fields (same six-branch pattern as
+            # employee_api.py, see PR #76).
             occupants = env['hr.employee'].sudo().search([
                 ('active', '=', True),
                 ('x_employee_code', '!=', False),
                 ('x_date_present_station', '!=', False),
                 ('x_date_present_station', '<=', str(cutoff)),
-                '|', '|',
-                ('x_central_jail_id', '=', jail.id),
-                ('x_district_jail_id', '=', jail.id),
-                ('x_sub_jail_id', '=', jail.id),
+                '|', '|', '|', '|', '|',
+                ('x_central_jail_id',  '=',      jail.id),
+                ('x_district_jail_id', '=',      jail.id),
+                ('x_sub_jail_id',      '=',      jail.id),
+                ('x_central_prison',   '=ilike', jail.name),
+                ('x_district_jail',    '=ilike', jail.name),
+                ('x_sub_jail',         '=ilike', jail.name),
             ], order='x_date_present_station asc')
 
             open_reqs = env['transfer.approval.request'].sudo().search([
@@ -2103,19 +2110,23 @@ class TransferApprovalController(http.Controller):
             if not jail.exists():
                 return self._err('Prison not found', status=404)
 
-            threshold_days = 547 if jail.is_hill_station else 1095
+            threshold_days = _TENURE_DAYS_HILL if jail.is_hill_station else _TENURE_DAYS_STANDARD
             cutoff = date.today() - timedelta(days=threshold_days)
             years_label = '18 months' if jail.is_hill_station else '3 years'
 
+            # Same six-branch M2O + legacy-text domain as overstay_occupants
             occupants = env['hr.employee'].sudo().search([
                 ('active', '=', True),
                 ('x_employee_code', '!=', False),
                 ('x_date_present_station', '!=', False),
                 ('x_date_present_station', '<=', str(cutoff)),
-                '|', '|',
-                ('x_central_jail_id', '=', jail.id),
-                ('x_district_jail_id', '=', jail.id),
-                ('x_sub_jail_id', '=', jail.id),
+                '|', '|', '|', '|', '|',
+                ('x_central_jail_id',  '=',      jail.id),
+                ('x_district_jail_id', '=',      jail.id),
+                ('x_sub_jail_id',      '=',      jail.id),
+                ('x_central_prison',   '=ilike', jail.name),
+                ('x_district_jail',    '=ilike', jail.name),
+                ('x_sub_jail',         '=ilike', jail.name),
             ])
 
             # Skip occupants with an open transfer request of their own
