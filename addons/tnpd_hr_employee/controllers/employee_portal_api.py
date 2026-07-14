@@ -636,6 +636,16 @@ class EmployeePortalAPI(http.Controller):
 
         return self._ok(history=reversed_history)
 
+    def _employee_hierarchy_type(self, emp):
+        """
+        Return the hierarchy_type ('general' | 'women') of the employee's
+        current posting, or None when it cannot be determined.
+        """
+        current = emp.x_sub_jail_id or emp.x_district_jail_id or emp.x_central_jail_id
+        if not current:
+            return None
+        return current.hierarchy_type or 'general'
+
     # ── GET /api/employee-portal/prisons ────────────────────────────────────
 
     @http.route(
@@ -644,29 +654,41 @@ class EmployeePortalAPI(http.Controller):
     )
     def get_prisons(self, **_kw):
         """
-        Return all active, non-closed prison.jail records with parent context.
+        Return active, non-closed prison.jail records with parent context.
         Used to populate the single-dropdown preference selectors on the
         Employee Transfer Request form.
+
+        Restricted by hierarchy: an employee posted at a General institution
+        sees only General prisons; an employee posted at an SPW sees only
+        Women-hierarchy prisons. When the employee's hierarchy cannot be
+        determined, the full list is returned.
         """
         emp, err = self._require_employee_session()
         if err:
             return err
 
+        domain = [('active', '=', True), ('is_closed', '=', False)]
+        emp_hierarchy = self._employee_hierarchy_type(emp)
+        if emp_hierarchy == 'women':
+            domain.append(('hierarchy_type', '=', 'women'))
+        elif emp_hierarchy == 'general':
+            domain.append(('hierarchy_type', '=', 'general'))
+
         Jail = request.env['prison.jail'].sudo()
-        jails = Jail.search([('active', '=', True), ('is_closed', '=', False)],
-                            order='sequence, jail_type, name')
+        jails = Jail.search(domain, order='sequence, jail_type, name')
 
         prisons = []
         for j in jails:
             prisons.append({
-                'id':          j.id,
-                'name':        j.name or '',
-                'jail_type':   j.jail_type or '',
-                'parent_id':   j.parent_id.id if j.parent_id else None,
-                'parent_name': j.parent_id.name if j.parent_id else None,
+                'id':             j.id,
+                'name':           j.name or '',
+                'jail_type':      j.jail_type or '',
+                'hierarchy_type': j.hierarchy_type or 'general',
+                'parent_id':      j.parent_id.id if j.parent_id else None,
+                'parent_name':    j.parent_id.name if j.parent_id else None,
             })
 
-        return self._ok(prisons=prisons)
+        return self._ok(prisons=prisons, employee_hierarchy=emp_hierarchy or '')
 
     # ── GET /api/employee-portal/vacancy ─────────────────────────────────────
 
@@ -819,6 +841,19 @@ class EmployeePortalAPI(http.Controller):
         for jid, label in [(p1_sub, 'Preference 1'), (p2_sub, 'Preference 2'), (p3_sub, 'Preference 3')]:
             if not Jail.browse(jid).exists():
                 return self._err(f'{label} — Prison Location not found')
+
+        # Hierarchy rule: General-prison employees may only request General
+        # prisons; SPW employees may only request Women-hierarchy prisons.
+        emp_hierarchy = self._employee_hierarchy_type(emp)
+        if emp_hierarchy in ('general', 'women'):
+            side_label = 'General' if emp_hierarchy == 'general' else 'Special Prison for Women'
+            for jid, label in [(p1_sub, 'Preference 1'), (p2_sub, 'Preference 2'), (p3_sub, 'Preference 3')]:
+                dest = Jail.browse(jid)
+                if (dest.hierarchy_type or 'general') != emp_hierarchy:
+                    return self._err(
+                        f'{label} — you are posted at a {side_label} institution and '
+                        f'can only request transfers within the {side_label} hierarchy.'
+                    )
 
         # Prevent duplicate active requests (draft or pending)
         existing = request.env['transfer.approval.request'].sudo().search([
