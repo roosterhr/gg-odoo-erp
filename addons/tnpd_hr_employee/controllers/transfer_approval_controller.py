@@ -1991,6 +1991,24 @@ class TransferApprovalController(http.Controller):
             _logger.exception('GET /api/transfer/vacancy-check failed: %s', exc)
             return self._err('Internal server error', status=500)
 
+    def _filter_occupants_by_role(self, env, occupants, role_id_raw):
+        """Keep only occupants whose base designation matches the role name."""
+        try:
+            role_id = int(role_id_raw or 0)
+        except (TypeError, ValueError):
+            role_id = 0
+        if not role_id:
+            return occupants
+        role = env['prison.role'].sudo().browse(role_id)
+        if not role.exists():
+            return occupants
+
+        def _base(desig):
+            return re.sub(r'\s*\((?:women|men)\)\s*$', '', (desig or '').strip(), flags=re.I).lower()
+
+        role_base = role.name.strip().lower()
+        return occupants.filtered(lambda e: _base(e.x_designation) == role_base)
+
     # ==================================================================
     # API 13b – Over-tenure occupants of a prison
     # GET /api/transfer/overstay-occupants
@@ -2052,6 +2070,14 @@ class TransferApprovalController(http.Controller):
                 ('x_district_jail',    '=ilike', jail.name),
                 ('x_sub_jail',         '=ilike', jail.name),
             ], order='x_date_present_station asc')
+
+            # Optional designation filter: only occupants holding the given
+            # role, so the list matches the applicant's designation (a
+            # Chief Head Warder vacating changes nothing for a Grade II
+            # Warder request). Compares base designation names with the
+            # (Women)/(Men) suffix stripped — same rule as the model's
+            # tenure-prompt matching.
+            occupants = self._filter_occupants_by_role(env, occupants, kwargs.get('role_id'))
 
             open_reqs = env['transfer.approval.request'].sudo().search([
                 ('employee_id', 'in', occupants.ids),
@@ -2149,6 +2175,9 @@ class TransferApprovalController(http.Controller):
                 ('x_district_jail',    '=ilike', jail.name),
                 ('x_sub_jail',         '=ilike', jail.name),
             ])
+
+            # Optional designation filter — notify only same-role occupants
+            occupants = self._filter_occupants_by_role(env, occupants, data.get('role_id'))
 
             # Skip occupants with an open transfer request of their own
             open_reqs = env['transfer.approval.request'].sudo().search([
