@@ -3,6 +3,7 @@
 
 import json
 import logging
+import re
 from datetime import date, timedelta
 
 from odoo import fields, http
@@ -109,6 +110,24 @@ class TransferApprovalController(http.Controller):
         except Exception:
             pass
 
+        # Resolve the employee's prison.role so the approval UI can show
+        # designation-wise vacancy (via x_role_id, else by designation name
+        # with the (Women)/(Men) suffix stripped — same rule as the model's
+        # _resolve_role).
+        role = None
+        try:
+            role = rec.employee_id.x_role_id or None
+            if not role:
+                base = re.sub(
+                    r'\s*\((?:women|men)\)\s*$', '',
+                    (rec.employee_id.x_designation or '').strip(), flags=re.I,
+                ).strip()
+                if base:
+                    role = rec.env['prison.role'].sudo().search(
+                        [('name', '=ilike', base)], limit=1) or None
+        except Exception:
+            role = None
+
         # ── Flatten current posting (Sub > District > Central) ──────────────
         from_sub      = rec.current_sub_jail.name      if rec.current_sub_jail      else ''
         from_district = rec.current_district_jail.name if rec.current_district_jail else ''
@@ -139,6 +158,8 @@ class TransferApprovalController(http.Controller):
             'employee_name':            rec.employee_id.name or '',
             'employee_code':            rec.employee_id.x_employee_code or '',
             'designation':              rec.employee_id.x_designation or '',
+            'employee_role_id':         role.id if role else None,
+            'employee_role_name':       role.name if role else '',
             # Current posting snapshot — nested objects (for detail view)
             'current_central_prison':   self._format_jail(rec.current_central_prison),
             'current_district_jail':    self._format_jail(rec.current_district_jail),
