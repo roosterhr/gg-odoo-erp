@@ -584,18 +584,7 @@ class PrisonJailApiController(http.Controller):
                     c_data.update(_strength(c.id))
                     children_formatted.append(c_data)
 
-                if children_formatted:
-                    agg_s = sum(c['sanctioned_strength'] for c in children_formatted)
-                    agg_f = sum(c['occupied_count']      for c in children_formatted)
-                    agg_v = sum(c['vacancy_count']       for c in children_formatted)
-                    p_data.update({
-                        'sanctioned_strength': agg_s,
-                        'occupied_count':      agg_f,
-                        'vacancy_count':       agg_v,
-                        'vacancy_available':   agg_v > 0,
-                    })
-                else:
-                    p_data.update(_strength(parent.id))
+                p_data.update(_strength(parent.id))
 
                 p_data['children'] = children_formatted
                 p_data['district_jails'] = [

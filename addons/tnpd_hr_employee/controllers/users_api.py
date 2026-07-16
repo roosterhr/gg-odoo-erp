@@ -643,11 +643,8 @@ class UsersApiController(http.Controller):
         except Exception:
             payload = {}
 
-        if payload.get('used'):
-            return self._err('Cannot revoke an already accepted invitation.', status=400)
-
         rec.unlink()
-        return self._ok(message='Invitation revoked successfully.')
+        return self._ok(message='Invitation deleted successfully.')
 
     # ── GET /api/auth/verify-invite ───────────────────────────────────────────
 
