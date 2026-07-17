@@ -746,17 +746,18 @@ class UsersApiController(http.Controller):
             partial = su_env['res.users'].with_context(active_test=False).search(
                 [('login', '=ilike', email)], limit=1)
             if partial:
-                partial.write({'name': name, 'active': True})
+                partial.write({'name': name, 'active': True, 'x_invited_by_admin': True})
                 new_user = partial
             else:
                 user_vals = {
-                    'name':        name,
-                    'login':       email,
-                    'email':       email,
-                    'active':      True,
-                    'share':       False,
-                    'company_id':  main_company.id,
-                    'company_ids': [(4, main_company.id)],
+                    'name':               name,
+                    'login':              email,
+                    'email':              email,
+                    'active':             True,
+                    'share':              False,
+                    'x_invited_by_admin': True,
+                    'company_id':         main_company.id,
+                    'company_ids':        [(4, main_company.id)],
                 }
                 new_user = su_env['res.users'].with_context(no_reset_password=True).create(user_vals)
 

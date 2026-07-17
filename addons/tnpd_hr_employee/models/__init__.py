@@ -3,6 +3,7 @@
 
 from . import ir_attachment
 from . import hr_employee
+from . import res_users
 from . import prison_master
 from . import transfer_approval_request
 from . import tnpd_notification
