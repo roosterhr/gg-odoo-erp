@@ -600,12 +600,27 @@ class UsersApiController(http.Controller):
         try:
             ICP    = request.env['ir.config_parameter'].sudo()
             params = ICP.search([('key', '=like', 'tnpd.invite.%')], order='create_date desc')
+            Users  = request.env['res.users'].sudo().with_context(active_test=False)
 
             invitations = []
             for p in params:
                 try:
-                    payload = json.loads(p.value or '{}')
-                    invitations.append(_format_invitation(p.key, payload))
+                    payload  = json.loads(p.value or '{}')
+                    formatted = _format_invitation(p.key, payload)
+
+                    # An accepted invite whose resulting account has since
+                    # been deactivated should disappear from this list —
+                    # same rule as System Users, which excludes inactive
+                    # accounts by default. Otherwise it would keep showing
+                    # "Onboarded" forever, with no link back to the account
+                    # (the invite payload has no reference to it).
+                    if formatted['status'] == 'Accepted' and formatted['email']:
+                        matching_user = Users.search(
+                            [('login', '=ilike', formatted['email'])], limit=1)
+                        if matching_user and not matching_user.active:
+                            continue
+
+                    invitations.append(formatted)
                 except Exception:
                     pass
 
