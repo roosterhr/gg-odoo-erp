@@ -520,11 +520,15 @@ class EmployeeAPI(http.Controller):
     def check_admin_session(self, **_kw):
         """
         Called by the frontend immediately after /web/session/authenticate
-        to confirm the authenticated user is an internal (non-portal) Odoo user.
+        to confirm the authenticated user is an internal (non-portal) Odoo user
+        who was actually provisioned through the admin invite flow.
 
-        Portal/employee users have share=True.  If a portal user somehow
-        reaches this endpoint we destroy their session and return 403 so
-        the admin login page can show a clear error.
+        Portal/employee users have share=True. Internal users lacking
+        x_invited_by_admin (legacy accounts, manual backend creation, etc.)
+        are equally not allowed — only the bootstrap admin and users who
+        completed signup via a valid admin-issued invite qualify. Either
+        case destroys the session and returns 403 so the admin login page
+        can show a clear error.
         """
         uid = request.session.uid
         if not uid:
@@ -534,8 +538,11 @@ class EmployeeAPI(http.Controller):
         if not user.exists():
             return self._json_response({'success': False, 'message': 'User not found'}, status=401)
 
-        if user.share:
-            # Portal or public user — must use Employee Login, not Admin Login.
+        bootstrap_admin = request.env.ref('base.user_admin', raise_if_not_found=False)
+        is_bootstrap_admin = bool(bootstrap_admin) and user.id == bootstrap_admin.id
+        if user.share or not (is_bootstrap_admin or user.x_invited_by_admin):
+            # Portal user, or an internal user never provisioned via an
+            # admin invite — must use Employee Login, not Admin Login.
             request.session.logout(keep_db=True)
             return self._json_response(
                 {'success': False, 'message': 'Employee accounts must use the Employee Login.'},

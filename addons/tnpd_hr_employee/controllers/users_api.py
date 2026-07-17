@@ -600,12 +600,27 @@ class UsersApiController(http.Controller):
         try:
             ICP    = request.env['ir.config_parameter'].sudo()
             params = ICP.search([('key', '=like', 'tnpd.invite.%')], order='create_date desc')
+            Users  = request.env['res.users'].sudo().with_context(active_test=False)
 
             invitations = []
             for p in params:
                 try:
-                    payload = json.loads(p.value or '{}')
-                    invitations.append(_format_invitation(p.key, payload))
+                    payload  = json.loads(p.value or '{}')
+                    formatted = _format_invitation(p.key, payload)
+
+                    # An accepted invite whose resulting account has since
+                    # been deactivated should disappear from this list —
+                    # same rule as System Users, which excludes inactive
+                    # accounts by default. Otherwise it would keep showing
+                    # "Onboarded" forever, with no link back to the account
+                    # (the invite payload has no reference to it).
+                    if formatted['status'] == 'Accepted' and formatted['email']:
+                        matching_user = Users.search(
+                            [('login', '=ilike', formatted['email'])], limit=1)
+                        if matching_user and not matching_user.active:
+                            continue
+
+                    invitations.append(formatted)
                 except Exception:
                     pass
 
@@ -746,17 +761,18 @@ class UsersApiController(http.Controller):
             partial = su_env['res.users'].with_context(active_test=False).search(
                 [('login', '=ilike', email)], limit=1)
             if partial:
-                partial.write({'name': name, 'active': True})
+                partial.write({'name': name, 'active': True, 'x_invited_by_admin': True})
                 new_user = partial
             else:
                 user_vals = {
-                    'name':        name,
-                    'login':       email,
-                    'email':       email,
-                    'active':      True,
-                    'share':       False,
-                    'company_id':  main_company.id,
-                    'company_ids': [(4, main_company.id)],
+                    'name':               name,
+                    'login':              email,
+                    'email':              email,
+                    'active':             True,
+                    'share':              False,
+                    'x_invited_by_admin': True,
+                    'company_id':         main_company.id,
+                    'company_ids':        [(4, main_company.id)],
                 }
                 new_user = su_env['res.users'].with_context(no_reset_password=True).create(user_vals)
 
