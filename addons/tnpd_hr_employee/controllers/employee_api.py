@@ -9,6 +9,7 @@ from datetime import datetime
 
 from odoo import http
 from odoo.http import request
+from odoo.osv import expression
 
 _logger = logging.getLogger(__name__)
 
@@ -418,28 +419,38 @@ class EmployeeAPI(http.Controller):
                 jail_id = int(kwargs['jail_id'])
                 jail = request.env['prison.jail'].sudo().browse(jail_id)
                 if jail.exists():
-                    # Match the jail at whichever posting tier the employee is
-                    # linked to (central / district / sub), regardless of the
-                    # jail's type. jail_type-specific branches missed women
-                    # institutions (spw, women_sub_jail, special_sub_jail) and
-                    # other types (open_air_jail, farm_jail, transit_yard),
-                    # which caused the filter to be silently ignored.
-                    # Prison IDs are globally unique, so an id can only appear
-                    # in the correct tier's M2O field. Legacy text fields are
-                    # matched too for employees imported before Prison Master
-                    # linkage — with exact (case-insensitive) equality, since a
-                    # substring match on short names like "Madurai" would pull
-                    # in every "..., Madurai" institution.
+                    # Match only the employee's actual current posting, at
+                    # whichever tier that is — sub > district > central,
+                    # same priority as _get_assigned_jail_id(). A central
+                    # jail's ID must NOT also match employees who are really
+                    # posted at a district/sub jail underneath it: the M2O
+                    # x_central_jail_id field is populated as the hierarchy
+                    # parent for those employees too, not just for staff
+                    # actually stationed at the central jail itself.
+                    no_district = ('x_district_jail_id', '=', False)
+                    no_sub      = ('x_sub_jail_id', '=', False)
+                    modern = expression.OR([
+                        [('x_sub_jail_id', '=', jail_id)],
+                        expression.AND([[('x_district_jail_id', '=', jail_id)], [no_sub]]),
+                        expression.AND([[('x_central_jail_id', '=', jail_id)], [no_district], [no_sub]]),
+                    ])
+                    # Legacy free-text fields (pre-Prison-Master imports) are
+                    # only consulted as a fallback for employees with no
+                    # modern hierarchy field set at all — otherwise the same
+                    # "central text pulls in everyone below it" bug can creep
+                    # back in via the text columns.
                     name = jail.name
-                    domain += [
-                        '|', '|', '|', '|', '|',
-                        ('x_central_jail_id', '=', jail_id),
-                        ('x_district_jail_id', '=', jail_id),
-                        ('x_sub_jail_id', '=', jail_id),
-                        ('x_central_prison', '=ilike', name),
-                        ('x_district_jail', '=ilike', name),
-                        ('x_sub_jail', '=ilike', name),
+                    no_m2o_hierarchy = [
+                        ('x_central_jail_id', '=', False),
+                        ('x_district_jail_id', '=', False),
+                        ('x_sub_jail_id', '=', False),
                     ]
+                    legacy = expression.OR([
+                        [('x_sub_jail', '=ilike', name)],
+                        [('x_district_jail', '=ilike', name)],
+                        [('x_central_prison', '=ilike', name)],
+                    ])
+                    domain += expression.OR([modern, expression.AND([no_m2o_hierarchy, legacy])])
             except (ValueError, TypeError):
                 pass
         elif kwargs.get('central_jail_id'):
