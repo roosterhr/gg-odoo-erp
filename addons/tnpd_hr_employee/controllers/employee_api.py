@@ -414,6 +414,9 @@ class EmployeeAPI(http.Controller):
         if kwargs.get('status') and kwargs['status'] != 'all':
             domain.append(('x_status', '=', kwargs['status']))
 
+        if kwargs.get('gender') and kwargs['gender'] in _VALID_GENDER:
+            domain.append(('x_gender', '=', kwargs['gender']))
+
         if kwargs.get('jail_id'):
             try:
                 jail_id = int(kwargs['jail_id'])
@@ -606,6 +609,7 @@ class EmployeeAPI(http.Controller):
         name, mobile_cug_no, employee_id str  individual search fields
         designation                     str  filter by designation (ilike)
         status                          str  filter by x_status exact match
+        gender                          str  filter by gender ('male'|'female'|'other')
         central_jail_id                 int  filter by central jail ID
         native_district                 str  filter by native district (ilike)
         sort                            str  'name' (default) | 'tenure' | 'designation'
