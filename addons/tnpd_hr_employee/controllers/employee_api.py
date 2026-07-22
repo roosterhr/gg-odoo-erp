@@ -5,6 +5,7 @@ import csv
 import io
 import json
 import logging
+import re
 from datetime import datetime
 
 from odoo import http
@@ -12,6 +13,46 @@ from odoo.http import request
 from odoo.osv import expression
 
 _logger = logging.getLogger(__name__)
+
+# Institution-type words/abbreviations that prefix legacy free-text jail
+# fields (x_central_prison / x_district_jail / x_sub_jail) but are absent
+# from the canonical prison.jail "name" — e.g. an employee record says
+# "Central Prison, Chennai-2" while the jail master record is just named
+# "Chennai - II". Stripped before comparison so the legacy fallback can
+# still resolve these to the right jail instead of silently matching
+# nothing (see _normalize_jail_alias).
+_JAIL_ALIAS_PREFIX_RE = re.compile(
+    r'^(?:SPECIAL\s*PRISON\s*FOR\s*WOMEN|CENTRAL\s*PRISON|DISTRICT\s*JAIL|'
+    r'SUB\s*JAIL|S\.?\s*J\.?|SPW|CP)\.?\s*[-,]?\s*',
+    re.IGNORECASE,
+)
+
+# Institution-type prefix that marks a legacy value as a women's institution,
+# used to keep a same-named central prison and SPW ("Madurai") from matching
+# each other.
+_WOMEN_TEXT_RE = re.compile(r'^\s*(SPECIAL\s*PRISON\s*FOR\s*WOMEN|SPW)\b', re.IGNORECASE)
+
+
+def _normalize_jail_alias(text):
+    """Canonical comparison key for a legacy jail-name string.
+
+    Strips the institution-type prefix, collapses punctuation/whitespace
+    separators, and converts a trailing roman-numeral suffix (only "I" /
+    "II" occur in this data set, e.g. "Chennai - II") to the arabic digit
+    used in free-text variants (e.g. "Chennai-2"). The roman->arabic
+    substitution only fires on the last whitespace-delimited token so it
+    can't corrupt a name that merely ends in the letter I.
+    """
+    if not text:
+        return ''
+    t = _JAIL_ALIAS_PREFIX_RE.sub('', text.strip().upper())
+    t = re.sub(r'[-.,]+', ' ', t)
+    tokens = [tok for tok in t.split() if tok]
+    if tokens and tokens[-1] == 'II':
+        tokens[-1] = '2'
+    elif tokens and tokens[-1] == 'I':
+        tokens[-1] = '1'
+    return ''.join(tokens)
 
 # Hard cap on records per page to prevent memory abuse.
 _MAX_LIMIT = 100
@@ -441,19 +482,37 @@ class EmployeeAPI(http.Controller):
                     # only consulted as a fallback for employees with no
                     # modern hierarchy field set at all — otherwise the same
                     # "central text pulls in everyone below it" bug can creep
-                    # back in via the text columns.
-                    name = jail.name
-                    no_m2o_hierarchy = [
-                        ('x_central_jail_id', '=', False),
-                        ('x_district_jail_id', '=', False),
-                        ('x_sub_jail_id', '=', False),
-                    ]
-                    legacy = expression.OR([
-                        [('x_sub_jail', '=ilike', name)],
-                        [('x_district_jail', '=ilike', name)],
-                        [('x_central_prison', '=ilike', name)],
-                    ])
-                    domain += expression.OR([modern, expression.AND([no_m2o_hierarchy, legacy])])
+                    # back in via the text columns. The free text uses
+                    # inconsistent institution-type prefixes/separators
+                    # ("Central Prison, Chennai-2") that never equal the bare
+                    # jail.name ("Chennai - II"), so matching is done via
+                    # _normalize_jail_alias rather than a literal ilike. A
+                    # name can legitimately belong to more than one active jail
+                    # (a central prison and a same-named women's institution),
+                    # so a text value only matches if its own women's-institution
+                    # signal agrees with this jail's hierarchy_type.
+                    target_key = _normalize_jail_alias(jail.name)
+                    target_is_women = jail.hierarchy_type == 'women'
+                    legacy_ids = []
+                    if target_key:
+                        request.env.cr.execute("""
+                            SELECT id, x_central_prison, x_district_jail, x_sub_jail
+                              FROM hr_employee
+                             WHERE active AND x_employee_code IS NOT NULL AND x_employee_code != ''
+                               AND x_central_jail_id IS NULL AND x_district_jail_id IS NULL AND x_sub_jail_id IS NULL
+                               AND (COALESCE(x_central_prison, '') != ''
+                                    OR COALESCE(x_district_jail, '') != ''
+                                    OR COALESCE(x_sub_jail, '') != '')
+                        """)
+                        legacy_ids = [
+                            row[0] for row in request.env.cr.fetchall()
+                            if any(
+                                v and _normalize_jail_alias(v) == target_key
+                                and bool(_WOMEN_TEXT_RE.match(v)) == target_is_women
+                                for v in row[1:]
+                            )
+                        ]
+                    domain += expression.OR([modern, [('id', 'in', legacy_ids)]])
             except (ValueError, TypeError):
                 pass
         elif kwargs.get('central_jail_id'):
