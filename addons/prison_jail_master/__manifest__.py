@@ -3,7 +3,7 @@
 
 {
     'name': 'Prison Jail Master',
-    'version': '19.0.2.4.0',
+    'version': '19.0.2.5.0',
     'category': 'Prison Management',
     'summary': 'Hierarchical master data for Tamil Nadu prison jails (v2 — flat 2-level)',
     'description': """

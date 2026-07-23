@@ -1,0 +1,620 @@
+canonical,jail_type,hierarchy,role,sanctioned,filled
+Ambasamuthiram,sub_jail,general,Assistant Jailer,1,1
+Ambasamuthiram,sub_jail,general,Chief Head Warder,2,2
+Ambasamuthiram,sub_jail,general,Grade I Warder,2,2
+Ambasamuthiram,sub_jail,general,Grade II Warder,6,6
+Ambur,sub_jail,general,Assistant Jailer,1,1
+Ambur,sub_jail,general,Chief Head Warder,2,2
+Ambur,sub_jail,general,Grade I Warder,2,2
+Ambur,sub_jail,general,Grade II Warder,6,6
+Arakkonam,sub_jail,general,Assistant Jailer,1,1
+Arakkonam,sub_jail,general,Chief Head Warder,2,2
+Arakkonam,sub_jail,general,Grade I Warder,2,2
+Arakkonam,sub_jail,general,Grade II Warder,6,6
+Arani,sub_jail,general,Assistant Jailer,1,0
+Arani,sub_jail,general,Chief Head Warder,2,2
+Arani,sub_jail,general,Grade I Warder,2,2
+Arani,sub_jail,general,Grade II Warder,6,2
+Aranthangi,sub_jail,general,Assistant Jailer,1,1
+Aranthangi,sub_jail,general,Chief Head Warder,2,2
+Aranthangi,sub_jail,general,Grade I Warder,2,2
+Aranthangi,sub_jail,general,Grade II Warder,6,3
+Ariyalur,sub_jail,general,Assistant Jailer,1,1
+Ariyalur,sub_jail,general,Chief Head Warder,2,2
+Ariyalur,sub_jail,general,Grade I Warder,2,2
+Ariyalur,sub_jail,general,Grade II Warder,6,6
+Aruppukottai,sub_jail,general,Assistant Jailer,1,1
+Aruppukottai,sub_jail,general,Chief Head Warder,2,2
+Aruppukottai,sub_jail,general,Grade I Warder,2,2
+Aruppukottai,sub_jail,general,Grade II Warder,6,6
+Avinashi,sub_jail,general,Assistant Jailer,1,1
+Avinashi,sub_jail,general,Chief Head Warder,2,2
+Avinashi,sub_jail,general,Grade I Warder,2,2
+Avinashi,sub_jail,general,Grade II Warder,6,5
+Bhavani,sub_jail,general,Assistant Jailer,1,0
+Bhavani,sub_jail,general,Chief Head Warder,2,2
+Bhavani,sub_jail,general,Grade I Warder,2,2
+Bhavani,sub_jail,general,Grade II Warder,6,5
+Chengalpattu,district_jail,general,Assistant Jailer,2,2
+Chengalpattu,district_jail,general,Chief Head Warder,4,4
+Chengalpattu,district_jail,general,Deputy Jailer,1,1
+Chengalpattu,district_jail,general,Grade I Warder,3,3
+Chengalpattu,district_jail,general,Grade II Warder,12,12
+Chengalpattu,district_jail,general,Jailer,1,0
+Chengam,sub_jail,general,Assistant Jailer,1,0
+Chengam,sub_jail,general,Chief Head Warder,2,2
+Chengam,sub_jail,general,Grade I Warder,2,2
+Chengam,sub_jail,general,Grade II Warder,6,6
+Chennai,spw,women,Assistant Jailer,3,3
+Chennai,spw,women,Chief Head Warder,6,6
+Chennai,spw,women,Deputy Jailer,1,1
+Chennai,spw,women,Grade I Warder,11,11
+Chennai,spw,women,Grade II Warder,36,29
+Chennai,spw,women,Jailer,1,1
+Chennai - I,central_jail,general,Assistant Jailer,10,7
+Chennai - I,central_jail,general,Chief Head Warder,18,17
+Chennai - I,central_jail,general,Deputy Jailer,3,3
+Chennai - I,central_jail,general,Grade I Warder,63,63
+Chennai - I,central_jail,general,Grade II Warder,84,79
+Chennai - I,central_jail,general,Jailer,2,1
+Chennai - II,central_jail,general,Assistant Jailer,13,13
+Chennai - II,central_jail,general,Chief Head Warder,15,14
+Chennai - II,central_jail,general,Deputy Jailer,2,2
+Chennai - II,central_jail,general,Grade I Warder,85,85
+Chennai - II,central_jail,general,Grade II Warder,118,116
+Chennai - II,central_jail,general,Jailer,3,2
+Cheyyar,sub_jail,general,Chief Head Warder,1,1
+Cheyyar,sub_jail,general,Grade I Warder,3,3
+Cheyyar,sub_jail,general,Grade II Warder,6,5
+Chidambaram,sub_jail,general,Assistant Jailer,1,1
+Chidambaram,sub_jail,general,Chief Head Warder,2,2
+Chidambaram,sub_jail,general,Grade I Warder,2,2
+Chidambaram,sub_jail,general,Grade II Warder,6,6
+Coimbatore,central_jail,general,Assistant Jailer,14,13
+Coimbatore,central_jail,general,Chief Head Warder,34,34
+Coimbatore,central_jail,general,Deputy Jailer,3,3
+Coimbatore,central_jail,general,Grade I Warder,88,87
+Coimbatore,central_jail,general,Grade II Warder,171,148
+Coimbatore,central_jail,general,Jailer,2,1
+Coimbatore,spw,women,Assistant Jailer,3,3
+Coimbatore,spw,women,Chief Head Warder,5,5
+Coimbatore,spw,women,Deputy Jailer,1,1
+Coimbatore,spw,women,Grade I Warder,3,3
+Coimbatore,spw,women,Grade II Warder,16,13
+Coimbatore,spw,women,Jailer,1,1
+Coonoor,sub_jail,general,Assistant Jailer,1,1
+Coonoor,sub_jail,general,Chief Head Warder,2,2
+Coonoor,sub_jail,general,Grade I Warder,2,2
+Coonoor,sub_jail,general,Grade II Warder,6,3
+Cuddalore,central_jail,general,Assistant Jailer,10,10
+Cuddalore,central_jail,general,Chief Head Warder,23,23
+Cuddalore,central_jail,general,Deputy Jailer,1,1
+Cuddalore,central_jail,general,Grade I Warder,71,69
+Cuddalore,central_jail,general,Grade II Warder,116,116
+Cuddalore,central_jail,general,Jailer,2,2
+Cuddalore,sub_jail,general,Assistant Jailer,1,0
+Cuddalore,sub_jail,general,Chief Head Warder,2,2
+Cuddalore,sub_jail,general,Grade I Warder,4,4
+Cuddalore,sub_jail,general,Grade II Warder,8,7
+Cuddalore,women_sub_jail,women,Assistant Jailer,1,1
+Cuddalore,women_sub_jail,women,Chief Head Warder,2,2
+Cuddalore,women_sub_jail,women,Grade I Warder,2,2
+Cuddalore,women_sub_jail,women,Grade II Warder,6,6
+D.J. Attur,district_jail,general,Assistant Jailer,3,3
+D.J. Attur,district_jail,general,Chief Head Warder,5,5
+D.J. Attur,district_jail,general,Deputy Jailer,1,1
+D.J. Attur,district_jail,general,Grade I Warder,3,3
+D.J. Attur,district_jail,general,Grade II Warder,17,0
+D.J. Attur,district_jail,general,Jailer,1,0
+D.J. Chengalpattu Women Annex,sub_jail,general,Assistant Jailer,1,1
+D.J. Chengalpattu Women Annex,sub_jail,general,Chief Head Warder,1,1
+D.J. Chengalpattu Women Annex,sub_jail,general,Grade II Warder,1,0
+D.J. Dharmapuri,district_jail,general,Assistant Jailer,3,2
+D.J. Dharmapuri,district_jail,general,Chief Head Warder,5,5
+D.J. Dharmapuri,district_jail,general,Deputy Jailer,1,1
+D.J. Dharmapuri,district_jail,general,Grade I Warder,3,3
+D.J. Dharmapuri,district_jail,general,Grade II Warder,17,18
+D.J. Dharmapuri,district_jail,general,Jailer,1,0
+D.J. Dindigul,district_jail,general,Assistant Jailer,3,2
+D.J. Dindigul,district_jail,general,Chief Head Warder,5,5
+D.J. Dindigul,district_jail,general,Deputy Jailer,1,1
+D.J. Dindigul,district_jail,general,Grade I Warder,4,4
+D.J. Dindigul,district_jail,general,Grade II Warder,17,17
+D.J. Dindigul,district_jail,general,Jailer,1,0
+D.J. Pudukkottai,district_jail,general,Assistant Jailer,5,5
+D.J. Pudukkottai,district_jail,general,Chief Head Warder,8,8
+D.J. Pudukkottai,district_jail,general,Deputy Jailer,1,1
+D.J. Pudukkottai,district_jail,general,Grade I Warder,8,8
+D.J. Pudukkottai,district_jail,general,Grade II Warder,26,25
+D.J. Pudukkottai,district_jail,general,Jailer,1,1
+D.J. Ramanathapuram,district_jail,general,Assistant Jailer,3,2
+D.J. Ramanathapuram,district_jail,general,Chief Head Warder,5,5
+D.J. Ramanathapuram,district_jail,general,Deputy Jailer,1,1
+D.J. Ramanathapuram,district_jail,general,Grade I Warder,3,3
+D.J. Ramanathapuram,district_jail,general,Grade II Warder,17,15
+D.J. Ramanathapuram,district_jail,general,Jailer,1,1
+D.J. Theni,district_jail,general,Assistant Jailer,3,2
+D.J. Theni,district_jail,general,Chief Head Warder,5,5
+D.J. Theni,district_jail,general,Deputy Jailer,1,1
+D.J. Theni,district_jail,general,Grade I Warder,3,3
+D.J. Theni,district_jail,general,Grade II Warder,17,17
+D.J. Theni,district_jail,general,Jailer,1,0
+D.J. Tiruppur,district_jail,general,Assistant Jailer,2,2
+D.J. Tiruppur,district_jail,general,Chief Head Warder,3,3
+D.J. Tiruppur,district_jail,general,Deputy Jailer,1,1
+D.J. Tiruppur,district_jail,general,Grade I Warder,2,2
+D.J. Tiruppur,district_jail,general,Grade II Warder,12,8
+D.J. Tiruppur,district_jail,general,Jailer,1,0
+D.J. Virudhunagar,district_jail,general,Assistant Jailer,3,3
+D.J. Virudhunagar,district_jail,general,Chief Head Warder,5,5
+D.J. Virudhunagar,district_jail,general,Deputy Jailer,1,0
+D.J. Virudhunagar,district_jail,general,Grade I Warder,3,3
+D.J. Virudhunagar,district_jail,general,Grade II Warder,16,16
+D.J. Virudhunagar,district_jail,general,Jailer,1,0
+Dharapuram,sub_jail,general,Assistant Jailer,1,1
+Dharapuram,sub_jail,general,Chief Head Warder,2,2
+Dharapuram,sub_jail,general,Grade I Warder,2,2
+Dharapuram,sub_jail,general,Grade II Warder,6,6
+Erode,sub_jail,general,Assistant Jailer,1,1
+Erode,sub_jail,general,Chief Head Warder,2,2
+Erode,sub_jail,general,Grade I Warder,2,2
+Erode,sub_jail,general,Grade II Warder,6,6
+Erode @ Gobichettipalayam,district_jail,general,Assistant Jailer,3,2
+Erode @ Gobichettipalayam,district_jail,general,Chief Head Warder,5,5
+Erode @ Gobichettipalayam,district_jail,general,Deputy Jailer,1,1
+Erode @ Gobichettipalayam,district_jail,general,Grade I Warder,3,3
+Erode @ Gobichettipalayam,district_jail,general,Grade II Warder,17,14
+Erode @ Gobichettipalayam,district_jail,general,Jailer,1,0
+"Female Jail, Perurani",sub_jail,general,Assistant Jailer,1,1
+"Female Jail, Perurani",sub_jail,general,Chief Head Warder,2,2
+"Female Jail, Perurani",sub_jail,general,Grade I Warder,1,1
+"Female Jail, Perurani",sub_jail,general,Grade II Warder,4,4
+Gingee,sub_jail,general,Assistant Jailer,1,1
+Gingee,sub_jail,general,Chief Head Warder,2,2
+Gingee,sub_jail,general,Grade I Warder,2,2
+Gingee,sub_jail,general,Grade II Warder,6,6
+Gudalur,sub_jail,general,Assistant Jailer,1,0
+Gudalur,sub_jail,general,Chief Head Warder,2,2
+Gudalur,sub_jail,general,Grade I Warder,2,2
+Gudalur,sub_jail,general,Grade II Warder,6,4
+Gudiyatham,sub_jail,general,Assistant Jailer,1,0
+Gudiyatham,sub_jail,general,Chief Head Warder,2,2
+Gudiyatham,sub_jail,general,Grade I Warder,2,2
+Gudiyatham,sub_jail,general,Grade II Warder,6,6
+Harur,sub_jail,general,Assistant Jailer,1,1
+Harur,sub_jail,general,Chief Head Warder,2,2
+Harur,sub_jail,general,Grade I Warder,2,2
+Harur,sub_jail,general,Grade II Warder,6,6
+Hosur,sub_jail,general,Assistant Jailer,1,1
+Hosur,sub_jail,general,Chief Head Warder,2,2
+Hosur,sub_jail,general,Grade I Warder,2,2
+Hosur,sub_jail,general,Grade II Warder,6,6
+Jeyankondam,sub_jail,general,Assistant Jailer,1,1
+Jeyankondam,sub_jail,general,Chief Head Warder,2,2
+Jeyankondam,sub_jail,general,Grade I Warder,2,2
+Jeyankondam,sub_jail,general,Grade II Warder,6,5
+Kallakurichi,sub_jail,general,Assistant Jailer,1,1
+Kallakurichi,sub_jail,general,Chief Head Warder,2,2
+Kallakurichi,sub_jail,general,Grade I Warder,2,2
+Kallakurichi,sub_jail,general,Grade II Warder,6,6
+Kancheepuram,sub_jail,general,Assistant Jailer,1,1
+Kancheepuram,sub_jail,general,Chief Head Warder,2,2
+Kancheepuram,sub_jail,general,Grade I Warder,2,2
+Kancheepuram,sub_jail,general,Grade II Warder,6,6
+Kanniyakumari @ Nagercoil,district_jail,general,Assistant Jailer,3,3
+Kanniyakumari @ Nagercoil,district_jail,general,Chief Head Warder,5,5
+Kanniyakumari @ Nagercoil,district_jail,general,Deputy Jailer,1,1
+Kanniyakumari @ Nagercoil,district_jail,general,Grade I Warder,4,4
+Kanniyakumari @ Nagercoil,district_jail,general,Grade II Warder,12,12
+Kanniyakumari @ Nagercoil,district_jail,general,Jailer,1,0
+Karur,sub_jail,general,Assistant Jailer,1,1
+Karur,sub_jail,general,Chief Head Warder,2,2
+Karur,sub_jail,general,Grade I Warder,2,2
+Karur,sub_jail,general,Grade II Warder,6,6
+Keeranur,sub_jail,general,Assistant Jailer,1,0
+Keeranur,sub_jail,general,Chief Head Warder,2,2
+Keeranur,sub_jail,general,Grade I Warder,2,1
+Keeranur,sub_jail,general,Grade II Warder,6,1
+Kodaikanal,sub_jail,general,Assistant Jailer,1,1
+Kodaikanal,sub_jail,general,Chief Head Warder,2,2
+Kodaikanal,sub_jail,general,Grade I Warder,2,2
+Kodaikanal,sub_jail,general,Grade II Warder,6,6
+Kokkirakulam (Women),special_sub_jail,general,Assistant Jailer,1,1
+Kokkirakulam (Women),special_sub_jail,general,Chief Head Warder,1,1
+Kokkirakulam (Women),special_sub_jail,general,Deputy Jailer,1,1
+Kokkirakulam (Women),special_sub_jail,general,Grade I Warder,4,4
+Kokkirakulam (Women),special_sub_jail,general,Grade II Warder,9,9
+Kovilpatti,sub_jail,general,Assistant Jailer,1,1
+Kovilpatti,sub_jail,general,Chief Head Warder,2,2
+Kovilpatti,sub_jail,general,Grade I Warder,2,2
+Kovilpatti,sub_jail,general,Grade II Warder,6,6
+Krishnagiri,sub_jail,general,Assistant Jailer,1,1
+Krishnagiri,sub_jail,general,Chief Head Warder,2,2
+Krishnagiri,sub_jail,general,Grade I Warder,2,2
+Krishnagiri,sub_jail,general,Grade II Warder,6,6
+Kulithalai,sub_jail,general,Assistant Jailer,1,1
+Kulithalai,sub_jail,general,Chief Head Warder,2,2
+Kulithalai,sub_jail,general,Grade I Warder,2,1
+Kulithalai,sub_jail,general,Grade II Warder,6,6
+Kumbakonam,sub_jail,general,Assistant Jailer,1,1
+Kumbakonam,sub_jail,general,Chief Head Warder,2,2
+Kumbakonam,sub_jail,general,Grade I Warder,2,2
+Kumbakonam,sub_jail,general,Grade II Warder,6,4
+Kuzhithurai,sub_jail,general,Assistant Jailer,1,0
+Kuzhithurai,sub_jail,general,Chief Head Warder,2,2
+Kuzhithurai,sub_jail,general,Grade I Warder,2,2
+Kuzhithurai,sub_jail,general,Grade II Warder,6,6
+Lalgudi,sub_jail,general,Assistant Jailer,1,1
+Lalgudi,sub_jail,general,Chief Head Warder,2,2
+Lalgudi,sub_jail,general,Grade I Warder,2,2
+Lalgudi,sub_jail,general,Grade II Warder,6,6
+Madurai,central_jail,general,Assistant Jailer,12,9
+Madurai,central_jail,general,Chief Head Warder,28,28
+Madurai,central_jail,general,Deputy Jailer,3,3
+Madurai,central_jail,general,Grade I Warder,88,88
+Madurai,central_jail,general,Grade II Warder,101,101
+Madurai,central_jail,general,Jailer,2,1
+Madurai,spw,women,Assistant Jailer,3,3
+Madurai,spw,women,Chief Head Warder,5,5
+Madurai,spw,women,Deputy Jailer,1,0
+Madurai,spw,women,Grade I Warder,3,3
+Madurai,spw,women,Grade II Warder,17,15
+Madurai,spw,women,Jailer,1,1
+Madurantagam,sub_jail,general,Assistant Jailer,1,0
+Madurantagam,sub_jail,general,Chief Head Warder,2,2
+Madurantagam,sub_jail,general,Grade I Warder,2,1
+Madurantagam,sub_jail,general,Grade II Warder,6,0
+Manaparai,sub_jail,general,Assistant Jailer,1,0
+Manaparai,sub_jail,general,Chief Head Warder,2,2
+Manaparai,sub_jail,general,Grade I Warder,2,1
+Manaparai,sub_jail,general,Grade II Warder,6,3
+Mannargudi,sub_jail,general,Assistant Jailer,1,1
+Mannargudi,sub_jail,general,Chief Head Warder,2,2
+Mannargudi,sub_jail,general,Grade I Warder,2,2
+Mannargudi,sub_jail,general,Grade II Warder,6,4
+Mayiladuthurai,sub_jail,general,Assistant Jailer,1,1
+Mayiladuthurai,sub_jail,general,Chief Head Warder,2,2
+Mayiladuthurai,sub_jail,general,Grade I Warder,2,2
+Mayiladuthurai,sub_jail,general,Grade II Warder,6,5
+Melur,sub_jail,general,Assistant Jailer,1,1
+Melur,sub_jail,general,Chief Head Warder,2,2
+Melur,sub_jail,general,Grade I Warder,2,2
+Melur,sub_jail,general,Grade II Warder,6,4
+Mettupalayam,sub_jail,general,Assistant Jailer,1,0
+Mettupalayam,sub_jail,general,Chief Head Warder,2,2
+Mettupalayam,sub_jail,general,Grade I Warder,2,2
+Mettupalayam,sub_jail,general,Grade II Warder,6,1
+Mudukulathur,sub_jail,general,Assistant Jailer,1,1
+Mudukulathur,sub_jail,general,Chief Head Warder,2,2
+Mudukulathur,sub_jail,general,Grade I Warder,2,2
+Mudukulathur,sub_jail,general,Grade II Warder,6,5
+Nagapattinam,district_jail,general,Assistant Jailer,3,3
+Nagapattinam,district_jail,general,Chief Head Warder,5,5
+Nagapattinam,district_jail,general,Deputy Jailer,1,1
+Nagapattinam,district_jail,general,Grade I Warder,3,3
+Nagapattinam,district_jail,general,Grade II Warder,17,11
+Nagapattinam,district_jail,general,Jailer,1,0
+Namakkal,sub_jail,general,Assistant Jailer,1,1
+Namakkal,sub_jail,general,Chief Head Warder,2,2
+Namakkal,sub_jail,general,Grade I Warder,2,2
+Namakkal,sub_jail,general,Grade II Warder,6,6
+Nanguneri (Men),special_sub_jail,general,Chief Head Warder,2,2
+Nanguneri (Men),special_sub_jail,general,Deputy Jailer,1,1
+Nanguneri (Men),special_sub_jail,general,Grade I Warder,3,3
+Nanguneri (Men),special_sub_jail,general,Grade II Warder,11,11
+Nannilam,sub_jail,general,Assistant Jailer,1,1
+Nannilam,sub_jail,general,Chief Head Warder,2,2
+Nannilam,sub_jail,general,Grade I Warder,2,2
+Nannilam,sub_jail,general,Grade II Warder,6,3
+Nilakottai,women_sub_jail,women,Assistant Jailer,1,1
+Nilakottai,women_sub_jail,women,Chief Head Warder,2,2
+Nilakottai,women_sub_jail,women,Grade I Warder,2,2
+Nilakottai,women_sub_jail,women,Grade II Warder,6,6
+Omalur,sub_jail,general,Assistant Jailer,1,0
+Omalur,sub_jail,general,Chief Head Warder,2,2
+Omalur,sub_jail,general,Grade I Warder,2,2
+Omalur,sub_jail,general,Grade II Warder,6,6
+Ooty,sub_jail,general,Assistant Jailer,1,1
+Ooty,sub_jail,general,Chief Head Warder,2,2
+Ooty,sub_jail,general,Grade I Warder,2,2
+Ooty,sub_jail,general,Grade II Warder,6,2
+Palani,sub_jail,general,Assistant Jailer,1,1
+Palani,sub_jail,general,Chief Head Warder,2,2
+Palani,sub_jail,general,Grade I Warder,2,2
+Palani,sub_jail,general,Grade II Warder,6,6
+Palayamkottai,central_jail,general,Assistant Jailer,13,13
+Palayamkottai,central_jail,general,Chief Head Warder,29,29
+Palayamkottai,central_jail,general,Deputy Jailer,3,3
+Palayamkottai,central_jail,general,Grade I Warder,81,79
+Palayamkottai,central_jail,general,Grade II Warder,149,149
+Palayamkottai,central_jail,general,Jailer,2,1
+Palladam,sub_jail,general,Assistant Jailer,1,1
+Palladam,sub_jail,general,Chief Head Warder,2,2
+Palladam,sub_jail,general,Grade I Warder,2,2
+Palladam,sub_jail,general,Grade II Warder,6,2
+Panruti,sub_jail,general,Assistant Jailer,1,1
+Panruti,sub_jail,general,Chief Head Warder,2,2
+Panruti,sub_jail,general,Grade I Warder,2,2
+Panruti,sub_jail,general,Grade II Warder,6,6
+Papanasam,sub_jail,general,Assistant Jailer,1,1
+Papanasam,sub_jail,general,Chief Head Warder,2,2
+Papanasam,sub_jail,general,Grade I Warder,2,2
+Papanasam,sub_jail,general,Grade II Warder,6,6
+Paramakudi,women_sub_jail,women,Assistant Jailer,1,1
+Paramakudi,women_sub_jail,women,Chief Head Warder,2,2
+Paramakudi,women_sub_jail,women,Grade I Warder,2,2
+Paramakudi,women_sub_jail,women,Grade II Warder,6,5
+Perambalur,sub_jail,general,Assistant Jailer,1,1
+Perambalur,sub_jail,general,Chief Head Warder,2,2
+Perambalur,sub_jail,general,Grade I Warder,2,2
+Perambalur,sub_jail,general,Grade II Warder,6,6
+Periakulam,sub_jail,general,Assistant Jailer,1,1
+Periakulam,sub_jail,general,Chief Head Warder,2,2
+Periakulam,sub_jail,general,Grade I Warder,2,2
+Periakulam,sub_jail,general,Grade II Warder,6,5
+Perundhurai,sub_jail,general,Assistant Jailer,1,1
+Perundhurai,sub_jail,general,Chief Head Warder,2,2
+Perundhurai,sub_jail,general,Grade I Warder,2,2
+Perundhurai,sub_jail,general,Grade II Warder,6,6
+Pollachi,sub_jail,general,Chief Head Warder,2,2
+Pollachi,sub_jail,general,Deputy Jailer,1,1
+Pollachi,sub_jail,general,Grade I Warder,3,3
+Pollachi,sub_jail,general,Grade II Warder,6,4
+Polur,sub_jail,general,Assistant Jailer,1,0
+Polur,sub_jail,general,Chief Head Warder,2,2
+Polur,sub_jail,general,Grade I Warder,2,2
+Polur,sub_jail,general,Grade II Warder,6,7
+Ponneri,sub_jail,general,Assistant Jailer,1,0
+Ponneri,sub_jail,general,Chief Head Warder,2,2
+Ponneri,sub_jail,general,Grade I Warder,2,2
+Ponneri,sub_jail,general,Grade II Warder,6,5
+Poonamallee (Men),special_sub_jail,general,Assistant Jailer,1,1
+Poonamallee (Men),special_sub_jail,general,Chief Head Warder,1,1
+Poonamallee (Men),special_sub_jail,general,Grade I Warder,2,2
+Poonamallee (Men),special_sub_jail,general,Grade II Warder,6,2
+Purasaraidaiudaippu,open_air_jail,general,Chief Head Warder,1,1
+Purasaraidaiudaippu,open_air_jail,general,Deputy Jailer,1,1
+Purasaraidaiudaippu,open_air_jail,general,Grade I Warder,3,3
+Purasaraidaiudaippu,open_air_jail,general,Grade II Warder,8,7
+Rasipuram,sub_jail,general,Assistant Jailer,1,0
+Rasipuram,sub_jail,general,Chief Head Warder,2,2
+Rasipuram,sub_jail,general,Grade I Warder,2,1
+Rasipuram,sub_jail,general,Grade II Warder,6,6
+S.J. Musiri,sub_jail,general,Assistant Jailer,1,0
+S.J. Musiri,sub_jail,general,Chief Head Warder,2,2
+S.J. Musiri,sub_jail,general,Grade I Warder,2,2
+S.J. Musiri,sub_jail,general,Grade II Warder,6,3
+S.J. Paramathy,sub_jail,general,Assistant Jailer,1,0
+S.J. Paramathy,sub_jail,general,Chief Head Warder,2,2
+S.J. Paramathy,sub_jail,general,Grade I Warder,2,1
+S.J. Paramathy,sub_jail,general,Grade II Warder,6,5
+S.J. Pattukottai,sub_jail,general,Assistant Jailer,1,0
+S.J. Pattukottai,sub_jail,general,Chief Head Warder,2,2
+S.J. Pattukottai,sub_jail,general,Grade I Warder,2,2
+S.J. Pattukottai,sub_jail,general,Grade II Warder,6,2
+S.J. Portonova,sub_jail,general,Assistant Jailer,1,0
+S.J. Portonova,sub_jail,general,Chief Head Warder,2,2
+S.J. Portonova,sub_jail,general,Grade I Warder,2,2
+S.J. Portonova,sub_jail,general,Grade II Warder,6,3
+S.J. Sirkali,sub_jail,general,Assistant Jailer,1,1
+S.J. Sirkali,sub_jail,general,Chief Head Warder,2,2
+S.J. Sirkali,sub_jail,general,Grade I Warder,2,2
+S.J. Sirkali,sub_jail,general,Grade II Warder,6,6
+S.J. Tharangambadi,sub_jail,general,Assistant Jailer,1,1
+S.J. Tharangambadi,sub_jail,general,Chief Head Warder,2,2
+S.J. Tharangambadi,sub_jail,general,Grade I Warder,2,2
+S.J. Tharangambadi,sub_jail,general,Grade II Warder,6,5
+S.J. Thiruturaipoondi,sub_jail,general,Assistant Jailer,1,1
+S.J. Thiruturaipoondi,sub_jail,general,Chief Head Warder,2,1
+S.J. Thiruturaipoondi,sub_jail,general,Grade I Warder,2,2
+S.J. Thiruturaipoondi,sub_jail,general,Grade II Warder,6,4
+S.J. Tiruchendur,sub_jail,general,Assistant Jailer,1,1
+S.J. Tiruchendur,sub_jail,general,Chief Head Warder,2,2
+S.J. Tiruchendur,sub_jail,general,Grade I Warder,2,2
+S.J. Tiruchendur,sub_jail,general,Grade II Warder,6,6
+S.J. Women Dharmapuri,sub_jail,general,Assistant Jailer,1,1
+S.J. Women Dharmapuri,sub_jail,general,Chief Head Warder,2,2
+S.J. Women Dharmapuri,sub_jail,general,Grade I Warder,2,2
+S.J. Women Dharmapuri,sub_jail,general,Grade II Warder,6,6
+"SICA, Tiruchirappalli",special_sub_jail,general,Assistant Jailer,2,2
+"SICA, Tiruchirappalli",special_sub_jail,general,Chief Head Warder,4,4
+"SICA, Tiruchirappalli",special_sub_jail,general,Jailer,1,1
+Saidapet,sub_jail,general,Assistant Jailer,1,1
+Saidapet,sub_jail,general,Chief Head Warder,2,2
+Saidapet,sub_jail,general,Grade I Warder,2,2
+Saidapet,sub_jail,general,Grade II Warder,6,5
+Salem,central_jail,general,Assistant Jailer,13,13
+Salem,central_jail,general,Chief Head Warder,23,23
+Salem,central_jail,general,Deputy Jailer,2,2
+Salem,central_jail,general,Grade I Warder,91,91
+Salem,central_jail,general,Grade II Warder,117,117
+Salem,central_jail,general,Jailer,2,2
+Salem (Women),special_sub_jail,general,Assistant Jailer,1,1
+Salem (Women),special_sub_jail,general,Chief Head Warder,3,3
+Salem (Women),special_sub_jail,general,Deputy Jailer,1,1
+Salem (Women),special_sub_jail,general,Grade I Warder,7,7
+Salem (Women),special_sub_jail,general,Grade II Warder,23,17
+Sankagiri,sub_jail,general,Assistant Jailer,1,1
+Sankagiri,sub_jail,general,Chief Head Warder,2,2
+Sankagiri,sub_jail,general,Grade I Warder,2,2
+Sankagiri,sub_jail,general,Grade II Warder,6,6
+Sankarankoil,sub_jail,general,Assistant Jailer,1,1
+Sankarankoil,sub_jail,general,Chief Head Warder,2,2
+Sankarankoil,sub_jail,general,Grade I Warder,2,2
+Sankarankoil,sub_jail,general,Grade II Warder,6,6
+Sathiamangalam,sub_jail,general,Assistant Jailer,1,0
+Sathiamangalam,sub_jail,general,Chief Head Warder,2,2
+Sathiamangalam,sub_jail,general,Grade I Warder,2,2
+Sathiamangalam,sub_jail,general,Grade II Warder,6,4
+Sattur,sub_jail,general,Assistant Jailer,1,1
+Sattur,sub_jail,general,Chief Head Warder,2,2
+Sattur,sub_jail,general,Grade I Warder,2,0
+Sattur,sub_jail,general,Grade II Warder,6,0
+Singanallur,open_air_jail,general,Chief Head Warder,1,0
+Singanallur,open_air_jail,general,Deputy Jailer,1,1
+Singanallur,open_air_jail,general,Grade I Warder,3,3
+Singanallur,open_air_jail,general,Grade II Warder,7,6
+Sivagangai,sub_jail,general,Assistant Jailer,1,1
+Sivagangai,sub_jail,general,Chief Head Warder,2,2
+Sivagangai,sub_jail,general,Grade I Warder,2,2
+Sivagangai,sub_jail,general,Grade II Warder,6,6
+Srivaikundam,sub_jail,general,Assistant Jailer,1,1
+Srivaikundam,sub_jail,general,Chief Head Warder,2,2
+Srivaikundam,sub_jail,general,Grade I Warder,2,2
+Srivaikundam,sub_jail,general,Grade II Warder,6,5
+Srivilliputhur,sub_jail,general,Assistant Jailer,1,2
+Srivilliputhur,sub_jail,general,Chief Head Warder,2,2
+Srivilliputhur,sub_jail,general,Grade I Warder,2,2
+Srivilliputhur,sub_jail,general,Grade II Warder,6,5
+Tenkasi,sub_jail,general,Assistant Jailer,1,1
+Tenkasi,sub_jail,general,Chief Head Warder,2,2
+Tenkasi,sub_jail,general,Grade I Warder,2,2
+Tenkasi,sub_jail,general,Grade II Warder,6,6
+Thanjavur,sub_jail,general,Assistant Jailer,1,1
+Thanjavur,sub_jail,general,Chief Head Warder,2,2
+Thanjavur,sub_jail,general,Grade I Warder,2,2
+Thanjavur,sub_jail,general,Grade II Warder,6,5
+Thindivanam,sub_jail,general,Assistant Jailer,1,1
+Thindivanam,sub_jail,general,Chief Head Warder,2,2
+Thindivanam,sub_jail,general,Grade I Warder,2,2
+Thindivanam,sub_jail,general,Grade II Warder,6,6
+Thiruchengodu,sub_jail,general,Assistant Jailer,1,1
+Thiruchengodu,sub_jail,general,Chief Head Warder,2,2
+Thiruchengodu,sub_jail,general,Grade I Warder,2,2
+Thiruchengodu,sub_jail,general,Grade II Warder,6,6
+Thirukovilur,sub_jail,general,Assistant Jailer,1,1
+Thirukovilur,sub_jail,general,Chief Head Warder,2,2
+Thirukovilur,sub_jail,general,Grade I Warder,2,2
+Thirukovilur,sub_jail,general,Grade II Warder,6,6
+Thirumangalam,sub_jail,general,Assistant Jailer,1,1
+Thirumangalam,sub_jail,general,Chief Head Warder,2,2
+Thirumangalam,sub_jail,general,Grade I Warder,2,2
+Thirumangalam,sub_jail,general,Grade II Warder,6,6
+Thirumayam,sub_jail,general,Assistant Jailer,1,1
+Thirumayam,sub_jail,general,Chief Head Warder,2,2
+Thirumayam,sub_jail,general,Grade I Warder,2,2
+Thirumayam,sub_jail,general,Grade II Warder,6,4
+Thiruvadanai,sub_jail,general,Assistant Jailer,1,0
+Thiruvadanai,sub_jail,general,Chief Head Warder,2,2
+Thiruvadanai,sub_jail,general,Grade I Warder,2,1
+Thiruvadanai,sub_jail,general,Grade II Warder,6,5
+Thiruvarur,women_sub_jail,women,Assistant Jailer,1,1
+Thiruvarur,women_sub_jail,women,Chief Head Warder,2,2
+Thiruvarur,women_sub_jail,women,Grade I Warder,2,2
+Thiruvarur,women_sub_jail,women,Grade II Warder,6,6
+Thiruvidaimaruthur,sub_jail,general,Assistant Jailer,1,0
+Thiruvidaimaruthur,sub_jail,general,Chief Head Warder,2,2
+Thiruvidaimaruthur,sub_jail,general,Grade I Warder,2,2
+Thiruvidaimaruthur,sub_jail,general,Grade II Warder,6,3
+Thoothukudi @ Perurani,district_jail,general,Assistant Jailer,4,4
+Thoothukudi @ Perurani,district_jail,general,Chief Head Warder,7,7
+Thoothukudi @ Perurani,district_jail,general,Deputy Jailer,1,1
+Thoothukudi @ Perurani,district_jail,general,Grade I Warder,4,4
+Thoothukudi @ Perurani,district_jail,general,Grade II Warder,14,14
+Thoothukudi @ Perurani,district_jail,general,Jailer,1,0
+Thuckalay,women_sub_jail,women,Assistant Jailer,1,1
+Thuckalay,women_sub_jail,women,Chief Head Warder,2,2
+Thuckalay,women_sub_jail,women,Grade I Warder,2,2
+Thuckalay,women_sub_jail,women,Grade II Warder,6,6
+Thuraiyur,sub_jail,general,Assistant Jailer,1,0
+Thuraiyur,sub_jail,general,Chief Head Warder,2,2
+Thuraiyur,sub_jail,general,Grade I Warder,2,2
+Thuraiyur,sub_jail,general,Grade II Warder,6,6
+Tiruchirappalli,central_jail,general,Assistant Jailer,11,9
+Tiruchirappalli,central_jail,general,Chief Head Warder,34,34
+Tiruchirappalli,central_jail,general,Deputy Jailer,3,2
+Tiruchirappalli,central_jail,general,Grade I Warder,76,76
+Tiruchirappalli,central_jail,general,Grade II Warder,148,144
+Tiruchirappalli,central_jail,general,Jailer,2,2
+Tiruchirappalli,spw,women,Assistant Jailer,4,4
+Tiruchirappalli,spw,women,Chief Head Warder,5,5
+Tiruchirappalli,spw,women,Deputy Jailer,1,1
+Tiruchirappalli,spw,women,Grade I Warder,21,21
+Tiruchirappalli,spw,women,Grade II Warder,41,28
+Tiruchirappalli,spw,women,Jailer,1,1
+Tirupathur,sub_jail,general,Assistant Jailer,1,1
+Tirupathur,sub_jail,general,Chief Head Warder,2,2
+Tirupathur,sub_jail,general,Grade I Warder,2,2
+Tirupathur,sub_jail,general,Grade II Warder,6,6
+Tiruppathur,sub_jail,general,Assistant Jailer,1,0
+Tiruppathur,sub_jail,general,Chief Head Warder,2,2
+Tiruppathur,sub_jail,general,Grade I Warder,2,2
+Tiruppathur,sub_jail,general,Grade II Warder,6,6
+Tiruppur (Annex),women_sub_jail,women,Assistant Jailer,1,1
+Tiruppur (Annex),women_sub_jail,women,Chief Head Warder,2,2
+Tiruppur (Annex),women_sub_jail,women,Grade I Warder,2,2
+Tiruppur (Annex),women_sub_jail,women,Grade II Warder,4,3
+Tiruthani,sub_jail,general,Assistant Jailer,1,1
+Tiruthani,sub_jail,general,Chief Head Warder,2,2
+Tiruthani,sub_jail,general,Grade I Warder,2,2
+Tiruthani,sub_jail,general,Grade II Warder,5,5
+Tiruvallur,sub_jail,general,Assistant Jailer,1,0
+Tiruvallur,sub_jail,general,Chief Head Warder,2,2
+Tiruvallur,sub_jail,general,Grade I Warder,2,1
+Tiruvallur,sub_jail,general,Grade II Warder,4,4
+Tiruvannamalai,sub_jail,general,Assistant Jailer,1,1
+Tiruvannamalai,sub_jail,general,Chief Head Warder,2,2
+Tiruvannamalai,sub_jail,general,Grade I Warder,2,2
+Tiruvannamalai,sub_jail,general,Grade II Warder,6,6
+Udumalaipettai,sub_jail,general,Assistant Jailer,1,1
+Udumalaipettai,sub_jail,general,Chief Head Warder,2,2
+Udumalaipettai,sub_jail,general,Grade I Warder,2,2
+Udumalaipettai,sub_jail,general,Grade II Warder,6,6
+Ulundurpet,sub_jail,general,Assistant Jailer,1,1
+Ulundurpet,sub_jail,general,Chief Head Warder,2,2
+Ulundurpet,sub_jail,general,Grade I Warder,2,2
+Ulundurpet,sub_jail,general,Grade II Warder,6,6
+Usilampatti,sub_jail,general,Assistant Jailer,1,1
+Usilampatti,sub_jail,general,Chief Head Warder,2,2
+Usilampatti,sub_jail,general,Grade I Warder,2,2
+Usilampatti,sub_jail,general,Grade II Warder,6,6
+Uthamapalayam,sub_jail,general,Assistant Jailer,1,1
+Uthamapalayam,sub_jail,general,Chief Head Warder,2,2
+Uthamapalayam,sub_jail,general,Grade I Warder,2,2
+Uthamapalayam,sub_jail,general,Grade II Warder,6,6
+Uthangarai,sub_jail,general,Assistant Jailer,1,1
+Uthangarai,sub_jail,general,Chief Head Warder,2,2
+Uthangarai,sub_jail,general,Grade I Warder,2,2
+Uthangarai,sub_jail,general,Grade II Warder,6,6
+Vandavasi,sub_jail,general,Assistant Jailer,1,1
+Vandavasi,sub_jail,general,Chief Head Warder,2,2
+Vandavasi,sub_jail,general,Grade I Warder,2,2
+Vandavasi,sub_jail,general,Grade II Warder,6,6
+Vaniyambadi,sub_jail,general,Assistant Jailer,1,1
+Vaniyambadi,sub_jail,general,Chief Head Warder,2,2
+Vaniyambadi,sub_jail,general,Grade I Warder,2,2
+Vaniyambadi,sub_jail,general,Grade II Warder,6,6
+Vedasandur,sub_jail,general,Assistant Jailer,1,1
+Vedasandur,sub_jail,general,Chief Head Warder,2,2
+Vedasandur,sub_jail,general,Grade I Warder,2,2
+Vedasandur,sub_jail,general,Grade II Warder,6,6
+Vellore,central_jail,general,Assistant Jailer,14,13
+Vellore,central_jail,general,Chief Head Warder,29,27
+Vellore,central_jail,general,Deputy Jailer,3,3
+Vellore,central_jail,general,Grade I Warder,73,72
+Vellore,central_jail,general,Grade II Warder,120,106
+Vellore,central_jail,general,Jailer,2,2
+Vellore,spw,women,Assistant Jailer,3,3
+Vellore,spw,women,Chief Head Warder,5,5
+Vellore,spw,women,Deputy Jailer,1,1
+Vellore,spw,women,Grade I Warder,17,15
+Vellore,spw,women,Grade II Warder,33,25
+Vellore,spw,women,Jailer,1,0
+Villupuram,district_jail,general,Assistant Jailer,3,2
+Villupuram,district_jail,general,Chief Head Warder,5,5
+Villupuram,district_jail,general,Deputy Jailer,1,1
+Villupuram,district_jail,general,Grade I Warder,3,3
+Villupuram,district_jail,general,Grade II Warder,17,17
+Villupuram,district_jail,general,Jailer,1,0
+Villupuram,women_sub_jail,women,Assistant Jailer,1,1
+Villupuram,women_sub_jail,women,Chief Head Warder,2,2
+Villupuram,women_sub_jail,women,Grade I Warder,2,2
+Villupuram,women_sub_jail,women,Grade II Warder,6,6
+Virudhachalam,sub_jail,general,Assistant Jailer,1,1
+Virudhachalam,sub_jail,general,Chief Head Warder,2,2
+Virudhachalam,sub_jail,general,Grade I Warder,2,2
+Virudhachalam,sub_jail,general,Grade II Warder,6,6
+Walajah,sub_jail,general,Assistant Jailer,1,1
+Walajah,sub_jail,general,Chief Head Warder,2,2
+Walajah,sub_jail,general,Grade I Warder,2,2
+Walajah,sub_jail,general,Grade II Warder,6,6
