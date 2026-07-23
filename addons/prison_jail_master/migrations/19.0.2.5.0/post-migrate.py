@@ -89,7 +89,11 @@ def migrate(cr, version):
         except Exception:
             _logger.exception('[prison_jail_master] consolidate failed for %r', spec[0])
 
-    _rebuild_designations(env)
+    # Rebuild via raw SQL, not the ORM: prison.role / prison.designation.vacancy
+    # are defined in tnpd_prison_vacancy, which loads AFTER prison_jail_master,
+    # so those models are not yet in the registry during this post-migrate.
+    # (prison.jail — used above — is this module's own model and is available.)
+    _rebuild_designations(cr)
     _logger.info('[prison_jail_master] post-migrate 19.0.2.5.0 — full rebuild done')
 
 
@@ -155,46 +159,60 @@ def _consolidate(env, spec, have_transfer):
                      dup_name, dup_id, canonical, keep_id)
 
 
-def _rebuild_designations(env):
-    cr = env.cr
-    # Resolve canonical role ids by name.
-    Role = env['prison.role']
-    role_ids = {}
+def _rebuild_designations(cr):
     with open(_CSV, encoding='utf-8') as fh:
-        for row in csv.DictReader(fh):
-            rn = row['role']
-            if rn not in role_ids:
-                rec = Role.search([('name', '=', rn)], limit=1)
-                if not rec:
-                    rec = Role.create({'name': rn, 'gender_type': 'both'})
-                    _logger.info('[prison_jail_master] created missing role %r', rn)
-                role_ids[rn] = rec.id
+        rows = list(csv.DictReader(fh))
 
-    # Wipe and rebuild the whole table.
+    # Role name -> id (create any role named in the CSV that is missing).
+    cr.execute("SELECT id, name FROM prison_role")
+    role_ids = {name: rid for rid, name in cr.fetchall()}
+    for rn in sorted({r['role'] for r in rows}):
+        if rn not in role_ids:
+            cr.execute("INSERT INTO prison_role (name, gender_type, active) VALUES (%s, 'both', TRUE) RETURNING id", [rn])
+            role_ids[rn] = cr.fetchone()[0]
+            _logger.info('[prison_jail_master] created missing role %r', rn)
+
+    # Wipe the whole table, then rebuild from the authoritative CSV.
     cr.execute("DELETE FROM prison_designation_vacancy")
-    env.invalidate_all()
-    Desig = env['prison.designation.vacancy']
 
     created = skipped = 0
     resolved = {}
-    with open(_CSV, encoding='utf-8') as fh:
-        for row in csv.DictReader(fh):
+    for row in rows:
             key = (row['canonical'], row['jail_type'])
             if key not in resolved:
-                rec = _find_jail(env, row['canonical'], row['jail_type'])
-                if rec and not rec.active:
-                    rec.write({'active': True})
-                resolved[key] = rec.id if rec else None
+                cr.execute("SELECT id, active FROM prison_jail WHERE name=%s AND jail_type=%s",
+                           [row['canonical'], row['jail_type']])
+                res = cr.fetchall()
+                if len(res) == 1:
+                    pid, act = res[0]
+                    if not act:
+                        cr.execute("UPDATE prison_jail SET active=TRUE WHERE id=%s", [pid])
+                    resolved[key] = pid
+                else:
+                    resolved[key] = None
+                    if len(res) > 1:
+                        _logger.warning('[prison_jail_master] rebuild: %r <%s> matched %d records — skipping',
+                                        row['canonical'], row['jail_type'], len(res))
             pid = resolved[key]
             if not pid:
                 skipped += 1
                 continue
-            Desig.create({
-                'prison_id': pid,
-                'role_id': role_ids[row['role']],
-                'sanctioned_strength': int(row['sanctioned']),
-                'filled_strength': int(row['filled']),
-            })
+            s, f = int(row['sanctioned']), int(row['filled'])
+            # Populate the stored related/compute columns (prison_name,
+            # hierarchy_type, role_name, display_name, vacancy_count) directly,
+            # matching what the ORM would compute — no model access needed.
+            cr.execute("""
+                INSERT INTO prison_designation_vacancy
+                    (prison_id, role_id, sanctioned_strength, filled_strength,
+                     prison_name, hierarchy_type, role_name, display_name,
+                     vacancy_count, last_updated, create_uid, write_uid,
+                     create_date, write_date)
+                SELECT pj.id, %(rid)s, %(s)s, %(f)s,
+                       pj.name, pj.hierarchy_type, %(role)s,
+                       pj.name || ' — ' || %(role)s, GREATEST(0, %(s)s - %(f)s),
+                       now(), 1, 1, now(), now()
+                  FROM prison_jail pj WHERE pj.id = %(pid)s
+            """, {'rid': role_ids[row['role']], 's': s, 'f': f, 'role': row['role'], 'pid': pid})
             created += 1
     _logger.info('[prison_jail_master] rebuilt designation table: %d rows created, %d skipped (%d facilities)',
                  created, skipped, len(resolved))
