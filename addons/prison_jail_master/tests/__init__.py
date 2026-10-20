@@ -2,3 +2,4 @@
 # License: LGPL-3
 
 from . import test_geo
+from . import test_geo_seed

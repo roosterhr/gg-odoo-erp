@@ -427,11 +427,11 @@ class HrEmployee(models.Model):
     @api.depends(
         'x_native_district',
         'x_central_jail_id', 'x_district_jail_id', 'x_sub_jail_id',
-        'x_sub_jail_id.latitude', 'x_sub_jail_id.longitude', 'x_sub_jail_id.geo_source',
-        'x_sub_jail_id.parent_id.latitude', 'x_sub_jail_id.parent_id.longitude',
-        'x_district_jail_id.latitude', 'x_district_jail_id.longitude', 'x_district_jail_id.geo_source',
-        'x_district_jail_id.parent_id.latitude', 'x_district_jail_id.parent_id.longitude',
-        'x_central_jail_id.latitude', 'x_central_jail_id.longitude', 'x_central_jail_id.geo_source',
+        # prison.jail keeps its effective position up to date for the whole
+        # hierarchy, so these three fields are all that is needed at any depth.
+        'x_sub_jail_id.geo_latitude', 'x_sub_jail_id.geo_longitude', 'x_sub_jail_id.geo_is_approx',
+        'x_district_jail_id.geo_latitude', 'x_district_jail_id.geo_longitude', 'x_district_jail_id.geo_is_approx',
+        'x_central_jail_id.geo_latitude', 'x_central_jail_id.geo_longitude', 'x_central_jail_id.geo_is_approx',
     )
     def _compute_x_distance(self):
         districts = self.env['prison.district.geo'].sudo()._lookup_table()

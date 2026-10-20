@@ -1,195 +1,195 @@
-xml_id,name,latitude,longitude,method
-prison_jail_master.jail_central_chennai,Chennai - I,13.15911,80.20311,nominatim
-prison_jail_master.jail_central_chennai_1,Chennai - II,13.15911,80.20311,nominatim
-prison_jail_master.jail_central_coimbatore,"Central Prison, Coimbatore",11.01680,76.95580,district_table
-prison_jail_master.jail_central_cuddalore,"Central Prison, Cuddalore",11.74800,79.77140,district_table
-prison_jail_master.jail_central_madurai,"Central Prison, Madurai",9.92520,78.11980,district_table
-prison_jail_master.jail_central_palayamkottai,"Central Prison, Palayamkottai",8.71965,77.76443,nominatim
-prison_jail_master.jail_central_salem,"Central Prison, Salem",11.66430,78.14600,district_table
-prison_jail_master.jail_central_trichy,"Central Prison, Tiruchirappalli",10.79050,78.70470,district_table
-prison_jail_master.jail_central_vellore,"Central Prison, Vellore",12.91650,79.13250,district_table
-prison_jail_master.jail_dist_ariyalur,Ariyalur District,11.14010,79.07860,district_table
-prison_jail_master.jail_dist_chennai,Chennai District,13.08270,80.27070,district_table
-prison_jail_master.jail_dist_coimbatore,Coimbatore District,11.01680,76.95580,district_table
-prison_jail_master.jail_dist_cuddalore,Cuddalore District,11.74800,79.77140,district_table
-prison_jail_master.jail_dist_dharmapuri,Dharmapuri District,12.13570,78.16020,district_table
-prison_jail_master.jail_dist_dindigul,Dindigul District,10.36730,77.98030,district_table
-prison_jail_master.jail_dist_erode,Erode District,11.34100,77.71720,district_table
-prison_jail_master.jail_dist_kallakurichi,Kallakurichi District,11.73840,78.96390,district_table
-prison_jail_master.jail_dist_kancheepuram,Kancheepuram District,12.83420,79.70360,district_table
-prison_jail_master.jail_dist_kanniyakumari,Kanniyakumari District,8.18330,77.41190,district_table
-prison_jail_master.jail_dist_karur,Karur District,10.96010,78.07660,district_table
-prison_jail_master.jail_dist_krishnagiri,Krishnagiri District,12.51860,78.21370,district_table
-prison_jail_master.jail_dist_madurai,Madurai District,9.92520,78.11980,district_table
-prison_jail_master.jail_dist_mayiladuthurai,Mayiladuthurai District,11.10180,79.65200,district_table
-prison_jail_master.jail_dist_namakkal,Namakkal District,11.21890,78.16770,district_table
-prison_jail_master.jail_dist_nilgiris,Nilgiris District,11.41020,76.69500,district_table
-prison_jail_master.jail_dist_perambalur,Perambalur District,11.23420,78.88080,district_table
-prison_jail_master.jail_dist_pudukkottai,Pudukkottai District,10.38330,78.80010,district_table
-prison_jail_master.jail_dist_ramanathapuram,Ramanathapuram District,9.36390,78.83950,district_table
-prison_jail_master.jail_dist_ranipet,Ranipet District,12.92490,79.33080,district_table
-prison_jail_master.jail_dist_salem,Salem District,11.66430,78.14600,district_table
-prison_jail_master.jail_dist_sivagangai,Sivagangai District,9.84770,78.48300,district_table
-prison_jail_master.jail_dist_tenkasi,Tenkasi District,8.95940,77.31520,district_table
-prison_jail_master.jail_dist_thanjavur,Thanjavur District,10.78700,79.13780,district_table
-prison_jail_master.jail_dist_theni,Theni District,10.01040,77.47680,district_table
-prison_jail_master.jail_dist_thiruvallur,Thiruvallur District,13.14310,79.90860,district_table
-prison_jail_master.jail_dist_thiruvannamalai,Thiruvannamalai District,12.22530,79.07470,district_table
-prison_jail_master.jail_dist_thiruvarur,Thiruvarur District,10.76610,79.63440,district_table
-prison_jail_master.jail_dist_thoothukudi,Thoothukudi District,8.76420,78.13480,district_table
-prison_jail_master.jail_dist_tirunelveli,Tirunelveli District,8.71390,77.75670,district_table
-prison_jail_master.jail_dist_tirupattur,Tirupattur District,12.49550,78.56790,district_table
-prison_jail_master.jail_dist_tiruppur,Tiruppur District,11.10850,77.34110,district_table
-prison_jail_master.jail_dist_trichy,Tiruchirappalli District,10.79050,78.70470,district_table
-prison_jail_master.jail_dist_vellore,Vellore District,12.91650,79.13250,district_table
-prison_jail_master.jail_dist_villupuram,Villupuram District,11.94010,79.48610,district_table
-prison_jail_master.jail_dist_virudhunagar,Virudhunagar District,9.58500,77.95760,district_table
-prison_jail_master.jail_dj_chengalpattu,D.J. Chengalpattu,12.68190,79.98880,district_table
-prison_jail_master.jail_dj_dharmapuri,D.J. Dharmapuri,12.13570,78.16020,district_table
-prison_jail_master.jail_dj_dindigul,D.J. Dindigul,10.36730,77.98030,district_table
-prison_jail_master.jail_dj_erode,D.J. Erode @ Gobichettipalayam,11.45518,77.43507,nominatim
-prison_jail_master.jail_dj_kanniyakumari,D.J. Kanniyakumari @ Nagercoil,8.18330,77.41190,district_table
-prison_jail_master.jail_dj_nagapattinam,D.J. Nagapattinam,10.76720,79.84490,district_table
-prison_jail_master.jail_dj_pudukkottai,D.J. Pudukkottai,10.38330,78.80010,district_table
-prison_jail_master.jail_dj_ramanathapuram,D.J. Ramanathapuram,9.36390,78.83950,district_table
-prison_jail_master.jail_dj_theni,D.J. Theni,10.01040,77.47680,district_table
-prison_jail_master.jail_dj_thoothukudi,D.J. Thoothukudi @ Perurani,8.76420,78.13480,district_fallback
-prison_jail_master.jail_dj_tiruppur,D.J. Tiruppur,11.10850,77.34110,district_table
-prison_jail_master.jail_dj_villuppuram,D.J. Villuppuram,11.94010,79.48610,district_table
-prison_jail_master.jail_dj_virudhunagar,D.J. Virudhunagar,9.58500,77.95760,district_table
-prison_jail_master.jail_female_annex_tiruppur,"Female Annex, Tiruppur",11.10850,77.34110,district_table
-prison_jail_master.jail_oaj_purasadaiudaippu,Purasaraidaiudaippu,9.36390,78.83950,district_fallback
-prison_jail_master.jail_oaj_singanallur,"OAJ, Singanallur",11.01247,77.03912,nominatim
-prison_jail_master.jail_sj_ambasamudram,S.J. Ambasamudram,8.70825,77.43827,nominatim
-prison_jail_master.jail_sj_ambur,S.J. Ambur,12.78742,78.71882,nominatim
-prison_jail_master.jail_sj_arakkonam,S.J. Arakkonam,13.03008,79.60878,nominatim
-prison_jail_master.jail_sj_aranthangi,S.J. Aranthangi,10.16865,78.99279,nominatim
-prison_jail_master.jail_sj_ariyalur,S.J. Ariyalur,11.14010,79.07860,district_table
-prison_jail_master.jail_sj_aruppukottai,S.J. Aruppukottai,9.50732,78.09590,nominatim_fixed
-prison_jail_master.jail_sj_avinashi,S.J. Avinashi,11.19001,77.26799,nominatim
-prison_jail_master.jail_sj_bhavani,S.J. Bhavani,11.44580,77.68280,manual
-prison_jail_master.jail_sj_chengam,S.J. Chengam,12.35023,78.87680,nominatim
-prison_jail_master.jail_sj_chidambaram,S.J. Chidambaram,11.39207,79.70302,nominatim
-prison_jail_master.jail_sj_coonoor,S.J. Coonoor,11.34594,76.79653,nominatim
-prison_jail_master.jail_sj_dharapuram,S.J. Dharapuram,10.73691,77.52610,nominatim
-prison_jail_master.jail_sj_erode,S.J. Erode,11.34100,77.71720,district_table
-prison_jail_master.jail_sj_gingee,S.J. Gingee,12.25442,79.41578,nominatim
-prison_jail_master.jail_sj_gudalur,S.J. Gudalur,11.49924,76.49239,nominatim
-prison_jail_master.jail_sj_gudiyatham,S.J. Gudiyatham,12.94857,78.87053,nominatim
-prison_jail_master.jail_sj_harur,S.J. Harur,12.05457,78.47862,nominatim
-prison_jail_master.jail_sj_hosur,S.J. Hosur,12.71834,77.82295,nominatim
-prison_jail_master.jail_sj_jayamkondam,S.J. Jayamkondam,11.02216,78.52748,nominatim
-prison_jail_master.jail_sj_kallakurichi,S.J. Kallakurichi,11.73840,78.96390,district_table
-prison_jail_master.jail_sj_kanchipuram,S.J. Kanchipuram,12.83420,79.70360,district_table
-prison_jail_master.jail_sj_karur,S.J. Karur,10.96010,78.07660,district_table
-prison_jail_master.jail_sj_kokkirakulam,S.J. Kokkirakulam,8.68838,77.71881,nominatim
-prison_jail_master.jail_sj_kovilpatti,S.J. Kovilpatti,9.17559,77.86870,nominatim
-prison_jail_master.jail_sj_krishnagiri,S.J. Krishnagiri,12.51860,78.21370,district_table
-prison_jail_master.jail_sj_kulithalai,S.J. Kulithalai,10.81545,78.48813,nominatim
-prison_jail_master.jail_sj_kumbakonam,S.J. Kumbakonam,10.96041,79.38209,nominatim
-prison_jail_master.jail_sj_kuzhithurai,S.J. Kuzhithurai,8.31553,77.20688,nominatim
-prison_jail_master.jail_sj_lalgudi,S.J. Lalgudi,10.87542,78.81532,nominatim
-prison_jail_master.jail_sj_madurai,S.J. Madurai,9.92520,78.11980,district_table
-prison_jail_master.jail_sj_manapparai,S.J. Manapparai,10.60823,78.42312,nominatim
-prison_jail_master.jail_sj_mannarkudi,S.J. Mannarkudi,10.67514,79.45537,nominatim_fixed
-prison_jail_master.jail_sj_mayiladuthurai,S.J. Mayiladuthurai,11.10180,79.65200,district_table
-prison_jail_master.jail_sj_melur,S.J. Melur,10.08584,78.35602,nominatim
-prison_jail_master.jail_sj_mettupalayam,S.J. Mettupalayam,11.30594,76.93565,nominatim
-prison_jail_master.jail_sj_mudukulathur,S.J. Mudukulathur,9.38213,78.55157,nominatim
-prison_jail_master.jail_sj_musiri,S.J. Musiri,11.04882,78.52823,nominatim
-prison_jail_master.jail_sj_namakkal,S.J. Namakkal,11.21890,78.16770,district_table
-prison_jail_master.jail_sj_nannilam,S.J. Nannilam,10.90724,79.61277,nominatim
-prison_jail_master.jail_sj_nilakottai,S.J. Nilakottai,10.24369,77.87274,nominatim
-prison_jail_master.jail_sj_omalur,S.J. Omalur,11.74285,78.04727,nominatim
-prison_jail_master.jail_sj_ooty,S.J. Ooty,11.41020,76.69500,district_table
-prison_jail_master.jail_sj_palani,S.J. Palani,10.45111,77.51545,nominatim
-prison_jail_master.jail_sj_palladam,S.J. Palladam,10.97081,77.28173,nominatim
-prison_jail_master.jail_sj_panruti,S.J. Panruti,11.77228,79.55190,nominatim
-prison_jail_master.jail_sj_papanasam,S.J. Papanasam,10.86042,79.23582,nominatim
-prison_jail_master.jail_sj_paramakudi,S.J. Paramakudi,9.48672,78.67227,nominatim
-prison_jail_master.jail_sj_paramathy,S.J. Paramathy,10.91444,77.88382,nominatim
-prison_jail_master.jail_sj_pattukottai,S.J. Pattukottai,10.41629,79.32056,nominatim_fixed
-prison_jail_master.jail_sj_perambalur,S.J. Perambalur,11.23420,78.88080,district_table
-prison_jail_master.jail_sj_periyakulam,S.J. Periyakulam,10.11987,77.54671,nominatim
-prison_jail_master.jail_sj_perundurai,S.J. Perundurai,11.25390,77.62883,nominatim
-prison_jail_master.jail_sj_pollachi,S.J. Pollachi,10.65882,77.00873,nominatim
-prison_jail_master.jail_sj_polur,S.J. Polur,12.59377,79.13853,nominatim
-prison_jail_master.jail_sj_ponneri,S.J. Ponneri,13.34926,80.24967,nominatim
-prison_jail_master.jail_sj_poonamallee,Poonamallee (Men),13.04174,80.10069,nominatim
-prison_jail_master.jail_sj_portonova,S.J. Portonova,11.49057,79.75690,nominatim_fixed
-prison_jail_master.jail_sj_rasipuram,S.J. Rasipuram,11.45373,78.17846,nominatim
-prison_jail_master.jail_sj_saidapet,S.J. Saidapet,13.02082,80.22395,nominatim
-prison_jail_master.jail_sj_sankagiri,S.J. Sankagiri,11.47609,77.87040,nominatim
-prison_jail_master.jail_sj_sankarankoil,S.J. Sankarankoil,9.14733,77.58656,nominatim
-prison_jail_master.jail_sj_sathyamangalam,S.J. Sathyamangalam,11.55237,77.26538,nominatim
-prison_jail_master.jail_sj_sirkali,S.J. Sirkali,11.26590,79.74433,nominatim
-prison_jail_master.jail_sj_sivagangai,S.J. Sivagangai,9.84770,78.48300,district_table
-prison_jail_master.jail_sj_srivaikundam,S.J. Srivaikundam,8.67904,77.86273,nominatim
-prison_jail_master.jail_sj_srivilliputhur,S.J. Srivilliputhur,9.56014,77.60913,nominatim
-prison_jail_master.jail_sj_tenkasi,S.J. Tenkasi,8.95940,77.31520,district_table
-prison_jail_master.jail_sj_thanjavur,S.J. Thanjavur,10.78700,79.13780,district_table
-prison_jail_master.jail_sj_tharangambadi,S.J. Tharangambadi,11.02993,79.85220,nominatim
-prison_jail_master.jail_sj_thiruchengodu,S.J. Thiruchengodu,11.36453,77.88932,nominatim
-prison_jail_master.jail_sj_thirukovilur,S.J. Thirukovilur,11.97130,79.21080,nominatim
-prison_jail_master.jail_sj_thirumangalam,S.J. Thirumangalam,9.79801,77.92984,nominatim_fixed
-prison_jail_master.jail_sj_thirumayam,S.J. Thirumayam,10.24494,78.74639,nominatim
-prison_jail_master.jail_sj_thiruturaipoondi,S.J. Thiruturaipoondi,10.53174,79.64007,nominatim_fixed
-prison_jail_master.jail_sj_thiruvallur,S.J. Thiruvallur,13.14310,79.90860,district_table
-prison_jail_master.jail_sj_thiruvannamalai,S.J. Thiruvannamalai,12.22530,79.07470,district_table
-prison_jail_master.jail_sj_thiruvidaimaruthur,S.J. Thiruvidaimaruthur,10.57615,79.69945,nominatim
-prison_jail_master.jail_sj_thuckalay,S.J. Thuckalay,8.25837,77.31119,nominatim
-prison_jail_master.jail_sj_thuraiyur,S.J. Thuraiyur,11.23020,78.56507,nominatim
-prison_jail_master.jail_sj_tindivanam,S.J. Tindivanam,12.22617,79.65150,nominatim
-prison_jail_master.jail_sj_tiruchendur,S.J. Tiruchendur,8.49557,78.12332,nominatim
-prison_jail_master.jail_sj_tirupattur,S.J. Tirupattur,12.49550,78.56790,district_table
-prison_jail_master.jail_sj_tiruppattur_sivagangai,S.J. Tiruppattur,10.10959,78.60144,nominatim_fixed
-prison_jail_master.jail_sj_tiruttani,S.J. Tiruttani,13.16108,79.55158,nominatim
-prison_jail_master.jail_sj_transit_puzhal,Transit Yard Puzhal,13.15911,80.20311,nominatim
-prison_jail_master.jail_sj_udumalaipet,S.J. Udumalaipet,10.58390,77.25000,nominatim_fixed
-prison_jail_master.jail_sj_ulundurpet,S.J. Ulundurpet,11.70203,79.31818,nominatim
-prison_jail_master.jail_sj_usilampatti,S.J. Usilampatti,9.97064,77.79399,nominatim
-prison_jail_master.jail_sj_uthamapalayam,S.J. Uthamapalayam,9.76625,77.32990,nominatim
-prison_jail_master.jail_sj_uthangarai,S.J. Uthangarai,12.27528,78.49388,nominatim
-prison_jail_master.jail_sj_vandavasi,S.J. Vandavasi,12.50560,79.60496,nominatim
-prison_jail_master.jail_sj_vaniyambadi,S.J. Vaniyambadi,12.67872,78.61999,nominatim
-prison_jail_master.jail_sj_vedasandur,S.J. Vedasandur,10.59903,78.00168,nominatim
-prison_jail_master.jail_sj_vellore_annex,Vellore Annex,12.91650,79.13250,district_table
-prison_jail_master.jail_sj_virudhachalam,S.J. Virudhachalam,11.54788,79.38454,nominatim
-prison_jail_master.jail_sj_walaja,S.J. Walaja,12.92547,79.36379,nominatim_fixed
-prison_jail_master.jail_sj_women_dharmapuri,S.J. Women Dharmapuri,12.13570,78.16020,district_table
-prison_jail_master.jail_spw_coimbatore,"SPW, Coimbatore",11.01680,76.95580,district_table
-prison_jail_master.jail_spw_salem,"SPW, Salem",11.66430,78.14600,district_table
-prison_jail_master.jail_spw_trichy,"SPW, Trichy",10.79050,78.70470,district_table
-prison_jail_master.jail_spw_vellore,"SPW, Vellore",12.91650,79.13250,district_table
-prison_jail_master.jail_wsj_thiruvarur,"WSJ, Thiruvarur",10.76610,79.63440,district_table
-tnpd_prison_vacancy.jail_dj_attur_closed,D.J. Attur (Closed),11.59954,78.59627,nominatim_fixed
-tnpd_prison_vacancy.jail_sj_arani_closed,S.J. Arani (Closed),12.68623,79.29924,nominatim_fixed
-tnpd_prison_vacancy.jail_sj_cheyyar_closed,S.J. Cheyyar (Closed),12.65639,79.54046,nominatim
-tnpd_prison_vacancy.jail_sj_cuddalore_closed,S.J. Cuddalore (Closed),11.74800,79.77140,district_table
-tnpd_prison_vacancy.jail_sj_cuddalore_women,Cuddalore,11.74800,79.77140,district_table
-tnpd_prison_vacancy.jail_sj_dharmapuri_women,Dharmapuri,12.13570,78.16020,district_table
-tnpd_prison_vacancy.jail_sj_keeranur_closed,S.J. Keeranur (Closed),10.57339,78.78427,nominatim
-tnpd_prison_vacancy.jail_sj_kodaikanal_closed,S.J. Kodaikanal (Closed),10.23371,77.49197,nominatim
-tnpd_prison_vacancy.jail_sj_maduranthagam_closed,S.J. Maduranthagam (Closed),12.50898,79.88912,nominatim
-tnpd_prison_vacancy.jail_sj_manapparai_closed,S.J. Manapparai (Closed),10.60823,78.42312,nominatim
-tnpd_prison_vacancy.jail_sj_mettupalayam_closed,S.J. Mettupalayam (Closed),11.30594,76.93565,nominatim
-tnpd_prison_vacancy.jail_sj_musiri_closed,S.J. Musiri (Closed),11.04882,78.52823,nominatim
-tnpd_prison_vacancy.jail_sj_nanguneri,Nanguneri (Men),8.48926,77.65967,nominatim
-tnpd_prison_vacancy.jail_sj_nilakottai_women,Nilakottai,10.24369,77.87274,nominatim
-tnpd_prison_vacancy.jail_sj_paramakudi_women,Paramakudi,9.48672,78.67227,nominatim
-tnpd_prison_vacancy.jail_sj_paramathivelur_closed,S.J. Paramathivelur (Closed),11.18645,77.95902,nominatim_fixed
-tnpd_prison_vacancy.jail_sj_parangipet_closed,S.J. Parangipet (Closed),11.49057,79.75690,nominatim_fixed
-tnpd_prison_vacancy.jail_sj_pattukottai_closed,S.J. Pattukottai (Closed),10.41629,79.32056,nominatim_fixed
-tnpd_prison_vacancy.jail_sj_rasipuram_closed,S.J. Rasipuram (Closed),11.45373,78.17846,nominatim
-tnpd_prison_vacancy.jail_sj_thiruchendur_closed,S.J. Thiruchendur (Closed),8.47772,78.11395,nominatim
-tnpd_prison_vacancy.jail_sj_thiruvadanai_closed,S.J. Thiruvadanai (Closed),9.84015,79.04400,nominatim
-tnpd_prison_vacancy.jail_sj_thiruvarur_women,Thiruvarur,10.76610,79.63440,district_table
-tnpd_prison_vacancy.jail_sj_thukalay_women,Thuckalay,8.25837,77.31119,nominatim
-tnpd_prison_vacancy.jail_sj_transit_puzhal,Puzhal (Young Offenders Correctional Facility),13.15911,80.20311,nominatim
-tnpd_prison_vacancy.jail_spw_chennai,Chennai,13.08270,80.27070,district_table
-tnpd_prison_vacancy.jail_spw_coimbatore,Coimbatore,11.01680,76.95580,district_table
-tnpd_prison_vacancy.jail_spw_madurai,Madurai,9.92520,78.11980,district_table
-tnpd_prison_vacancy.jail_spw_trichy,Tiruchirappalli,10.79050,78.70470,district_table
-tnpd_prison_vacancy.jail_spw_vellore,Vellore,12.91650,79.13250,district_table
-tnpd_prison_vacancy.jail_ssj_kokkirakulam,Kokkirakulam (Women),8.68838,77.71881,nominatim
-tnpd_prison_vacancy.jail_ssj_salem_women,Salem (Women),11.66430,78.14600,district_table
+xml_id,name,jail_type,hierarchy_type,latitude,longitude,method
+prison_jail_master.jail_central_chennai,Chennai - I,central_jail,general,13.15911,80.20311,nominatim
+prison_jail_master.jail_central_chennai_1,Chennai - II,central_jail,general,13.15911,80.20311,nominatim
+prison_jail_master.jail_central_coimbatore,"Central Prison, Coimbatore",central_jail,general,11.01680,76.95580,district_table
+prison_jail_master.jail_central_cuddalore,"Central Prison, Cuddalore",central_jail,general,11.74800,79.77140,district_table
+prison_jail_master.jail_central_madurai,"Central Prison, Madurai",central_jail,general,9.92520,78.11980,district_table
+prison_jail_master.jail_central_palayamkottai,"Central Prison, Palayamkottai",central_jail,general,8.71965,77.76443,nominatim
+prison_jail_master.jail_central_salem,"Central Prison, Salem",central_jail,general,11.66430,78.14600,district_table
+prison_jail_master.jail_central_trichy,"Central Prison, Tiruchirappalli",central_jail,general,10.79050,78.70470,district_table
+prison_jail_master.jail_central_vellore,"Central Prison, Vellore",central_jail,general,12.91650,79.13250,district_table
+prison_jail_master.jail_dist_ariyalur,Ariyalur District,district_jail,general,11.14010,79.07860,district_table
+prison_jail_master.jail_dist_chennai,Chennai District,district_jail,general,13.08270,80.27070,district_table
+prison_jail_master.jail_dist_coimbatore,Coimbatore District,district_jail,general,11.01680,76.95580,district_table
+prison_jail_master.jail_dist_cuddalore,Cuddalore District,district_jail,general,11.74800,79.77140,district_table
+prison_jail_master.jail_dist_dharmapuri,Dharmapuri District,district_jail,general,12.13570,78.16020,district_table
+prison_jail_master.jail_dist_dindigul,Dindigul District,district_jail,general,10.36730,77.98030,district_table
+prison_jail_master.jail_dist_erode,Erode District,district_jail,general,11.34100,77.71720,district_table
+prison_jail_master.jail_dist_kallakurichi,Kallakurichi District,district_jail,general,11.73840,78.96390,district_table
+prison_jail_master.jail_dist_kancheepuram,Kancheepuram District,district_jail,general,12.83420,79.70360,district_table
+prison_jail_master.jail_dist_kanniyakumari,Kanniyakumari District,district_jail,general,8.18330,77.41190,district_table
+prison_jail_master.jail_dist_karur,Karur District,district_jail,general,10.96010,78.07660,district_table
+prison_jail_master.jail_dist_krishnagiri,Krishnagiri District,district_jail,general,12.51860,78.21370,district_table
+prison_jail_master.jail_dist_madurai,Madurai District,district_jail,general,9.92520,78.11980,district_table
+prison_jail_master.jail_dist_mayiladuthurai,Mayiladuthurai District,district_jail,general,11.10180,79.65200,district_table
+prison_jail_master.jail_dist_namakkal,Namakkal District,district_jail,general,11.21890,78.16770,district_table
+prison_jail_master.jail_dist_nilgiris,Nilgiris District,district_jail,general,11.41020,76.69500,district_table
+prison_jail_master.jail_dist_perambalur,Perambalur District,district_jail,general,11.23420,78.88080,district_table
+prison_jail_master.jail_dist_pudukkottai,Pudukkottai District,district_jail,general,10.38330,78.80010,district_table
+prison_jail_master.jail_dist_ramanathapuram,Ramanathapuram District,district_jail,general,9.36390,78.83950,district_table
+prison_jail_master.jail_dist_ranipet,Ranipet District,district_jail,general,12.92490,79.33080,district_table
+prison_jail_master.jail_dist_salem,Salem District,district_jail,general,11.66430,78.14600,district_table
+prison_jail_master.jail_dist_sivagangai,Sivagangai District,district_jail,general,9.84770,78.48300,district_table
+prison_jail_master.jail_dist_tenkasi,Tenkasi District,district_jail,general,8.95940,77.31520,district_table
+prison_jail_master.jail_dist_thanjavur,Thanjavur District,district_jail,general,10.78700,79.13780,district_table
+prison_jail_master.jail_dist_theni,Theni District,district_jail,general,10.01040,77.47680,district_table
+prison_jail_master.jail_dist_thiruvallur,Thiruvallur District,district_jail,general,13.14310,79.90860,district_table
+prison_jail_master.jail_dist_thiruvannamalai,Thiruvannamalai District,district_jail,general,12.22530,79.07470,district_table
+prison_jail_master.jail_dist_thiruvarur,Thiruvarur District,district_jail,general,10.76610,79.63440,district_table
+prison_jail_master.jail_dist_thoothukudi,Thoothukudi District,district_jail,general,8.76420,78.13480,district_table
+prison_jail_master.jail_dist_tirunelveli,Tirunelveli District,district_jail,general,8.71390,77.75670,district_table
+prison_jail_master.jail_dist_tirupattur,Tirupattur District,district_jail,general,12.49550,78.56790,district_table
+prison_jail_master.jail_dist_tiruppur,Tiruppur District,district_jail,general,11.10850,77.34110,district_table
+prison_jail_master.jail_dist_trichy,Tiruchirappalli District,district_jail,general,10.79050,78.70470,district_table
+prison_jail_master.jail_dist_vellore,Vellore District,district_jail,general,12.91650,79.13250,district_table
+prison_jail_master.jail_dist_villupuram,Villupuram District,district_jail,general,11.94010,79.48610,district_table
+prison_jail_master.jail_dist_virudhunagar,Virudhunagar District,district_jail,general,9.58500,77.95760,district_table
+prison_jail_master.jail_dj_chengalpattu,D.J. Chengalpattu,district_jail,general,12.68190,79.98880,district_table
+prison_jail_master.jail_dj_dharmapuri,D.J. Dharmapuri,district_jail,general,12.13570,78.16020,district_table
+prison_jail_master.jail_dj_dindigul,D.J. Dindigul,district_jail,general,10.36730,77.98030,district_table
+prison_jail_master.jail_dj_erode,D.J. Erode @ Gobichettipalayam,district_jail,general,11.45518,77.43507,nominatim
+prison_jail_master.jail_dj_kanniyakumari,D.J. Kanniyakumari @ Nagercoil,district_jail,general,8.18330,77.41190,district_table
+prison_jail_master.jail_dj_nagapattinam,D.J. Nagapattinam,district_jail,general,10.76720,79.84490,district_table
+prison_jail_master.jail_dj_pudukkottai,D.J. Pudukkottai,district_jail,general,10.38330,78.80010,district_table
+prison_jail_master.jail_dj_ramanathapuram,D.J. Ramanathapuram,district_jail,general,9.36390,78.83950,district_table
+prison_jail_master.jail_dj_theni,D.J. Theni,district_jail,general,10.01040,77.47680,district_table
+prison_jail_master.jail_dj_thoothukudi,D.J. Thoothukudi @ Perurani,district_jail,general,8.76420,78.13480,district_fallback
+prison_jail_master.jail_dj_tiruppur,D.J. Tiruppur,district_jail,general,11.10850,77.34110,district_table
+prison_jail_master.jail_dj_villuppuram,D.J. Villuppuram,district_jail,general,11.94010,79.48610,district_table
+prison_jail_master.jail_dj_virudhunagar,D.J. Virudhunagar,district_jail,general,9.58500,77.95760,district_table
+prison_jail_master.jail_female_annex_tiruppur,"Female Annex, Tiruppur",sub_jail,general,11.10850,77.34110,district_table
+prison_jail_master.jail_oaj_purasadaiudaippu,Purasaraidaiudaippu,sub_jail,general,9.36390,78.83950,district_fallback
+prison_jail_master.jail_oaj_singanallur,"OAJ, Singanallur",sub_jail,general,11.01247,77.03912,nominatim
+prison_jail_master.jail_sj_ambasamudram,S.J. Ambasamudram,sub_jail,general,8.70825,77.43827,nominatim
+prison_jail_master.jail_sj_ambur,S.J. Ambur,sub_jail,general,12.78742,78.71882,nominatim
+prison_jail_master.jail_sj_arakkonam,S.J. Arakkonam,sub_jail,general,13.03008,79.60878,nominatim
+prison_jail_master.jail_sj_aranthangi,S.J. Aranthangi,sub_jail,general,10.16865,78.99279,nominatim
+prison_jail_master.jail_sj_ariyalur,S.J. Ariyalur,sub_jail,general,11.14010,79.07860,district_table
+prison_jail_master.jail_sj_aruppukottai,S.J. Aruppukottai,sub_jail,general,9.50732,78.09590,nominatim_fixed
+prison_jail_master.jail_sj_avinashi,S.J. Avinashi,sub_jail,general,11.19001,77.26799,nominatim
+prison_jail_master.jail_sj_bhavani,S.J. Bhavani,sub_jail,general,11.44580,77.68280,manual
+prison_jail_master.jail_sj_chengam,S.J. Chengam,sub_jail,general,12.35023,78.87680,nominatim
+prison_jail_master.jail_sj_chidambaram,S.J. Chidambaram,sub_jail,general,11.39207,79.70302,nominatim
+prison_jail_master.jail_sj_coonoor,S.J. Coonoor,sub_jail,general,11.34594,76.79653,nominatim
+prison_jail_master.jail_sj_dharapuram,S.J. Dharapuram,sub_jail,general,10.73691,77.52610,nominatim
+prison_jail_master.jail_sj_erode,S.J. Erode,sub_jail,general,11.34100,77.71720,district_table
+prison_jail_master.jail_sj_gingee,S.J. Gingee,sub_jail,general,12.25442,79.41578,nominatim
+prison_jail_master.jail_sj_gudalur,S.J. Gudalur,sub_jail,general,11.49924,76.49239,nominatim
+prison_jail_master.jail_sj_gudiyatham,S.J. Gudiyatham,sub_jail,general,12.94857,78.87053,nominatim
+prison_jail_master.jail_sj_harur,S.J. Harur,sub_jail,general,12.05457,78.47862,nominatim
+prison_jail_master.jail_sj_hosur,S.J. Hosur,sub_jail,general,12.71834,77.82295,nominatim
+prison_jail_master.jail_sj_jayamkondam,S.J. Jayamkondam,sub_jail,general,11.02216,78.52748,nominatim
+prison_jail_master.jail_sj_kallakurichi,S.J. Kallakurichi,sub_jail,general,11.73840,78.96390,district_table
+prison_jail_master.jail_sj_kanchipuram,S.J. Kanchipuram,sub_jail,general,12.83420,79.70360,district_table
+prison_jail_master.jail_sj_karur,S.J. Karur,sub_jail,general,10.96010,78.07660,district_table
+prison_jail_master.jail_sj_kokkirakulam,S.J. Kokkirakulam,sub_jail,general,8.68838,77.71881,nominatim
+prison_jail_master.jail_sj_kovilpatti,S.J. Kovilpatti,sub_jail,general,9.17559,77.86870,nominatim
+prison_jail_master.jail_sj_krishnagiri,S.J. Krishnagiri,sub_jail,general,12.51860,78.21370,district_table
+prison_jail_master.jail_sj_kulithalai,S.J. Kulithalai,sub_jail,general,10.81545,78.48813,nominatim
+prison_jail_master.jail_sj_kumbakonam,S.J. Kumbakonam,sub_jail,general,10.96041,79.38209,nominatim
+prison_jail_master.jail_sj_kuzhithurai,S.J. Kuzhithurai,sub_jail,general,8.31553,77.20688,nominatim
+prison_jail_master.jail_sj_lalgudi,S.J. Lalgudi,sub_jail,general,10.87542,78.81532,nominatim
+prison_jail_master.jail_sj_madurai,S.J. Madurai,sub_jail,general,9.92520,78.11980,district_table
+prison_jail_master.jail_sj_manapparai,S.J. Manapparai,sub_jail,general,10.60823,78.42312,nominatim
+prison_jail_master.jail_sj_mannarkudi,S.J. Mannarkudi,sub_jail,general,10.67514,79.45537,nominatim_fixed
+prison_jail_master.jail_sj_mayiladuthurai,S.J. Mayiladuthurai,sub_jail,general,11.10180,79.65200,district_table
+prison_jail_master.jail_sj_melur,S.J. Melur,sub_jail,general,10.08584,78.35602,nominatim
+prison_jail_master.jail_sj_mettupalayam,S.J. Mettupalayam,sub_jail,general,11.30594,76.93565,nominatim
+prison_jail_master.jail_sj_mudukulathur,S.J. Mudukulathur,sub_jail,general,9.38213,78.55157,nominatim
+prison_jail_master.jail_sj_musiri,S.J. Musiri,sub_jail,general,11.04882,78.52823,nominatim
+prison_jail_master.jail_sj_namakkal,S.J. Namakkal,sub_jail,general,11.21890,78.16770,district_table
+prison_jail_master.jail_sj_nannilam,S.J. Nannilam,sub_jail,general,10.90724,79.61277,nominatim
+prison_jail_master.jail_sj_nilakottai,S.J. Nilakottai,sub_jail,general,10.24369,77.87274,nominatim
+prison_jail_master.jail_sj_omalur,S.J. Omalur,sub_jail,general,11.74285,78.04727,nominatim
+prison_jail_master.jail_sj_ooty,S.J. Ooty,sub_jail,general,11.41020,76.69500,district_table
+prison_jail_master.jail_sj_palani,S.J. Palani,sub_jail,general,10.45111,77.51545,nominatim
+prison_jail_master.jail_sj_palladam,S.J. Palladam,sub_jail,general,10.97081,77.28173,nominatim
+prison_jail_master.jail_sj_panruti,S.J. Panruti,sub_jail,general,11.77228,79.55190,nominatim
+prison_jail_master.jail_sj_papanasam,S.J. Papanasam,sub_jail,general,10.86042,79.23582,nominatim
+prison_jail_master.jail_sj_paramakudi,S.J. Paramakudi,sub_jail,general,9.48672,78.67227,nominatim
+prison_jail_master.jail_sj_paramathy,S.J. Paramathy,sub_jail,general,10.91444,77.88382,nominatim
+prison_jail_master.jail_sj_pattukottai,S.J. Pattukottai,sub_jail,general,10.41629,79.32056,nominatim_fixed
+prison_jail_master.jail_sj_perambalur,S.J. Perambalur,sub_jail,general,11.23420,78.88080,district_table
+prison_jail_master.jail_sj_periyakulam,S.J. Periyakulam,sub_jail,general,10.11987,77.54671,nominatim
+prison_jail_master.jail_sj_perundurai,S.J. Perundurai,sub_jail,general,11.25390,77.62883,nominatim
+prison_jail_master.jail_sj_pollachi,S.J. Pollachi,sub_jail,general,10.65882,77.00873,nominatim
+prison_jail_master.jail_sj_polur,S.J. Polur,sub_jail,general,12.59377,79.13853,nominatim
+prison_jail_master.jail_sj_ponneri,S.J. Ponneri,sub_jail,general,13.34926,80.24967,nominatim
+prison_jail_master.jail_sj_poonamallee,Poonamallee (Men),sub_jail,general,13.04174,80.10069,nominatim
+prison_jail_master.jail_sj_portonova,S.J. Portonova,sub_jail,general,11.49057,79.75690,nominatim_fixed
+prison_jail_master.jail_sj_rasipuram,S.J. Rasipuram,sub_jail,general,11.45373,78.17846,nominatim
+prison_jail_master.jail_sj_saidapet,S.J. Saidapet,sub_jail,general,13.02082,80.22395,nominatim
+prison_jail_master.jail_sj_sankagiri,S.J. Sankagiri,sub_jail,general,11.47609,77.87040,nominatim
+prison_jail_master.jail_sj_sankarankoil,S.J. Sankarankoil,sub_jail,general,9.14733,77.58656,nominatim
+prison_jail_master.jail_sj_sathyamangalam,S.J. Sathyamangalam,sub_jail,general,11.55237,77.26538,nominatim
+prison_jail_master.jail_sj_sirkali,S.J. Sirkali,sub_jail,general,11.26590,79.74433,nominatim
+prison_jail_master.jail_sj_sivagangai,S.J. Sivagangai,sub_jail,general,9.84770,78.48300,district_table
+prison_jail_master.jail_sj_srivaikundam,S.J. Srivaikundam,sub_jail,general,8.67904,77.86273,nominatim
+prison_jail_master.jail_sj_srivilliputhur,S.J. Srivilliputhur,sub_jail,general,9.56014,77.60913,nominatim
+prison_jail_master.jail_sj_tenkasi,S.J. Tenkasi,sub_jail,general,8.95940,77.31520,district_table
+prison_jail_master.jail_sj_thanjavur,S.J. Thanjavur,sub_jail,general,10.78700,79.13780,district_table
+prison_jail_master.jail_sj_tharangambadi,S.J. Tharangambadi,sub_jail,general,11.02993,79.85220,nominatim
+prison_jail_master.jail_sj_thiruchengodu,S.J. Thiruchengodu,sub_jail,general,11.36453,77.88932,nominatim
+prison_jail_master.jail_sj_thirukovilur,S.J. Thirukovilur,sub_jail,general,11.97130,79.21080,nominatim
+prison_jail_master.jail_sj_thirumangalam,S.J. Thirumangalam,sub_jail,general,9.79801,77.92984,nominatim_fixed
+prison_jail_master.jail_sj_thirumayam,S.J. Thirumayam,sub_jail,general,10.24494,78.74639,nominatim
+prison_jail_master.jail_sj_thiruturaipoondi,S.J. Thiruturaipoondi,sub_jail,general,10.53174,79.64007,nominatim_fixed
+prison_jail_master.jail_sj_thiruvallur,S.J. Thiruvallur,sub_jail,general,13.14310,79.90860,district_table
+prison_jail_master.jail_sj_thiruvannamalai,S.J. Thiruvannamalai,sub_jail,general,12.22530,79.07470,district_table
+prison_jail_master.jail_sj_thiruvidaimaruthur,S.J. Thiruvidaimaruthur,sub_jail,general,10.57615,79.69945,nominatim
+prison_jail_master.jail_sj_thuckalay,S.J. Thuckalay,sub_jail,general,8.25837,77.31119,nominatim
+prison_jail_master.jail_sj_thuraiyur,S.J. Thuraiyur,sub_jail,general,11.23020,78.56507,nominatim
+prison_jail_master.jail_sj_tindivanam,S.J. Tindivanam,sub_jail,general,12.22617,79.65150,nominatim
+prison_jail_master.jail_sj_tiruchendur,S.J. Tiruchendur,sub_jail,general,8.49557,78.12332,nominatim
+prison_jail_master.jail_sj_tirupattur,S.J. Tirupattur,sub_jail,general,12.49550,78.56790,district_table
+prison_jail_master.jail_sj_tiruppattur_sivagangai,S.J. Tiruppattur,sub_jail,general,10.10959,78.60144,nominatim_fixed
+prison_jail_master.jail_sj_tiruttani,S.J. Tiruttani,sub_jail,general,13.16108,79.55158,nominatim
+prison_jail_master.jail_sj_transit_puzhal,Transit Yard Puzhal,sub_jail,general,13.15911,80.20311,nominatim
+prison_jail_master.jail_sj_udumalaipet,S.J. Udumalaipet,sub_jail,general,10.58390,77.25000,nominatim_fixed
+prison_jail_master.jail_sj_ulundurpet,S.J. Ulundurpet,sub_jail,general,11.70203,79.31818,nominatim
+prison_jail_master.jail_sj_usilampatti,S.J. Usilampatti,sub_jail,general,9.97064,77.79399,nominatim
+prison_jail_master.jail_sj_uthamapalayam,S.J. Uthamapalayam,sub_jail,general,9.76625,77.32990,nominatim
+prison_jail_master.jail_sj_uthangarai,S.J. Uthangarai,sub_jail,general,12.27528,78.49388,nominatim
+prison_jail_master.jail_sj_vandavasi,S.J. Vandavasi,sub_jail,general,12.50560,79.60496,nominatim
+prison_jail_master.jail_sj_vaniyambadi,S.J. Vaniyambadi,sub_jail,general,12.67872,78.61999,nominatim
+prison_jail_master.jail_sj_vedasandur,S.J. Vedasandur,sub_jail,general,10.59903,78.00168,nominatim
+prison_jail_master.jail_sj_vellore_annex,Vellore Annex,sub_jail,general,12.91650,79.13250,district_table
+prison_jail_master.jail_sj_virudhachalam,S.J. Virudhachalam,sub_jail,general,11.54788,79.38454,nominatim
+prison_jail_master.jail_sj_walaja,S.J. Walaja,sub_jail,general,12.92547,79.36379,nominatim_fixed
+prison_jail_master.jail_sj_women_dharmapuri,S.J. Women Dharmapuri,sub_jail,general,12.13570,78.16020,district_table
+prison_jail_master.jail_spw_coimbatore,"SPW, Coimbatore",sub_jail,general,11.01680,76.95580,district_table
+prison_jail_master.jail_spw_salem,"SPW, Salem",sub_jail,general,11.66430,78.14600,district_table
+prison_jail_master.jail_spw_trichy,"SPW, Trichy",sub_jail,general,10.79050,78.70470,district_table
+prison_jail_master.jail_spw_vellore,"SPW, Vellore",sub_jail,general,12.91650,79.13250,district_table
+prison_jail_master.jail_wsj_thiruvarur,"WSJ, Thiruvarur",sub_jail,general,10.76610,79.63440,district_table
+tnpd_prison_vacancy.jail_dj_attur_closed,D.J. Attur (Closed),district_jail,general,11.59954,78.59627,nominatim_fixed
+tnpd_prison_vacancy.jail_sj_arani_closed,S.J. Arani (Closed),sub_jail,general,12.68623,79.29924,nominatim_fixed
+tnpd_prison_vacancy.jail_sj_cheyyar_closed,S.J. Cheyyar (Closed),sub_jail,general,12.65639,79.54046,nominatim
+tnpd_prison_vacancy.jail_sj_cuddalore_closed,S.J. Cuddalore (Closed),sub_jail,general,11.74800,79.77140,district_table
+tnpd_prison_vacancy.jail_sj_cuddalore_women,Cuddalore,women_sub_jail,women,11.74800,79.77140,district_table
+tnpd_prison_vacancy.jail_sj_dharmapuri_women,Dharmapuri,women_sub_jail,women,12.13570,78.16020,district_table
+tnpd_prison_vacancy.jail_sj_keeranur_closed,S.J. Keeranur (Closed),sub_jail,general,10.57339,78.78427,nominatim
+tnpd_prison_vacancy.jail_sj_kodaikanal_closed,S.J. Kodaikanal (Closed),sub_jail,general,10.23371,77.49197,nominatim
+tnpd_prison_vacancy.jail_sj_maduranthagam_closed,S.J. Maduranthagam (Closed),sub_jail,general,12.50898,79.88912,nominatim
+tnpd_prison_vacancy.jail_sj_manapparai_closed,S.J. Manapparai (Closed),sub_jail,general,10.60823,78.42312,nominatim
+tnpd_prison_vacancy.jail_sj_mettupalayam_closed,S.J. Mettupalayam (Closed),sub_jail,general,11.30594,76.93565,nominatim
+tnpd_prison_vacancy.jail_sj_musiri_closed,S.J. Musiri (Closed),sub_jail,general,11.04882,78.52823,nominatim
+tnpd_prison_vacancy.jail_sj_nanguneri,Nanguneri (Men),special_sub_jail,general,8.48926,77.65967,nominatim
+tnpd_prison_vacancy.jail_sj_nilakottai_women,Nilakottai,women_sub_jail,women,10.24369,77.87274,nominatim
+tnpd_prison_vacancy.jail_sj_paramakudi_women,Paramakudi,women_sub_jail,women,9.48672,78.67227,nominatim
+tnpd_prison_vacancy.jail_sj_paramathivelur_closed,S.J. Paramathivelur (Closed),sub_jail,general,11.18645,77.95902,nominatim_fixed
+tnpd_prison_vacancy.jail_sj_parangipet_closed,S.J. Parangipet (Closed),sub_jail,general,11.49057,79.75690,nominatim_fixed
+tnpd_prison_vacancy.jail_sj_pattukottai_closed,S.J. Pattukottai (Closed),sub_jail,general,10.41629,79.32056,nominatim_fixed
+tnpd_prison_vacancy.jail_sj_rasipuram_closed,S.J. Rasipuram (Closed),sub_jail,general,11.45373,78.17846,nominatim
+tnpd_prison_vacancy.jail_sj_thiruchendur_closed,S.J. Thiruchendur (Closed),sub_jail,general,8.47772,78.11395,nominatim
+tnpd_prison_vacancy.jail_sj_thiruvadanai_closed,S.J. Thiruvadanai (Closed),sub_jail,general,9.84015,79.04400,nominatim
+tnpd_prison_vacancy.jail_sj_thiruvarur_women,Thiruvarur,women_sub_jail,women,10.76610,79.63440,district_table
+tnpd_prison_vacancy.jail_sj_thukalay_women,Thuckalay,women_sub_jail,women,8.25837,77.31119,nominatim
+tnpd_prison_vacancy.jail_sj_transit_puzhal,Puzhal (Young Offenders Correctional Facility),transit_yard,general,13.15911,80.20311,nominatim
+tnpd_prison_vacancy.jail_spw_chennai,Chennai,spw,women,13.08270,80.27070,district_table
+tnpd_prison_vacancy.jail_spw_coimbatore,Coimbatore,spw,women,11.01680,76.95580,district_table
+tnpd_prison_vacancy.jail_spw_madurai,Madurai,spw,women,9.92520,78.11980,district_table
+tnpd_prison_vacancy.jail_spw_trichy,Tiruchirappalli,spw,women,10.79050,78.70470,district_table
+tnpd_prison_vacancy.jail_spw_vellore,Vellore,spw,women,12.91650,79.13250,district_table
+tnpd_prison_vacancy.jail_ssj_kokkirakulam,Kokkirakulam (Women),special_sub_jail,women,8.68838,77.71881,nominatim
+tnpd_prison_vacancy.jail_ssj_salem_women,Salem (Women),special_sub_jail,women,11.66430,78.14600,district_table
