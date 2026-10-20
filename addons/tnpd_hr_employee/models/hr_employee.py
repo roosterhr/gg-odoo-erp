@@ -4,6 +4,8 @@
 from odoo import api, fields, models
 from odoo.exceptions import ValidationError
 
+from odoo.addons.prison_jail_master import geo
+
 
 class HrEmployee(models.Model):
     """
@@ -392,3 +394,57 @@ class HrEmployee(models.Model):
         groups='hr.group_hr_user',
         help='Current service status of the employee within the department.',
     )
+
+    # ── Section 11: Geographical location ─────────────────────────────────
+    # Straight-line distance from the centre of the native district to the
+    # prison where the officer is posted. Stored, so the Personnel list can
+    # filter and page on it in the database.
+
+    x_distance_km = fields.Integer(
+        string='Distance from native place (km)',
+        compute='_compute_x_distance',
+        store=True,
+        groups='hr.group_hr_user',
+        help='Whole km. Only meaningful when the band is not "Unknown".',
+    )
+    x_distance_band = fields.Selection(
+        selection=geo.BAND_SELECTION,
+        string='Geographical location',
+        compute='_compute_x_distance',
+        store=True,
+        index=True,
+        groups='hr.group_hr_user',
+    )
+    x_distance_approx = fields.Boolean(
+        string='Distance is approximate',
+        compute='_compute_x_distance',
+        store=True,
+        groups='hr.group_hr_user',
+        help='The prison has no coordinates of its own, or only an approximate '
+             'position, so the distance is measured to a nearby point.',
+    )
+
+    @api.depends(
+        'x_native_district',
+        'x_central_jail_id', 'x_district_jail_id', 'x_sub_jail_id',
+        'x_sub_jail_id.latitude', 'x_sub_jail_id.longitude', 'x_sub_jail_id.geo_source',
+        'x_sub_jail_id.parent_id.latitude', 'x_sub_jail_id.parent_id.longitude',
+        'x_district_jail_id.latitude', 'x_district_jail_id.longitude', 'x_district_jail_id.geo_source',
+        'x_district_jail_id.parent_id.latitude', 'x_district_jail_id.parent_id.longitude',
+        'x_central_jail_id.latitude', 'x_central_jail_id.longitude', 'x_central_jail_id.geo_source',
+    )
+    def _compute_x_distance(self):
+        districts = self.env['prison.district.geo'].sudo()._lookup_table()
+        for emp in self:
+            home = geo.find_point(districts, emp.x_native_district)
+            jail = emp.x_sub_jail_id or emp.x_district_jail_id or emp.x_central_jail_id
+            point = jail._geo_point() if jail else None
+            if not home or not point:
+                emp.x_distance_km = 0
+                emp.x_distance_band = geo.BAND_UNKNOWN
+                emp.x_distance_approx = False
+                continue
+            km = geo.whole_km(geo.haversine_km(home[0], home[1], point[0], point[1]))
+            emp.x_distance_km = km
+            emp.x_distance_band = geo.distance_band(km)
+            emp.x_distance_approx = point[2]

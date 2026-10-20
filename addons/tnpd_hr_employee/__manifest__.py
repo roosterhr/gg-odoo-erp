@@ -3,7 +3,7 @@
 
 {
     'name': 'TNPD Prison HR Employee Extension',
-    'version': '19.0.2.3.0',
+    'version': '19.0.2.4.0',
     'category': 'Human Resources/Employees',
     'summary': 'Extends hr.employee with TNPD prison department fields',
     'description': """
@@ -27,6 +27,8 @@ No core Odoo files are modified.
         'views/hr_employee_views.xml',
         'views/transfer_approval_views.xml',
     ],
+
+    'post_init_hook': 'post_init_hook',
 
     'installable': True,
     'application': False,

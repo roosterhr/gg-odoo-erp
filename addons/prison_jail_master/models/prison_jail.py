@@ -126,6 +126,12 @@ class PrisonJail(models.Model):
     )
     latitude  = fields.Float(string='Latitude',  digits=(10, 6))
     longitude = fields.Float(string='Longitude', digits=(10, 6))
+    geo_source = fields.Selection(
+        selection=[('approximate', 'Approximate (town or district centre)')],
+        string='Location accuracy',
+        help='Leave blank for coordinates that have been checked. "Approximate" '
+             'marks a seeded position; distances measured to it are shown with a "~".',
+    )
 
     # ── Hill Station ──────────────────────────────────────────────────────────
 
@@ -253,6 +259,28 @@ class PrisonJail(models.Model):
         if self.jail_type in self.CHILD_TYPES:
             return [('jail_type', 'in', list(self.PARENT_TYPES)), ('active', '=', True)]
         return [('id', '=', False)]
+
+    # ── Geographical location ─────────────────────────────────────────────────
+
+    def _geo_point(self):
+        """
+        Map point of this institution as ``(latitude, longitude, approximate)``,
+        or ``None`` when neither it nor any parent has coordinates.
+
+        A sub-jail with no coordinates of its own borrows its parent's, and the
+        result is then flagged approximate, as is a point seeded with
+        ``geo_source = 'approximate'``.
+        """
+        self.ensure_one()
+        node, borrowed = self, False
+        seen = set()
+        while node and node.id not in seen:
+            seen.add(node.id)
+            if node.latitude and node.longitude:
+                return (node.latitude, node.longitude,
+                        borrowed or node.geo_source == 'approximate')
+            node, borrowed = node.parent_id, True
+        return None
 
     # ── Name search ───────────────────────────────────────────────────────────
 

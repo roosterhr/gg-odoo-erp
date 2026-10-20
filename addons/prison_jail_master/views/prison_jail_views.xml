@@ -96,6 +96,9 @@
                                    placeholder="e.g. Chennai"/>
                             <field name="state_id"
                                    options="{'no_create': True}"/>
+                            <field name="latitude"/>
+                            <field name="longitude"/>
+                            <field name="geo_source"/>
                         </group>
                         <!-- Right: Notes -->
                         <group string="Notes">

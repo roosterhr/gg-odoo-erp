@@ -300,6 +300,10 @@ class EmployeeAPI(http.Controller):
             'medals':                                      _str(emp.x_medals),
             'rewards':                                     _str(emp.x_rewards),
             'remarks':                                     _str(emp.x_remarks),
+            # Geographical location: km from native district to current prison
+            'distance_km':                                 emp.x_distance_km if emp.x_distance_band in ('green', 'yellow', 'red') else None,
+            'distance_band':                               emp.x_distance_band or 'unknown',
+            'distance_approx':                             bool(emp.x_distance_approx),
         }
 
     def _emp_to_csv_row(self, emp):
@@ -457,6 +461,13 @@ class EmployeeAPI(http.Controller):
 
         if kwargs.get('gender') and kwargs['gender'] in _VALID_GENDER:
             domain.append(('x_gender', '=', kwargs['gender']))
+
+        # Geographical location: green | yellow | red | unknown
+        band = (kwargs.get('distance_band') or '').strip().lower()
+        if band == 'unknown':
+            domain.append(('x_distance_band', 'in', ['unknown', False]))
+        elif band in ('green', 'yellow', 'red'):
+            domain.append(('x_distance_band', '=', band))
 
         if kwargs.get('jail_id'):
             try:
@@ -671,6 +682,7 @@ class EmployeeAPI(http.Controller):
         gender                          str  filter by gender ('male'|'female'|'other')
         central_jail_id                 int  filter by central jail ID
         native_district                 str  filter by native district (ilike)
+        distance_band                   str  'green' (0-70 km) | 'yellow' (71-150 km) | 'red' (>150 km) | 'unknown'
         sort                            str  'name' (default) | 'tenure' | 'designation'
         """
         try:
