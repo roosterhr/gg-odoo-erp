@@ -114,6 +114,18 @@ class TestPlaceKey(unittest.TestCase):
         self.assertIsNone(geo.find_point(table, None))
 
 
+class TestWomenPrisonName(unittest.TestCase):
+
+    def test_names_that_say_women(self):
+        for name in ('Special Prison for Women, Chennai', 'SPW Chennai', 'Women Sub Jail',
+                     'Female Annex, Tiruppur'):
+            self.assertTrue(geo.names_a_women_prison(name), name)
+
+    def test_other_names(self):
+        for name in ('Central Prison, Chennai-1', 'Chennai', 'Womenville', '', None):
+            self.assertFalse(geo.names_a_women_prison(name), name)
+
+
 class TestFindDistrictPoint(unittest.TestCase):
     """Native places are typed in by hand: misspelt, with extra words, or a town."""
 

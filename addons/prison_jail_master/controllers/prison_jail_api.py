@@ -994,7 +994,8 @@ class PrisonJailApiController(http.Controller):
         if body.get('secret') != SEED_SECRET:
             return {'success': False, 'error': 'Unauthorized'}
 
-        Jail = request.env['prison.jail'].sudo()
+        # Officers' distances are refreshed once, just before the commit.
+        Jail = request.env['prison.jail'].sudo().with_context(skip_officer_distance=True)
         created, skipped = [], []
 
         def find(name, jail_type=None):
@@ -1088,6 +1089,7 @@ class PrisonJailApiController(http.Controller):
                 else:
                     skipped.append(f'{name} [no parent found]')
 
+            Jail._refresh_officer_distances()
             request.env.cr.commit()
 
             return {
@@ -1131,7 +1133,8 @@ class PrisonJailApiController(http.Controller):
         if body.get('secret') != SYNC_SECRET:
             return {'success': False, 'error': 'Unauthorized'}
 
-        Jail = request.env['prison.jail'].sudo()
+        # Officers' distances are refreshed once, just before the commit.
+        Jail = request.env['prison.jail'].sudo().with_context(skip_officer_distance=True)
         log = {'renamed': [], 'migrated': [], 'deactivated': [], 'created': [], 'skipped': [], 'errors': []}
 
         def find(name, jail_type=None, parent_name=None):
@@ -1453,6 +1456,7 @@ class PrisonJailApiController(http.Controller):
                 if dupes:
                     dupes.write({'active': False})  # already inactive, just confirm
 
+            Jail._refresh_officer_distances()
             request.env.cr.commit()
 
             return {
@@ -1631,7 +1635,8 @@ class PrisonJailApiController(http.Controller):
                     'error': 'No reference.records in body and embedded snapshot missing'}
 
         dry_run = bool(body.get('dry_run'))
-        Jail = request.env['prison.jail'].sudo()
+        # Officers' distances are refreshed once, just before the commit.
+        Jail = request.env['prison.jail'].sudo().with_context(skip_officer_distance=True)
         PARENT_TYPES = ('central_jail', 'spw')
 
         report = {
@@ -1877,6 +1882,7 @@ class PrisonJailApiController(http.Controller):
                 })
 
             if not dry_run:
+                Jail._refresh_officer_distances()
                 request.env.cr.commit()
 
             # ── Snapshot AFTER ────────────────────────────────────────────────
@@ -2189,7 +2195,8 @@ class PrisonJailApiController(http.Controller):
         repair_hierarchy  = body.get('repairHierarchy', True)
         remove_duplicates = body.get('removeDuplicates', True)
 
-        Jail = request.env['prison.jail'].sudo()
+        # Officers' distances are refreshed once, just before the commit.
+        Jail = request.env['prison.jail'].sudo().with_context(skip_officer_distance=True)
 
         counts = {
             'created': 0,
@@ -2361,6 +2368,7 @@ class PrisonJailApiController(http.Controller):
                         dup.write({'active': False})
                         counts['duplicatesRemoved'] += 1
 
+            Jail._refresh_officer_distances()
             request.env.cr.commit()
 
             return {

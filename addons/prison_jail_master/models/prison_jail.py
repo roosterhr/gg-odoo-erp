@@ -315,10 +315,13 @@ class PrisonJail(models.Model):
     def _geo_name_index(self):
         """
         ``{place_core: {kind: [(lat, lng, approx), ...]}}`` for every institution
-        that has a position, where ``kind`` is 'central', 'district' or 'sub'.
+        that has a position, where ``kind`` is 'central', 'spw' (special prison
+        for women), 'district' or 'sub'.
 
         Older officer records name their posting as plain text instead of linking
-        an institution; this finds the institution such a name stands for.
+        an institution; this finds the institution such a name stands for. Women's
+        prisons are kept apart from central prisons because a women's prison and
+        a central prison often carry the same town name ("Chennai").
         """
         index = {}
         jails = self.sudo().with_context(active_test=False).search([])
@@ -327,8 +330,10 @@ class PrisonJail(models.Model):
             key = geo.place_core(jail.name)
             if not point or not key:
                 continue
-            if jail.jail_type in self.PARENT_TYPES:
+            if jail.jail_type == 'central_jail':
                 kind = 'central'
+            elif jail.jail_type == 'spw':
+                kind = 'spw'
             elif jail.jail_type == 'district_jail':
                 kind = 'district'
             else:
@@ -341,13 +346,33 @@ class PrisonJail(models.Model):
         """
         Position of the institution of this ``kind`` that ``name`` stands for, as
         ``(lat, lng, approx)``, or ``None`` when it is unknown or ambiguous.
+
+        A name typed in the "central prison" field can be a central prison or a
+        special prison for women: a name that says "women" or "SPW" looks among
+        the women's prisons first, any other name among the central prisons first.
+        The first group that has the place decides; its answer is not second-guessed.
         """
         key = geo.place_core(name)
-        return geo.agreed_point(index.get(key, {}).get(kind)) if key else None
+        if not key:
+            return None
+        places = index.get(key, {})
+        if kind == 'central':
+            women = geo.names_a_women_prison(name)
+            kinds = ('spw', 'central') if women else ('central', 'spw')
+        else:
+            kinds = (kind,)
+        for candidate in kinds:
+            if places.get(candidate):
+                return geo.agreed_point(places[candidate])
+        return None
 
     @api.model
-    def _refresh_officer_distances(self):
-        """Hook for modules that store a distance to an institution."""
+    def _refresh_officer_distances(self, names=None):
+        """
+        Hook for modules that store a distance to an institution. ``names`` limits
+        the work to officers whose posting names one of these institutions;
+        ``None`` means every officer.
+        """
 
     # ── Name search ───────────────────────────────────────────────────────────
 

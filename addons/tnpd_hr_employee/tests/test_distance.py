@@ -143,6 +143,65 @@ class TestOfficerDistance(TransactionCase):
         })
         self.assertEqual(emp.x_distance_band, 'green')
 
+    def _women_prison(self, name='Gamma'):
+        # A women's prison and a central prison often carry the same town name.
+        return self.env['prison.jail'].create({
+            'name': name, 'jail_type': 'spw', 'hierarchy_type': 'women',
+            'latitude': 8.1833, 'longitude': 77.4119,
+        })
+
+    def test_women_prison_with_the_same_town_name_is_not_ambiguous(self):
+        self._women_prison()
+        emp = self._officer('Vellore', x_central_prison='Central Prison, Gamma')
+        self.assertEqual(emp.x_distance_band, 'yellow', 'the central prison, not the women\'s one')
+
+    def test_a_name_that_says_women_looks_among_the_women_prisons(self):
+        self._women_prison()
+        emp = self._officer('Vellore', x_central_prison='Special Prison for Women, Gamma')
+        self.assertEqual(emp.x_distance_band, 'red', 'Kanniyakumari is far from Vellore')
+
+    def test_a_women_prison_is_used_when_no_central_prison_has_that_name(self):
+        self._women_prison('Delta')
+        emp = self._officer('Vellore', x_central_prison='Delta')
+        self.assertEqual(emp.x_distance_band, 'red')
+
+    # ── Only the officers who are affected are refreshed ──────────────────────
+
+    def test_a_change_refreshes_only_officers_posted_by_that_name(self):
+        affected = self._officer('Vellore', x_central_prison='Central Prison, Gamma')
+        other = self._officer('Madurai', x_central_prison='Central Prison, Elsewhere')
+        unrelated = self._officer('Salem', x_central_jail_id=self.central.id)
+        for emp in (other, unrelated):
+            emp.x_distance_km = 999  # a marker: a refresh would overwrite it
+        self.central.write({'latitude': 12.9165, 'longitude': 79.1325})
+        self.assertEqual(affected.x_distance_band, 'green')
+        self.assertEqual(other.x_distance_km, 999, 'posted elsewhere: not recomputed')
+        # the linked officer is refreshed by the field dependency, not by name
+        self.assertNotEqual(unrelated.x_distance_km, 999)
+
+    def test_a_renamed_institution_refreshes_both_its_old_and_new_names(self):
+        old = self._officer('Vellore', x_central_prison='Central Prison, Gamma')
+        new = self._officer('Vellore', x_central_prison='Central Prison, Renamed')
+        self.assertEqual(old.x_distance_band, 'yellow')
+        self.assertEqual(new.x_distance_band, 'unknown')
+        self.central.write({'name': 'Renamed'})
+        self.assertEqual(old.x_distance_band, 'unknown')
+        self.assertEqual(new.x_distance_band, 'yellow')
+
+    def test_a_sub_jail_name_follows_a_parent_that_moves(self):
+        emp = self._officer('Vellore', x_sub_jail='S.J. Gamma')
+        self.assertEqual(emp.x_distance_band, 'yellow')
+        self.central.write({'latitude': 12.9165, 'longitude': 79.1325})
+        self.assertEqual(emp.x_distance_band, 'green', 'named after a sub-jail two levels down')
+
+    def test_bulk_loading_can_skip_the_refresh_and_do_it_once_at_the_end(self):
+        emp = self._officer('Vellore', x_central_prison='Central Prison, Gamma')
+        Jail = self.env['prison.jail'].with_context(skip_officer_distance=True)
+        Jail.browse(self.central.id).write({'latitude': 12.9165, 'longitude': 79.1325})
+        self.assertEqual(emp.x_distance_band, 'yellow', 'skipped')
+        Jail._refresh_officer_distances()
+        self.assertEqual(emp.x_distance_band, 'green')
+
     def test_api_filter_domain(self):
         self._officer('Vellore', x_central_jail_id=self.central.id)
         Emp = self.env['hr.employee']

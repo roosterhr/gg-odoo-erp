@@ -83,6 +83,14 @@ def place_key(text):
     return re.sub(r'(.)\1+', r'\1', key)
 
 
+_WOMEN_WORDS = re.compile(r'\b(women|womens|woman|female|spw)\b', re.IGNORECASE)
+
+
+def names_a_women_prison(name):
+    """True when an institution name says it is for women ("Special Prison for Women, X")."""
+    return bool(_WOMEN_WORDS.search(name or ''))
+
+
 def agreed_point(points):
     """
     The one position a list of ``(lat, lng, approx)`` points stands for, or
