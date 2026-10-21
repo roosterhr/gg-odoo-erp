@@ -82,3 +82,25 @@ def find_point(table, text):
     """Look a place name up in a ``{place_key: (lat, lng)}`` table."""
     key = place_key(text)
     return table.get(key) if key else None
+
+
+# Words that only say what kind of institution it is, not where it is. The
+# institution type is a field of its own, so names are compared without them.
+_KIND_WORDS = frozenset({
+    'central', 'prison', 'prisons', 'jail', 'jails', 'district', 'dist',
+    'sub', 'special', 'for', 'the', 'open', 'air', 'farm', 'transit', 'yard',
+    'women', 'womens', 'woman', 'female', 'male', 'men', 'mens',
+    'annex', 'closed', 'facility',
+    # abbreviations: S.J., D.J., SPW, OAJ, WSJ
+    's', 'j', 'd', 'sj', 'dj', 'spw', 'oaj', 'wsj',
+})
+
+
+def place_core(name):
+    """
+    The place part of an institution name, spelling-tolerant, so that
+    "Central Prison, Coimbatore", "Coimbatore" and "S.J. Coimbatore (Closed)"
+    give the same key. Compare it together with the institution type.
+    """
+    tokens = re.sub(r'[^a-z0-9]+', ' ', (name or '').lower()).split()
+    return place_key(' '.join(t for t in tokens if t not in _KIND_WORDS))

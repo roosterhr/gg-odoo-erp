@@ -137,15 +137,15 @@ class PrisonJail(models.Model):
     # own value, so a change anywhere up the hierarchy refreshes every child below.
     geo_latitude = fields.Float(
         string='Effective latitude', digits=(10, 6),
-        compute='_compute_geo_position', store=True,
+        compute='_compute_geo_position', store=True, recursive=True,
     )
     geo_longitude = fields.Float(
         string='Effective longitude', digits=(10, 6),
-        compute='_compute_geo_position', store=True,
+        compute='_compute_geo_position', store=True, recursive=True,
     )
     geo_is_approx = fields.Boolean(
         string='Effective position is approximate',
-        compute='_compute_geo_position', store=True,
+        compute='_compute_geo_position', store=True, recursive=True,
         help='The position is borrowed from a parent, or is marked approximate.',
     )
 

@@ -99,5 +99,32 @@ class TestPlaceKey(unittest.TestCase):
         self.assertIsNone(geo.find_point(table, None))
 
 
+class TestPlaceCore(unittest.TestCase):
+    """The place part of an institution name, without words that only name its kind."""
+
+    def test_prefixes_and_suffixes_are_ignored(self):
+        same = [
+            'Coimbatore', 'Central Prison, Coimbatore', 'central prison  coimbatore',
+            'S.J. Coimbatore', 'Coimbatore District', 'D.J. Coimbatore',
+            'S.J. Coimbatore (Closed)', 'SPW, Coimbatore', 'Coimbatore (Women)',
+        ]
+        keys = {geo.place_core(n) for n in same}
+        self.assertEqual(keys, {geo.place_key('Coimbatore')})
+
+    def test_spelling_variants_still_match(self):
+        self.assertEqual(geo.place_core('S.J. Thiruvannamalai'), geo.place_core('Tiruvannamalai District'))
+
+    def test_roman_numbers_and_other_words_are_kept(self):
+        self.assertEqual(geo.place_core('Chennai - I'), geo.place_core('Chennai - II'),
+                         'collapsing repeated letters merges these; they share a town')
+        self.assertNotEqual(geo.place_core('S.J. Salem'), geo.place_core('S.J. Namakkal'))
+        self.assertNotEqual(geo.place_core('D.J. Thoothukudi @ Perurani'), geo.place_core('Thoothukudi District'))
+
+    def test_a_name_made_only_of_kind_words_has_no_place(self):
+        self.assertEqual(geo.place_core('Central Prison'), '')
+        self.assertEqual(geo.place_core(''), '')
+        self.assertEqual(geo.place_core(None), '')
+
+
 if __name__ == '__main__':
     unittest.main()
