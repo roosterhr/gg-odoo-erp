@@ -3,7 +3,7 @@
 
 {
     'name': 'TNPD Prison HR Employee Extension',
-    'version': '19.0.2.4.0',
+    'version': '19.0.2.5.0',
     'category': 'Human Resources/Employees',
     'summary': 'Extends hr.employee with TNPD prison department fields',
     'description': """

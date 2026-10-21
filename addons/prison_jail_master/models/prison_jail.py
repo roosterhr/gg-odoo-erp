@@ -4,6 +4,8 @@
 from odoo import api, fields, models
 from odoo.exceptions import ValidationError
 
+from .. import geo
+
 
 class PrisonJail(models.Model):
     """
@@ -308,6 +310,44 @@ class PrisonJail(models.Model):
         if self.geo_latitude and self.geo_longitude:
             return (self.geo_latitude, self.geo_longitude, self.geo_is_approx)
         return None
+
+    @api.model
+    def _geo_name_index(self):
+        """
+        ``{place_core: {kind: [(lat, lng, approx), ...]}}`` for every institution
+        that has a position, where ``kind`` is 'central', 'district' or 'sub'.
+
+        Older officer records name their posting as plain text instead of linking
+        an institution; this finds the institution such a name stands for.
+        """
+        index = {}
+        jails = self.sudo().with_context(active_test=False).search([])
+        for jail in jails:
+            point = jail._geo_point()
+            key = geo.place_core(jail.name)
+            if not point or not key:
+                continue
+            if jail.jail_type in self.PARENT_TYPES:
+                kind = 'central'
+            elif jail.jail_type == 'district_jail':
+                kind = 'district'
+            else:
+                kind = 'sub'
+            index.setdefault(key, {}).setdefault(kind, []).append(point)
+        return index
+
+    @api.model
+    def _geo_point_by_name(self, index, kind, name):
+        """
+        Position of the institution of this ``kind`` that ``name`` stands for, as
+        ``(lat, lng, approx)``, or ``None`` when it is unknown or ambiguous.
+        """
+        key = geo.place_core(name)
+        return geo.agreed_point(index.get(key, {}).get(kind)) if key else None
+
+    @api.model
+    def _refresh_officer_distances(self):
+        """Hook for modules that store a distance to an institution."""
 
     # ── Name search ───────────────────────────────────────────────────────────
 

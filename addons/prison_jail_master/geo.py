@@ -13,6 +13,7 @@ rounded to whole km first, so the number shown on screen and the band it
 falls in always agree.
 """
 
+import difflib
 import math
 import re
 
@@ -21,6 +22,10 @@ EARTH_RADIUS_KM = 6371.0088
 # Upper edge of each band, in whole km.
 GREEN_MAX_KM = 70
 YELLOW_MAX_KM = 150
+
+# Two positions this close together are the same place (an open and a closed
+# jail in one town, or the same town looked up twice).
+SAME_PLACE_KM = 5
 
 BAND_GREEN = 'green'
 BAND_YELLOW = 'yellow'
@@ -78,10 +83,100 @@ def place_key(text):
     return re.sub(r'(.)\1+', r'\1', key)
 
 
+def agreed_point(points):
+    """
+    The one position a list of ``(lat, lng, approx)`` points stands for, or
+    ``None`` when there are none or they lie in different places (nothing is
+    guessed). Points within ``SAME_PLACE_KM`` of the first count as one place.
+    """
+    if not points:
+        return None
+    first = points[0]
+    for point in points[1:]:
+        if haversine_km(first[0], first[1], point[0], point[1]) > SAME_PLACE_KM:
+            return None
+    return first
+
+
 def find_point(table, text):
     """Look a place name up in a ``{place_key: (lat, lng)}`` table."""
     key = place_key(text)
     return table.get(key) if key else None
+
+
+# Words in a typed-in place that only say "district" or "taluk".
+_DISTRICT_NOISE = frozenset({
+    'district', 'distric', 'districtt', 'dstrict', 'dist', 'dsit', 'dt', 'tk', 'taluk', 'tq',
+})
+_DISTRICT_SUFFIXES = ('district', 'dist', 'dt')
+
+# A typed-in name this similar to a known place (0 to 1) is taken to be a
+# misspelling of it, unless a different place is almost as close.
+FUZZY_CUTOFF = 0.82
+FUZZY_MARGIN = 0.04
+FUZZY_MIN_LENGTH = 6
+
+
+def _clean_place(text):
+    """Letters only, without district/taluk words, also when stuck to the name."""
+    words = []
+    for word in re.sub(r'[^a-z]+', ' ', (text or '').lower()).split():
+        if word in _DISTRICT_NOISE:
+            continue
+        for suffix in _DISTRICT_SUFFIXES:
+            if word.endswith(suffix) and len(word) - len(suffix) >= 5:
+                word = word[:-len(suffix)]
+                break
+        words.append(word)
+    return ' '.join(words)
+
+
+def _fuzzy_point(table, key):
+    """The one place whose key is clearly the closest to ``key``, else ``None``."""
+    if len(key) < FUZZY_MIN_LENGTH:
+        return None
+    scored = sorted(
+        ((difflib.SequenceMatcher(None, key, known).ratio(), table[known]) for known in table),
+        key=lambda pair: pair[0], reverse=True,
+    )
+    best_ratio, best = scored[0]
+    if best_ratio < FUZZY_CUTOFF:
+        return None
+    for ratio, point in scored[1:]:
+        if point != best:
+            return best if best_ratio - ratio >= FUZZY_MARGIN else None
+    return best
+
+
+def find_district_point(table, text):
+    """
+    Map point of a native place typed in by hand, from a ``{place_key: (lat, lng)}``
+    table of districts and their spellings. ``None`` when there is no clear match.
+
+    Tried in this order: the whole text, each part between commas, slashes or
+    brackets, then each word, all as exact (spelling-tolerant) names; then the
+    whole text and each part as a misspelling of a known place. Single words are
+    never matched loosely, so "Madhura koothiramedu" is not taken for Madurai.
+    """
+    whole = _clean_place(text)
+    if not whole:
+        return None
+    parts = [whole]
+    for part in re.split(r'[,/;()]', text or ''):
+        part = _clean_place(part)
+        if part and part not in parts:
+            parts.append(part)
+    words = [w for w in whole.split() if w not in parts]
+
+    for candidate in parts + words:
+        point = find_point(table, candidate)
+        if point:
+            return point
+    for candidate in parts:
+        point = _fuzzy_point(table, place_key(candidate))
+        if point:
+            return point
+    return None
 
 
 # Words that only say what kind of institution it is, not where it is. The

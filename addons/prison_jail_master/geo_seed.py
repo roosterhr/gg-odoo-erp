@@ -43,7 +43,7 @@ WARN_MISSING_SHARE = 0.10
 
 # Seed rows for one place whose positions lie within this distance of each
 # other are the same place (an open and a closed jail in one town).
-SAME_PLACE_KM = 5
+SAME_PLACE_KM = geo.SAME_PLACE_KM
 
 
 def _name_key(name):
@@ -101,7 +101,8 @@ def _position(row):
 def seed_from_rows(env, rows):
     """Seed blank positions from ``rows`` (dicts shaped like the seed file)."""
     # Closed institutions are archived but still need a position.
-    Jail = env['prison.jail'].with_context(active_test=False)
+    # Officers' distances are refreshed once at the end, not after every write.
+    Jail = env['prison.jail'].with_context(active_test=False, skip_officer_distance=True)
     how = collections.Counter()
     counts = {'placed': 0, 'skipped': 0}
 
@@ -142,6 +143,9 @@ def seed_from_rows(env, rows):
         mine = [j for j in blank if (j.jail_type, j.hierarchy_type) == kind]
         if len(kind_rows) == 1 and len(mine) == 1:
             place(mine[0], kind_rows[0], 'only one of its kind')
+
+    if counts['placed']:
+        env['prison.jail']._refresh_officer_distances()
 
     still = Jail.search([]).filtered(lambda j: not _has_position(j))
     total = Jail.search_count([])
