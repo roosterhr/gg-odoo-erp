@@ -427,6 +427,9 @@ class HrEmployee(models.Model):
     @api.depends(
         'x_native_district',
         'x_central_jail_id', 'x_district_jail_id', 'x_sub_jail_id',
+        # Older records name the posting as text; prison.jail refreshes those
+        # officers itself when an institution changes (see models/prison_jail.py).
+        'x_central_prison', 'x_district_jail', 'x_sub_jail',
         # prison.jail keeps its effective position up to date for the whole
         # hierarchy, so these three fields are all that is needed at any depth.
         'x_sub_jail_id.geo_latitude', 'x_sub_jail_id.geo_longitude', 'x_sub_jail_id.geo_is_approx',
@@ -435,10 +438,17 @@ class HrEmployee(models.Model):
     )
     def _compute_x_distance(self):
         districts = self.env['prison.district.geo'].sudo()._lookup_table()
+        Jail = self.env['prison.jail'].sudo()
+        names = None
+        homes = {}  # typed-in native place -> point, so each spelling is worked out once
         for emp in self:
-            home = geo.find_point(districts, emp.x_native_district)
-            jail = emp.x_sub_jail_id or emp.x_district_jail_id or emp.x_central_jail_id
-            point = jail._geo_point() if jail else None
+            if names is None and emp._posting_named_in_text():
+                names = Jail._geo_name_index()
+            native = emp.x_native_district or ''
+            if native not in homes:
+                homes[native] = geo.find_district_point(districts, native)
+            home = homes[native]
+            point = emp._posting_point(Jail, names or {})
             if not home or not point:
                 emp.x_distance_km = 0
                 emp.x_distance_band = geo.BAND_UNKNOWN
@@ -448,3 +458,37 @@ class HrEmployee(models.Model):
             emp.x_distance_km = km
             emp.x_distance_band = geo.distance_band(km)
             emp.x_distance_approx = point[2]
+
+    def _posting_tiers(self):
+        """(linked institution, name typed in the old text field, kind), most specific first."""
+        self.ensure_one()
+        return (
+            (self.x_sub_jail_id, self.x_sub_jail, 'sub'),
+            (self.x_district_jail_id, self.x_district_jail, 'district'),
+            (self.x_central_jail_id, self.x_central_prison, 'central'),
+        )
+
+    def _posting_named_in_text(self):
+        return any(not jail and (text or '').strip() for jail, text, _kind in self._posting_tiers())
+
+    def _posting_point(self, Jail, names):
+        """
+        Where the officer is posted, as ``(lat, lng, approximate)``, or ``None``.
+
+        Same order as the profile page: the most specific of sub-jail, district
+        jail and central prison, each taken from its link or else from the name
+        typed in the old text field. When that one has no position, the next one
+        up is used and the result is marked approximate.
+        """
+        skipped = False
+        for jail, text, kind in self._posting_tiers():
+            if jail:
+                point = jail._geo_point()
+            elif (text or '').strip():
+                point = Jail._geo_point_by_name(names, kind, text)
+            else:
+                continue
+            if point:
+                return (point[0], point[1], point[2] or skipped)
+            skipped = True
+        return None

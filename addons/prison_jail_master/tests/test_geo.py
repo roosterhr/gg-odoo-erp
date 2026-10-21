@@ -64,6 +64,21 @@ class TestHaversine(unittest.TestCase):
         self.assertEqual(geo.distance_band(km), 'red')
 
 
+class TestAgreedPoint(unittest.TestCase):
+
+    def test_nothing_or_one(self):
+        self.assertIsNone(geo.agreed_point([]))
+        self.assertIsNone(geo.agreed_point(None))
+        self.assertEqual(geo.agreed_point([(11.0, 79.0, False)]), (11.0, 79.0, False))
+
+    def test_points_in_one_place_agree(self):
+        near = [(8.5000, 78.1200, False), (8.5080, 78.1250, True)]
+        self.assertEqual(geo.agreed_point(near), (8.5, 78.12, False))
+
+    def test_points_in_different_places_do_not(self):
+        self.assertIsNone(geo.agreed_point([(10.0, 78.0, False), (12.0, 80.0, False)]))
+
+
 class TestPlaceKey(unittest.TestCase):
 
     def test_spelling_variants_match(self):
@@ -97,6 +112,71 @@ class TestPlaceKey(unittest.TestCase):
         self.assertIsNone(geo.find_point(table, 'Madurai'))
         self.assertIsNone(geo.find_point(table, ''))
         self.assertIsNone(geo.find_point(table, None))
+
+
+class TestWomenPrisonName(unittest.TestCase):
+
+    def test_names_that_say_women(self):
+        for name in ('Special Prison for Women, Chennai', 'SPW Chennai', 'Women Sub Jail',
+                     'Female Annex, Tiruppur'):
+            self.assertTrue(geo.names_a_women_prison(name), name)
+
+    def test_other_names(self):
+        for name in ('Central Prison, Chennai-1', 'Chennai', 'Womenville', '', None):
+            self.assertFalse(geo.names_a_women_prison(name), name)
+
+
+class TestFindDistrictPoint(unittest.TestCase):
+    """Native places are typed in by hand: misspelt, with extra words, or a town."""
+
+    VELLORE = (12.9165, 79.1325)
+    DINDIGUL = (10.3673, 77.9803)
+    TIRUNELVELI = (8.7139, 77.7567)
+    TIRUPPUR = (11.1085, 77.3411)
+    TIRUPATTUR = (12.4955, 78.5679)
+
+    def setUp(self):
+        self.table = {}
+        for label, point in (
+            ('Vellore', self.VELLORE), ('Dindigul', self.DINDIGUL),
+            ('Tirunelveli', self.TIRUNELVELI), ('Palayamkottai', self.TIRUNELVELI),
+            ('Tiruppur', self.TIRUPPUR), ('Tirupattur', self.TIRUPATTUR),
+        ):
+            self.table[geo.place_key(label)] = point
+
+    def find(self, text):
+        return geo.find_district_point(self.table, text)
+
+    def test_exact_and_district_words(self):
+        for text in ('Vellore', 'VELLORE DIST', 'Vellore District.', 'VellureDt', 'Vellore (Dt)'):
+            self.assertEqual(self.find(text), self.VELLORE, text)
+
+    def test_a_town_listed_as_a_spelling(self):
+        self.assertEqual(self.find('Palayamkottai'), self.TIRUNELVELI)
+
+    def test_the_district_is_found_inside_longer_text(self):
+        self.assertEqual(self.find('Katpadi, Vellore'), self.VELLORE)
+        self.assertEqual(self.find('Tirunelveli / Radhapuram'), self.TIRUNELVELI)
+        self.assertEqual(self.find('VIRUTHAMPATTU vellore district'), self.VELLORE)
+
+    def test_misspellings(self):
+        self.assertEqual(self.find('Dindugul'), self.DINDIGUL)
+        self.assertEqual(self.find('TIRUNELVILI'), self.TIRUNELVELI)
+        self.assertEqual(self.find('Tirunalvelli'), self.TIRUNELVELI)
+
+    def test_close_names_of_two_places_are_not_guessed(self):
+        """A typo almost as close to Tiruppur as to Tirupattur is left unknown."""
+        self.assertEqual(self.find('Tiruppur'), self.TIRUPPUR)
+        self.assertEqual(self.find('Tirupattur'), self.TIRUPATTUR)
+        self.assertEqual(self.find('Tirupatpur'), self.TIRUPATTUR, 'a clear winner is matched')
+        self.assertIsNone(self.find('Tirupaur'))
+
+    def test_single_words_are_not_matched_loosely(self):
+        self.assertIsNone(self.find('Vellure Madhura'))
+
+    def test_short_or_empty_names_are_not_matched_loosely(self):
+        for text in ('', None, '--', 'NIL', '2017-18 / 56', 'Vel'):
+            self.assertIsNone(self.find(text), text)
 
 
 class TestPlaceCore(unittest.TestCase):
