@@ -194,6 +194,20 @@ class TestOfficerDistance(TransactionCase):
         self.central.write({'latitude': 12.9165, 'longitude': 79.1325})
         self.assertEqual(emp.x_distance_band, 'green', 'named after a sub-jail two levels down')
 
+    def test_institutions_with_an_empty_parent_path_can_still_be_edited(self):
+        """Some databases have a few institutions without a parent_path."""
+        emp = self._officer('Vellore', x_sub_jail='S.J. Gamma')
+        self.env.cr.execute(
+            "UPDATE prison_jail SET parent_path = NULL WHERE id IN %s",
+            [tuple((self.central | self.district | self.sub).ids)],
+        )
+        self.env['prison.jail'].invalidate_model(['parent_path'])
+        self.central.write({'latitude': 12.9165, 'longitude': 79.1325})
+        self.central.write({'name': 'Gamma Central Renamed'})
+        self.assertEqual(emp.x_distance_band, 'green', 'the sub-jail below still follows')
+        self.sub.unlink()
+        self.assertEqual(emp.x_distance_band, 'unknown', 'the typed name no longer matches anything')
+
     def test_bulk_loading_can_skip_the_refresh_and_do_it_once_at_the_end(self):
         emp = self._officer('Vellore', x_central_prison='Central Prison, Gamma')
         Jail = self.env['prison.jail'].with_context(skip_officer_distance=True)

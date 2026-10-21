@@ -43,9 +43,20 @@ class PrisonJail(models.Model):
         Employee.browse(affected)._compute_x_distance()
 
     def _names_with_descendants(self):
-        """Names of these institutions and of every institution below them."""
+        """
+        Names of these institutions and of every institution below them.
+
+        Walks ``parent_id`` level by level instead of using ``child_of``, which
+        relies on ``parent_path`` and fails for institutions where it is empty
+        (some databases have a few, from an earlier raw-SQL rebuild).
+        """
         everything = self.sudo().with_context(active_test=False)
-        return set(everything.search([('id', 'child_of', self.ids)]).mapped('name'))
+        found = everything.browse(self.ids)
+        level = found
+        while level:
+            level = everything.search([('parent_id', 'in', level.ids)]) - found
+            found |= level
+        return set(found.mapped('name'))
 
     def _refresh_after_change(self, names):
         if names and not self.env.context.get('skip_officer_distance'):
