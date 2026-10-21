@@ -3,7 +3,7 @@
 
 {
     'name': 'TNPD Prison Vacancy Management',
-    'version': '19.0.2.2.0',
+    'version': '19.0.2.3.0',
     'category': 'Prison Management',
     'summary': 'Prison-wise staff vacancy master data and transfer availability API',
     'description': """
@@ -34,6 +34,8 @@ Features
         'data/prison_role_data.xml',
         'data/prison_vacancy_data.xml',
     ],
+
+    'post_init_hook': 'post_init_hook',
 
     'installable': True,
     'application': False,

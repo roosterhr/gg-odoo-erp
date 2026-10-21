@@ -7,3 +7,4 @@ from . import res_users
 from . import prison_master
 from . import transfer_approval_request
 from . import tnpd_notification
+from . import prison_district_geo

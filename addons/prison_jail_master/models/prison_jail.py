@@ -126,6 +126,28 @@ class PrisonJail(models.Model):
     )
     latitude  = fields.Float(string='Latitude',  digits=(10, 6))
     longitude = fields.Float(string='Longitude', digits=(10, 6))
+    geo_source = fields.Selection(
+        selection=[('approximate', 'Approximate (town or district centre)')],
+        string='Location accuracy',
+        help='Leave blank for coordinates that have been checked. "Approximate" '
+             'marks a seeded position; distances measured to it are shown with a "~".',
+    )
+    # The position used for distances: this institution's own coordinates, else
+    # the nearest parent that has some. Stored, with the dependency on the parent's
+    # own value, so a change anywhere up the hierarchy refreshes every child below.
+    geo_latitude = fields.Float(
+        string='Effective latitude', digits=(10, 6),
+        compute='_compute_geo_position', store=True, recursive=True,
+    )
+    geo_longitude = fields.Float(
+        string='Effective longitude', digits=(10, 6),
+        compute='_compute_geo_position', store=True, recursive=True,
+    )
+    geo_is_approx = fields.Boolean(
+        string='Effective position is approximate',
+        compute='_compute_geo_position', store=True, recursive=True,
+        help='The position is borrowed from a parent, or is marked approximate.',
+    )
 
     # ── Hill Station ──────────────────────────────────────────────────────────
 
@@ -253,6 +275,39 @@ class PrisonJail(models.Model):
         if self.jail_type in self.CHILD_TYPES:
             return [('jail_type', 'in', list(self.PARENT_TYPES)), ('active', '=', True)]
         return [('id', '=', False)]
+
+    # ── Geographical location ─────────────────────────────────────────────────
+
+    @api.depends(
+        'latitude', 'longitude', 'geo_source',
+        'parent_id.geo_latitude', 'parent_id.geo_longitude', 'parent_id.geo_is_approx',
+    )
+    def _compute_geo_position(self):
+        """Own coordinates, else the parent's (flagged approximate), else nothing."""
+        for rec in self:
+            parent = rec.parent_id
+            if rec.latitude and rec.longitude:
+                rec.geo_latitude = rec.latitude
+                rec.geo_longitude = rec.longitude
+                rec.geo_is_approx = rec.geo_source == 'approximate'
+            elif parent and parent.geo_latitude and parent.geo_longitude:
+                rec.geo_latitude = parent.geo_latitude
+                rec.geo_longitude = parent.geo_longitude
+                rec.geo_is_approx = True
+            else:
+                rec.geo_latitude = 0.0
+                rec.geo_longitude = 0.0
+                rec.geo_is_approx = False
+
+    def _geo_point(self):
+        """
+        Map point of this institution as ``(latitude, longitude, approximate)``,
+        or ``None`` when neither it nor any parent has coordinates.
+        """
+        self.ensure_one()
+        if self.geo_latitude and self.geo_longitude:
+            return (self.geo_latitude, self.geo_longitude, self.geo_is_approx)
+        return None
 
     # ── Name search ───────────────────────────────────────────────────────────
 
