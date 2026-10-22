@@ -11,6 +11,7 @@ _logger = logging.getLogger(__name__)
 # The order number is built from this pattern. {serial} is the next number of the
 # sequence, {year} the year of the order and {section} the optional section code.
 # Change them under Settings > Technical > System Parameters; nothing else to edit.
+REPORT_NAME = 'tnpd_hr_employee.report_transfer_offer_letter'
 NUMBER_FORMAT_PARAM = 'tnpd.transfer_order.number_format'
 SECTION_CODE_PARAM = 'tnpd.transfer_order.section_code'
 DEFAULT_NUMBER_FORMAT = '{serial}/{year}'
@@ -154,7 +155,8 @@ class TransferOrder(models.Model):
 
     @api.model
     def _next_number(self, when):
-        serial = self.env['ir.sequence'].sudo().next_by_code('transfer.order') or '000'
+        """The order number for an order dated ``when``; the serial restarts every year."""
+        serial = self.env['ir.sequence'].sudo().next_by_code('transfer.order', sequence_date=when) or '000'
         params = self.env['ir.config_parameter'].sudo()
         pattern = params.get_param(NUMBER_FORMAT_PARAM) or DEFAULT_NUMBER_FORMAT
         section = params.get_param(SECTION_CODE_PARAM) or ''
@@ -181,6 +183,7 @@ class TransferOrder(models.Model):
                 'issued_date': fields.Datetime.now(),
                 'issued_by': self.env.user.id,
             })
+            order._freeze_pdf()
             order._notify_officers(
                 'Your transfer order No. %s dated %s has been issued. '
                 'You can download it from your transfers.'
@@ -188,7 +191,24 @@ class TransferOrder(models.Model):
             )
         return True
 
+    def _freeze_pdf(self):
+        """
+        Make and keep the PDF of an issued order.
+
+        The report stores the file as an attachment the first time an issued order is
+        printed and serves that file afterwards. Doing it here, at issue, fixes the
+        letter as it was issued. If the PDF cannot be made the order is not issued.
+        """
+        report = self.env['ir.actions.report'].sudo().with_context(force_report_rendering=True)
+        for order in self:
+            report._render_qweb_pdf(REPORT_NAME, order.ids)
+            if not self.env['ir.attachment'].sudo().search_count(
+                [('res_model', '=', order._name), ('res_id', '=', order.id)]
+            ):
+                raise UserError('The PDF of the order could not be stored, so it was not issued.')
+
     def action_cancel(self):
+        """Cancel a draft or issued order. An issued order's officers are told."""
         for order in self:
             if order.state == 'cancelled':
                 continue

@@ -51,9 +51,18 @@ class ReportTransferOfferLetter(models.AbstractModel):
 
     @api.model
     def _plural(self, designation):
-        """'Grade I Warder (Men)' -> 'Grade I Warders (Men)'."""
+        """'Grade I Warder (Men)' -> 'Grade I Warders (Men)'; nothing known -> 'officers'."""
         head, bracket, tail = designation.partition(' (')
-        return '%ss%s%s' % (head, bracket, tail) if head else designation
+        head = head.strip()
+        if not head:
+            return 'officers'
+        if head.endswith('y') and head[-2:-1].lower() not in 'aeiou':
+            head = head[:-1] + 'ies'
+        elif head.endswith(('s', 'x', 'ch', 'sh')):
+            head += 'es'
+        else:
+            head += 's'
+        return head + bracket + tail
 
     @api.model
     def _row(self, transfer):

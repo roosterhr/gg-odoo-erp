@@ -514,6 +514,13 @@ class TransferApprovalRequest(models.Model):
         return records
 
     def write(self, vals):
+        if 'ta_da_eligible' in vals:
+            frozen = self.filtered(lambda r: any(o.state == 'issued' for o in r.order_ids))
+            if frozen:
+                raise UserError(
+                    'TA/DA cannot be changed: TRF/%s is in an issued transfer order. '
+                    'Cancel that order first.' % ', '.join(str(i) for i in frozen.ids)
+                )
         self._check_reason_not_legacy(vals, self)
         newly_pending = self.env['transfer.approval.request']
         if vals.get('state') == 'pending':

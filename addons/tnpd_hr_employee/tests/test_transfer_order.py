@@ -3,12 +3,15 @@
 
 import json
 import re
+from datetime import date
 
 from odoo import fields
-from odoo.exceptions import UserError, ValidationError
+from odoo.exceptions import AccessError, UserError, ValidationError
 from odoo.tests import HttpCase, TransactionCase, tagged
 
 from .common import approved_transfer, make_fixtures
+
+REPORT = 'tnpd_hr_employee.report_transfer_offer_letter'
 
 
 @tagged('post_install', '-at_install')
@@ -133,6 +136,65 @@ class TestTransferOrder(TransactionCase):
         self.assertNotEqual(second, first)
         second.action_issue()
         self.assertNotEqual(second.name, number)
+
+    # ── an issued letter is fixed ─────────────────────────────────────────────
+
+    def test_an_issued_letter_does_not_change_after_it_is_issued(self):
+        order = self.Order._draft_for_transfers(self._transfer())
+        order.action_issue()
+        stored = self.env['ir.attachment'].search([('res_model', '=', 'transfer.order'), ('res_id', '=', order.id)])
+        self.assertEqual(len(stored), 1)
+
+        report = self.env['ir.actions.report'].with_context(force_report_rendering=True)
+        before, _kind = report._render_qweb_pdf(REPORT, order.ids)
+        # A promotion and a renamed prison afterwards must not touch the letter.
+        self.fx.officers[0].x_designation = 'Jailor'
+        self.fx.dst_sub.name = 'Renamed Sub'
+        after, _kind = report._render_qweb_pdf(REPORT, order.ids)
+        self.assertEqual(before, after)
+        self.assertEqual(stored.raw, before)
+
+    def test_a_draft_is_not_frozen(self):
+        order = self.Order._draft_for_transfers(self._transfer())
+        self.assertFalse(self.env['ir.attachment'].search_count(
+            [('res_model', '=', 'transfer.order'), ('res_id', '=', order.id)]))
+
+    def test_ta_da_cannot_change_once_the_order_is_issued(self):
+        transfer = self._transfer()
+        order = self.Order._draft_for_transfers(transfer)
+        transfer.ta_da_eligible = True            # fine while it is a draft
+        order.action_issue()
+        with self.assertRaises(UserError):
+            transfer.write({'ta_da_eligible': False})
+        order.action_cancel()
+        transfer.write({'ta_da_eligible': False})  # free again after the order is cancelled
+
+    # ── numbering ─────────────────────────────────────────────────────────────
+
+    def test_the_serial_starts_again_each_year(self):
+        numbers = []
+        for officer, day in ((self.fx.officers[0], date(2031, 1, 5)),
+                             (self.fx.officers[1], date(2031, 6, 1)),
+                             (self.fx.officers[2], date(2032, 1, 2))):
+            order = self.Order._draft_for_transfers(self._transfer(officer))
+            order.order_date = day
+            order.action_issue()
+            numbers.append(order.name)
+        self.assertEqual(numbers, ['001/2031', '002/2031', '001/2032'])
+
+    # ── who can read ──────────────────────────────────────────────────────────
+
+    def test_only_hr_users_can_read_orders(self):
+        Users = self.env['res.users']
+        staff = Users.create({'name': 'Plain Staff', 'login': 'order_plain_staff',
+                              'group_ids': [(6, 0, [self.env.ref('base.group_user').id])]})
+        hr = Users.create({'name': 'Hr Staff', 'login': 'order_hr_staff',
+                           'group_ids': [(6, 0, [self.env.ref('base.group_user').id,
+                                                 self.env.ref('hr.group_hr_user').id])]})
+        self.Order._draft_for_transfers(self._transfer())
+        with self.assertRaises(AccessError):
+            self.Order.with_user(staff).search([])
+        self.assertTrue(self.Order.with_user(hr).search([]))
 
     # ── bulk ──────────────────────────────────────────────────────────────────
 
@@ -282,7 +344,40 @@ class TestTransferOrderAPI(HttpCase):
         self.assertIn(free.id, ids)
         self.assertNotIn(taken.id, ids)
 
+    def test_designation_filter_is_applied_before_the_limit(self):
+        jailor = self._transfer(self.fx.other_designation)        # older
+        self._transfer(self.fx.officers[0])                       # newer Grade I
+        self._transfer(self.fx.officers[1])
+        self.authenticate('api_admin', 'Api-Admin-1')
+        result = self._json(self._call('GET', '/api/transfer/orders/eligible?designation=Jailor&limit=1'))
+        self.assertEqual([t['request_id'] for t in result['transfers']], [jailor.id])
+
+    def test_null_and_malformed_input_is_handled(self):
+        transfer = self._transfer(self.fx.officers[0])
+        self.authenticate('api_admin', 'Api-Admin-1')
+        order = self._json(self._call('POST', '/api/transfer/orders/create', {'request_ids': [transfer.id]}))['order']
+        url = '/api/transfer/orders/%s/update' % order['id']
+
+        result = self._json(self._call('POST', url, {'present': None, 'dig_range': '  '}))
+        self.assertTrue(result['success'], result)
+        self.assertEqual((result['order']['present'], result['order']['dig_range']), ('', ''))
+
+        for bad in ({'lines': ['x']}, {'lines': 'x'}, {'lines': [{'request_id': 999999999}]}):
+            self.assertFalse(self._json(self._call('POST', url, bad))['success'], bad)
+
     # ── the officer's download ────────────────────────────────────────────────
+
+    def test_the_officer_gets_the_letter_as_it_was_issued(self):
+        order = self.env['transfer.order']._draft_for_transfers(self._transfer(self.fx.officers[0]))
+        order.action_issue()
+        self.authenticate('api_officer', 'Api-Officer-1')
+        url = '/api/employee-portal/orders/%s/pdf' % order.id
+        first = self._call('GET', url).content
+        self.assertTrue(first.startswith(b'%PDF'))
+
+        self.fx.officers[0].x_designation = 'Jailor'              # changes nothing on the letter
+        self.fx.dst_sub.name = 'Renamed Sub'
+        self.assertEqual(self._call('GET', url).content, first)
 
     def test_officer_downloads_only_their_own_issued_order(self):
         mine = self.env['transfer.order']._draft_for_transfers(self._transfer(self.fx.officers[0]))

@@ -38,8 +38,14 @@ _UPDATABLE_TEXT = ('present', 'reference_letter', 'dig_range')
 
 
 def render_order_pdf(env, order):
-    """The PDF of a transfer order as an HTTP response."""
-    pdf, _kind = env['ir.actions.report'].sudo()._render_qweb_pdf(REPORT_NAME, order.ids)
+    """
+    The PDF of a transfer order as an HTTP response.
+
+    An issued order is served from the file stored when it was issued, so it never
+    changes afterwards; a draft is rendered from the current data.
+    """
+    report = env['ir.actions.report'].sudo().with_context(force_report_rendering=True)
+    pdf, _kind = report._render_qweb_pdf(REPORT_NAME, order.ids)
     filename = 'Transfer_Order_%s.pdf' % ((order.name or 'DRAFT-%s' % order.id).replace('/', '-'))
     return request.make_response(pdf, headers=[
         ('Content-Type', 'application/pdf'),
@@ -82,6 +88,7 @@ class TransferOrderAPI(http.Controller):
         return request.env(user=uid), None
 
     def _order(self, env, order_id):
+        """(order, None), or (empty, 404 response) when there is no such order."""
         order = env['transfer.order'].sudo().browse(order_id).exists()
         return order, (None if order else self._err('Transfer order not found.', status=404))
 
@@ -90,6 +97,7 @@ class TransferOrderAPI(http.Controller):
         return exc.args[0] if exc.args else str(exc)
 
     def _fmt_line(self, env, transfer):
+        """One officer on an order, as the screens show it."""
         row = env['report.tnpd_hr_employee.report_transfer_offer_letter'].sudo()._row(transfer)
         return {
             'request_id': transfer.id,
@@ -105,6 +113,7 @@ class TransferOrderAPI(http.Controller):
         }
 
     def _fmt_order(self, env, order, lines=True):
+        """An order as JSON; ``lines=False`` leaves out the officers (for lists)."""
         data = {
             'id': order.id,
             'number': order.name or '',
@@ -129,6 +138,7 @@ class TransferOrderAPI(http.Controller):
 
     @http.route('/api/transfer/orders', auth='none', type='http', methods=['GET'], csrf=False)
     def list_orders(self, **kwargs):
+        """Orders, newest first. Filters: state, search (number or officer); paged."""
         env, err = self._require_admin()
         if err:
             return err
@@ -165,13 +175,15 @@ class TransferOrderAPI(http.Controller):
         if kwargs.get('search'):
             domain += ['|', ('employee_id.name', 'ilike', kwargs['search']),
                        ('employee_id.x_employee_code', 'ilike', kwargs['search'])]
-        transfers = env['transfer.approval.request'].sudo().search(domain, order='id desc', limit=limit)
         designation = (kwargs.get('designation') or '').strip()
+        if designation:  # same rule as the order: the role name, else the typed designation
+            domain += ['|', ('employee_id.x_role_id.name', '=', designation),
+                       '&', ('employee_id.x_role_id', '=', False),
+                       ('employee_id.x_designation', '=', designation)]
+        transfers = env['transfer.approval.request'].sudo().search(domain, order='id desc', limit=limit)
         result = []
         for transfer in transfers:
             line = self._fmt_line(env, transfer)
-            if designation and line['designation'] != designation:
-                continue
             live = transfer._live_order()
             line['order_id'] = live.id if live else None
             result.append(line)
@@ -179,6 +191,7 @@ class TransferOrderAPI(http.Controller):
 
     @http.route('/api/transfer/orders/<int:order_id>', auth='none', type='http', methods=['GET'], csrf=False)
     def get_order(self, order_id, **_kw):
+        """One order with its officers."""
         env, err = self._require_admin()
         if err:
             return err
@@ -229,7 +242,11 @@ class TransferOrderAPI(http.Controller):
         if order.state != 'draft':
             return self._err('Only a draft order can be edited.')
 
-        vals = {f: (str(data[f]).strip() or False) for f in _UPDATABLE_TEXT if f in data}
+        # null means "blank", never the text "None"
+        vals = {
+            f: (str(data[f]).strip() if data[f] is not None else '') or False
+            for f in _UPDATABLE_TEXT if f in data
+        }
         for field_name in ('reference_date', 'order_date'):
             if field_name in data:
                 try:
@@ -237,6 +254,8 @@ class TransferOrderAPI(http.Controller):
                 except (TypeError, ValueError):
                     return self._err('%s must be a date (YYYY-MM-DD).' % field_name)
         lines = data.get('lines') or []
+        if not isinstance(lines, list) or not all(isinstance(line, dict) for line in lines):
+            return self._err('lines must be a list of {request_id, ta_da_eligible}.')
         by_id = {t.id: t for t in order.transfer_ids}
         for line in lines:
             if line.get('request_id') not in by_id:
@@ -254,6 +273,7 @@ class TransferOrderAPI(http.Controller):
     # ── issue / cancel ────────────────────────────────────────────────────────
 
     def _transition(self, order_id, action):
+        """Run ``action_issue`` or ``action_cancel`` on an order; a refusal changes nothing."""
         env, err = self._require_admin()
         if err:
             return err

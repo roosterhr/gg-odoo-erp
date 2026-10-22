@@ -22,6 +22,11 @@
         <field name="report_name">tnpd_hr_employee.report_transfer_offer_letter</field>
         <field name="report_file">tnpd_hr_employee.report_transfer_offer_letter</field>
         <field name="print_report_name">'Transfer_Order_%s' % ((object.name or 'DRAFT-%s' % object.id).replace('/', '-'))</field>
+        <!-- An issued order is a legal document: its PDF is stored the first time it is made
+             (at issue) and that file is served from then on, so later changes to an
+             employee, a role or a prison name cannot alter a letter already sent. -->
+        <field name="attachment">(object.state == 'issued') and ('Transfer_Order_%s.pdf' % object.name.replace('/', '-'))</field>
+        <field name="attachment_use" eval="True"/>
         <field name="paperformat_id" ref="paperformat_transfer_offer_letter"/>
         <field name="binding_model_id" ref="model_transfer_order"/>
         <field name="binding_type">report</field>

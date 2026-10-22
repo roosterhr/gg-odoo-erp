@@ -135,6 +135,14 @@ class TestTransferOfferLetter(TransactionCase):
         rows = self.report_model._letter_values(order)['rows']
         self.assertEqual([r['ta_da'] for r in rows], [True, False, False])
 
+    def test_plural_of_a_designation(self):
+        plural = self.report_model._plural
+        self.assertEqual(plural('Grade I Warder (Men)'), 'Grade I Warders (Men)')
+        self.assertEqual(plural('Secretary'), 'Secretaries')
+        self.assertEqual(plural('Boss'), 'Bosses')
+        self.assertEqual(plural('Day'), 'Days')
+        self.assertEqual(plural(''), 'officers')
+
     # ── PDF ───────────────────────────────────────────────────────────────────
 
     def test_pdf_is_produced(self):
