@@ -100,6 +100,43 @@ class TransferApprovalRequest(models.Model):
         help='Score out of 10 for the reason category. Used only to sort requests.',
     )
 
+    ta_da_eligible = fields.Boolean(
+        string='Eligible for TA/DA',
+        compute='_compute_ta_da_eligible', store=True, readonly=False,
+        help='Printed on the transfer order. A transfer made on the own request of the '
+             'officer is not eligible; others are, unless changed on the order.',
+    )
+    order_ids = fields.Many2many(
+        'transfer.order', 'transfer_order_request_rel', 'request_id', 'order_id',
+        string='Transfer Orders', copy=False,
+    )
+
+    @api.depends('transfer_type')
+    def _compute_ta_da_eligible(self):
+        for rec in self:
+            rec.ta_da_eligible = rec.transfer_type != 'request'
+
+    def _live_order(self):
+        """The order (draft or issued) this transfer is in, if any."""
+        self.ensure_one()
+        return self.order_ids.filtered(lambda o: o.state != 'cancelled')[:1]
+
+    def _create_draft_order(self):
+        """Give an approved transfer its draft order. Never blocks the approval."""
+        try:
+            with self.env.cr.savepoint():
+                self.env['transfer.order'].sudo()._draft_for_transfers(self)
+        except Exception:
+            _logger.exception('Could not create the transfer order for TRF/%s', self.ids)
+
+    def action_print_transfer_order(self):
+        """Print button on an approved transfer: open its order as a PDF."""
+        self.ensure_one()
+        if self.state != 'approved':
+            raise UserError('The transfer order can only be printed for approved transfers.')
+        order = self.env['transfer.order'].sudo()._draft_for_transfers(self)
+        return order.action_print()
+
     @api.depends('reason_category')
     def _compute_reason_score(self):
         for rec in self:
@@ -477,6 +514,13 @@ class TransferApprovalRequest(models.Model):
         return records
 
     def write(self, vals):
+        if 'ta_da_eligible' in vals:
+            frozen = self.filtered(lambda r: any(o.state == 'issued' for o in r.order_ids))
+            if frozen:
+                raise UserError(
+                    'TA/DA cannot be changed: TRF/%s is in an issued transfer order. '
+                    'Cancel that order first.' % ', '.join(str(i) for i in frozen.ids)
+                )
         self._check_reason_not_legacy(vals, self)
         newly_pending = self.env['transfer.approval.request']
         if vals.get('state') == 'pending':
@@ -824,6 +868,7 @@ class TransferApprovalRequest(models.Model):
             f'You have been transferred to {to_jail}. '
             f'Approved by: {approved_by_user.name}.',
         )
+        self._create_draft_order()
 
     def action_approve(self):
         self.ensure_one()
