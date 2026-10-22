@@ -72,6 +72,9 @@ class TransferApprovalRequest(models.Model):
         'others':                     0,
     }
 
+    # Kept so older requests still display, but no longer allowed on new ones.
+    LEGACY_REASONS = ('medical_reasons',)
+
     reason_category = fields.Selection(
         selection=[
             ('illness_self',               'Serious illness to self'),
@@ -454,13 +457,27 @@ class TransferApprovalRequest(models.Model):
     # _prompt_tenure_candidates()'s own idempotency guard makes it safe for
     # both hooks to potentially fire for the same record.
 
+    def _check_reason_not_legacy(self, vals, records=None):
+        """Refuse to give a request a retired reason. Existing requests keep theirs."""
+        reason = vals.get('reason_category')
+        if reason not in self.LEGACY_REASONS:
+            return
+        if records is None or any(r.reason_category != reason for r in records):
+            raise ValidationError(
+                'Please choose one of the current reasons; "Medical reasons" is no '
+                'longer available for new requests.'
+            )
+
     @api.model_create_multi
     def create(self, vals_list):
+        for vals in vals_list:
+            self._check_reason_not_legacy(vals)
         records = super().create(vals_list)
         records.filtered(lambda r: r.state == 'pending').prompt_tenure_candidates_if_no_vacancy()
         return records
 
     def write(self, vals):
+        self._check_reason_not_legacy(vals, self)
         newly_pending = self.env['transfer.approval.request']
         if vals.get('state') == 'pending':
             newly_pending = self.filtered(lambda r: r.state != 'pending')

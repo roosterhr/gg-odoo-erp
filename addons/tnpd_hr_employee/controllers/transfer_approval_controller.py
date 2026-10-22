@@ -1170,6 +1170,15 @@ class TransferApprovalController(http.Controller):
 
             env = request.env(user=uid)
 
+            # --- Validate reason (optional; retired and unknown values are refused) ---
+            Transfer        = env['transfer.approval.request']
+            reason_category = (data.get('reason_category') or '').strip()
+            if reason_category and (
+                reason_category not in Transfer.REASON_SCORES
+                or reason_category in Transfer.LEGACY_REASONS
+            ):
+                return self._err('Invalid reason_category')
+
             # --- Validate employee ---
             employee = self._resolve_employee(env, data['employee_id'])
             if not employee.exists():
@@ -1221,7 +1230,7 @@ class TransferApprovalController(http.Controller):
                 'requested_by':            uid,
                 'state':                   'draft',
                 'transfer_type':           'request',
-                'reason_category':         reason_category,
+                'reason_category':         reason_category or False,
                 'transfer_reason':         data.get('transfer_reason', ''),
                 'priority':                data.get('priority', 'medium'),
                 **current_vals,
