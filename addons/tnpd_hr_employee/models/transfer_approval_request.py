@@ -54,16 +54,53 @@ class TransferApprovalRequest(models.Model):
         index=True,
     )
 
+    # Reason for a transfer request, with the priority score (out of 10) used to
+    # sort pending requests. Highest score first. Scores are for sorting only;
+    # nothing is approved or rejected because of them.
+    REASON_SCORES = {
+        'illness_self':               8,
+        'retirement_one_year':        7,
+        'spouse_working':             6,
+        'single_parent':              5,
+        'ex_serviceman':              4,
+        'illness_family':             3,
+        'long_service_outside_range': 2,
+        'mutual_request':             1,
+        # Older requests only. Shown as before; it was never split into
+        # "self" or "family" illness, so it keeps the higher score.
+        'medical_reasons':            8,
+        'others':                     0,
+    }
+
     reason_category = fields.Selection(
         selection=[
-            ('single_parent',   'Single Parent'),
-            ('spouse_working',  'Spouse Working'),
-            ('medical_reasons', 'Medical Reasons'),
-            ('others',          'Others'),
+            ('illness_self',               'Serious illness to self'),
+            ('retirement_one_year',        'Retirement within one year'),
+            ('spouse_working',             'Spouse employed'),
+            ('single_parent',              'Single parent'),
+            ('ex_serviceman',              'Ex-serviceman'),
+            ('illness_family',             'Illness to spouse / children'),
+            ('long_service_outside_range', 'Long service in outside range'),
+            ('mutual_request',             'Mutual request'),
+            ('medical_reasons',            'Medical reasons (older requests)'),
+            ('others',                     'Others'),
         ],
         string='Reason Category',
         index=True,
     )
+
+    reason_score = fields.Integer(
+        string='Priority Score',
+        compute='_compute_reason_score',
+        store=True,
+        index=True,
+        help='Score out of 10 for the reason category. Used only to sort requests.',
+    )
+
+    @api.depends('reason_category')
+    def _compute_reason_score(self):
+        for rec in self:
+            rec.reason_score = self.REASON_SCORES.get(rec.reason_category, 0)
 
     transfer_reason = fields.Text(
         string='Transfer Reason',

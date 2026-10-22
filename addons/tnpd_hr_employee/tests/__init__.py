@@ -2,3 +2,4 @@
 # License: LGPL-3
 
 from . import test_distance
+from . import test_reason_score

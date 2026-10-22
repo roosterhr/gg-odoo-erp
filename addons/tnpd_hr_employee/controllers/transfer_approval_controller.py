@@ -201,6 +201,7 @@ class TransferApprovalController(http.Controller):
             # Extended fields
             'transfer_type':    getattr(rec, 'transfer_type', '') or '',
             'reason_category':  getattr(rec, 'reason_category', '') or '',
+            'reason_score':     getattr(rec, 'reason_score', 0) or 0,
             'transfer_reason':  getattr(rec, 'transfer_reason', '') or '',
             'priority':         getattr(rec, 'priority', '') or '',
             'tenure_years':     tenure_years,
@@ -1057,6 +1058,9 @@ class TransferApprovalController(http.Controller):
         transfer_type str  optional — filter by transfer_type field
         search        str  optional — partial match on employee name
         employee_id   int  optional — filter by specific employee
+        offset        int  optional — number of rows to skip (used instead of page)
+        sort          str  optional — 'priority' = highest reason score first, then
+                           oldest request first; anything else = newest first
         """
         try:
             uid, err = self._require_auth()
@@ -1064,12 +1068,16 @@ class TransferApprovalController(http.Controller):
                 return err
 
             try:
-                page  = max(1, int(kwargs.get('page', 1)))
                 limit = max(1, min(_MAX_LIMIT, int(kwargs.get('limit', 20))))
+                if kwargs.get('offset') not in (None, ''):
+                    offset = max(0, int(kwargs['offset']))
+                    page   = offset // limit + 1
+                else:
+                    page   = max(1, int(kwargs.get('page', 1)))
+                    offset = (page - 1) * limit
             except (TypeError, ValueError) as exc:
                 return self._err(f'Invalid pagination parameter: {exc}')
 
-            offset = (page - 1) * limit
             env    = request.env(user=uid)
 
             domain = [('active', '=', True)]
@@ -1095,14 +1103,15 @@ class TransferApprovalController(http.Controller):
                     domain.append(('priority', '=', kwargs['priority']))
 
             if kwargs.get('reason'):
-                valid_cats = {'single_parent', 'spouse_working', 'medical_reasons', 'others'}
+                valid_cats = set(env['transfer.approval.request'].REASON_SCORES)
                 if kwargs['reason'] in valid_cats:
                     domain.append(('reason_category', '=', kwargs['reason']))
 
             TransferRequest = env['transfer.approval.request'].sudo()
             total_count     = TransferRequest.search_count(domain)
+            order = 'reason_score desc, id asc' if kwargs.get('sort') == 'priority' else 'id desc'
             records         = TransferRequest.search(
-                domain, offset=offset, limit=limit, order='id desc'
+                domain, offset=offset, limit=limit, order=order
             )
 
             return self._json_response({
