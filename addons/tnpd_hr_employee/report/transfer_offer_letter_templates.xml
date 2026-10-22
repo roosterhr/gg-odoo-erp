@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Part of TNPD Prison HR Employee Extension. License: LGPL-3 -->
+<odoo>
+
+    <!--
+        Proceedings of the Director General for a transfer order: one officer, or a
+        bulk list of officers of one designation. Layout follows the department's
+        "Transfer petition models" form.
+    -->
+    <template id="report_transfer_offer_letter">
+        <t t-foreach="docs" t-as="o">
+            <t t-set="L" t-value="letter[o.id]"/>
+            <!-- web.basic_layout wraps each letter in the div Odoo's PDF step looks for;
+                 without it the page is sent to wkhtmltopdf with no charset and accents break. -->
+            <t t-call="web.basic_layout">
+                <div class="page" style="font-family: 'Times New Roman', Times, serif; font-size: 12pt; line-height: 1.55; color: #000;">
+
+                    <div t-if="L['is_draft']"
+                         style="text-align: center; font-family: Arial, sans-serif; font-size: 9pt; letter-spacing: 2px; color: #B91C1C; border: 1px solid #B91C1C; padding: 2px 0; margin-bottom: 10px;">
+                        DRAFT &#8211; NOT YET ISSUED
+                    </div>
+
+                    <div style="text-align: center; font-weight: bold; font-size: 13pt; line-height: 1.4;">
+                        Proceedings of the<br/>
+                        Director General of Prisons and Correctional Services,<br/>
+                        Tamil Nadu, Chennai.
+                    </div>
+
+                    <div style="margin-top: 14px;">
+                        Present:
+                        <span t-if="L['present']" t-out="L['present']"/>
+                        <span t-else="" style="display: inline-block; min-width: 230px; border-bottom: 1px solid #000;">&#160;</span>
+                    </div>
+
+                    <table style="width: 100%; margin-top: 6px;">
+                        <tr>
+                            <td>No.
+                                <span t-if="L['number']" t-out="L['number']"/>
+                                <span t-else="" style="display: inline-block; min-width: 90px; border-bottom: 1px solid #000;">&#160;</span>
+                            </td>
+                            <td style="text-align: right;">Dated: <span t-out="L['date']"/></td>
+                        </tr>
+                    </table>
+
+                    <table style="width: 100%; margin-top: 10px;">
+                        <tr>
+                            <td style="width: 52px; vertical-align: top; font-weight: bold;">Sub:-</td>
+                            <td style="text-align: justify;">
+                                Department of Prisons and Correctional Services &#8211; Tamil Nadu Jail
+                                Subordinate Service &#8211; Transfer and postings of
+                                <span t-out="L['heading']"/> &#8211; Orders &#8211; issued &#8211; Regarding.
+                            </td>
+                        </tr>
+                        <tr t-if="L['show_ref']">
+                            <td style="vertical-align: top; font-weight: bold; padding-top: 6px;">Ref:</td>
+                            <td style="padding-top: 6px;">
+                                Letter No.
+                                <span t-if="L['ref_letter']" t-out="L['ref_letter']"/>
+                                <span t-else="" style="display: inline-block; min-width: 90px; border-bottom: 1px solid #000;">&#160;</span>,
+                                Dated
+                                <span t-if="L['ref_date']" t-out="L['ref_date']"/>
+                                <span t-else="" style="display: inline-block; min-width: 90px; border-bottom: 1px solid #000;">&#160;</span>
+                                of the Superintendent, <span t-out="L['source_super']"/>.
+                            </td>
+                        </tr>
+                    </table>
+
+                    <div style="text-align: center; margin: 8px 0;">* * * *</div>
+
+                    <div style="font-weight: bold;">Order:</div>
+
+                    <!-- single officer: all clauses in one list -->
+                    <table t-if="not L['bulk']" style="width: 100%; margin-top: 4px;">
+                        <tr t-foreach="L['clauses']" t-as="clause">
+                            <td style="width: 34px; vertical-align: top;"><span t-out="clause_index + 1"/>)</td>
+                            <td style="text-align: justify; padding-bottom: 6px;"><span t-out="clause"/></td>
+                        </tr>
+                    </table>
+
+                    <!-- bulk list: first clause, the table of officers, then the other clauses -->
+                    <t t-if="L['bulk']">
+                        <table style="width: 100%; margin-top: 4px;">
+                            <tr>
+                                <td style="width: 34px; vertical-align: top;">1)</td>
+                                <td style="text-align: justify; padding-bottom: 6px;"><span t-out="L['clauses'][0]"/></td>
+                            </tr>
+                        </table>
+                        <table style="width: 100%; border-collapse: collapse; font-size: 11pt; line-height: 1.35; margin: 4px 0 8px 0;">
+                            <thead>
+                                <tr style="font-weight: bold; text-align: center;">
+                                    <td style="border: 1px solid #000; padding: 4px; width: 38px;">S.No.</td>
+                                    <td style="border: 1px solid #000; padding: 4px;">Name / Employee ID / Place of working</td>
+                                    <td style="border: 1px solid #000; padding: 4px;">Transferred and posted to</td>
+                                    <td style="border: 1px solid #000; padding: 4px; width: 120px;">Eligible to claim TA/DA (Yes or No)</td>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr t-foreach="L['rows']" t-as="row">
+                                    <td style="border: 1px solid #000; padding: 4px; text-align: center; vertical-align: top;"><span t-out="row['no']"/>.</td>
+                                    <td style="border: 1px solid #000; padding: 4px; vertical-align: top;">
+                                        <b t-out="row['name']"/><br/>
+                                        Employee ID (<span t-out="row['badge_no']"/>)<br/>
+                                        <span t-out="row['designation']"/><br/>
+                                        <span t-out="row['source']"/>
+                                    </td>
+                                    <td style="border: 1px solid #000; padding: 4px; vertical-align: top;"><span t-out="row['target']"/></td>
+                                    <td style="border: 1px solid #000; padding: 4px; text-align: center; vertical-align: top;">
+                                        <span t-out="'Yes' if row['ta_da'] else 'No'"/>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <table style="width: 100%;">
+                            <tr t-foreach="L['clauses'][1:]" t-as="clause">
+                                <td style="width: 34px; vertical-align: top;"><span t-out="clause_index + 2"/>)</td>
+                                <td style="text-align: justify; padding-bottom: 6px;"><span t-out="clause"/></td>
+                            </tr>
+                        </table>
+                    </t>
+
+                    <div style="margin-top: 36px; text-align: right; font-weight: bold; line-height: 1.4;">
+                        Director General of Prisons &amp;<br/>
+                        Correctional Services
+                    </div>
+
+                    <div style="margin-top: 14px;">
+                        <div>To</div>
+                        <div style="padding-left: 28px;">
+                            The Superintendent<t t-if="len(L['addressed_to']) &gt; 1">s</t>,
+                            <t t-foreach="L['addressed_to']" t-as="place">
+                                <span t-out="place"/><t t-if="not place_last"> and </t>
+                            </t>.
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 10px;">
+                        <div>Copy to:</div>
+                        <table style="width: 100%;">
+                            <tr>
+                                <td style="width: 34px; vertical-align: top;">1.</td>
+                                <td>The Deputy Inspector General of Prisons,
+                                    <span t-if="L['dig_range']" t-out="L['dig_range']"/>
+                                    <span t-else="" style="display: inline-block; min-width: 110px; border-bottom: 1px solid #000;">&#160;</span>
+                                    Range.</td>
+                            </tr>
+                            <tr>
+                                <td style="vertical-align: top;">2.</td>
+                                <td>Inspector General of Prisons (H.Q), Prisons Headquarters.</td>
+                            </tr>
+                            <tr>
+                                <td style="vertical-align: top;">3.</td>
+                                <td>The Deputy Superintendent of Police (i/c), Intelligence-cum-Vigilance Wing,
+                                    Prisons Headquarters.</td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <div t-if="not L['bulk']"
+                         style="margin-top: 14px; font-size: 10pt; color: #333; border-top: 1px solid #999; padding-top: 4px;">
+                        Employee ID / Badge No.: <b t-out="L['badge_no']"/> &#160;|&#160; <span t-out="L['name']"/>
+                        <t t-if="L['approved_on']"> &#160;|&#160; Transfer approved on <span t-out="L['approved_on']"/></t>
+                    </div>
+                </div>
+            </t>
+        </t>
+    </template>
+
+</odoo>

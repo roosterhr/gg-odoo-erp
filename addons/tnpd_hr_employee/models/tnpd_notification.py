@@ -44,6 +44,12 @@ class TnpdNotification(models.Model):
         ondelete='set null',
         index=True,
     )
+    order_id = fields.Many2one(
+        'transfer.order',
+        string='Transfer Order',
+        ondelete='set null',
+        index=True,
+    )
 
     # ── Notification content ────────────────────────────────────────────────────
     notification_type = fields.Selection(
@@ -52,6 +58,7 @@ class TnpdNotification(models.Model):
             ('transfer_approved',   'Transfer Approved'),
             ('transfer_rejected',   'Transfer Rejected'),
             ('transfer_pending',    'Transfer Pending Review'),
+            ('transfer_order',      'Transfer Order'),
             ('general',             'General'),
         ],
         string='Notification Type',

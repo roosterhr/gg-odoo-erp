@@ -5,3 +5,6 @@ access_tnpd_prison_master_hr_manager,tnpd.prison.master (hr manager),model_tnpd_
 access_transfer_approval_request_user,transfer.approval.request (user),model_transfer_approval_request,base.group_user,1,1,1,0
 access_transfer_approval_request_hr_manager,transfer.approval.request (hr manager),model_transfer_approval_request,hr.group_hr_manager,1,1,1,1
 access_prison_jail_tnpd_user,prison.jail in tnpd context (user read),prison_jail_master.model_prison_jail,base.group_user,1,0,0,0
+access_transfer_order_user,transfer.order (user read),model_transfer_order,base.group_user,1,0,0,0
+access_transfer_order_hr_user,transfer.order (hr user),model_transfer_order,hr.group_hr_user,1,1,1,0
+access_transfer_order_hr_manager,transfer.order (hr manager),model_transfer_order,hr.group_hr_manager,1,1,1,1

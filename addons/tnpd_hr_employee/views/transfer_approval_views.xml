@@ -66,6 +66,11 @@
             <form string="Transfer Approval Request">
                 <!-- Status bar -->
                 <header>
+                    <button name="action_print_transfer_order"
+                            string="Print Offer Letter"
+                            type="object"
+                            class="btn-primary"
+                            invisible="state != 'approved'"/>
                     <field name="state"
                            widget="statusbar"
                            statusbar_visible="pending,approved,rejected"/>

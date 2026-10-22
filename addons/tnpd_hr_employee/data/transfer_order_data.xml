@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Part of TNPD Prison HR Employee Extension. License: LGPL-3 -->
+<odoo noupdate="1">
+
+    <!-- Serial part of the transfer order number. The full pattern (serial, year,
+         optional section code) is the system parameter tnpd.transfer_order.number_format. -->
+    <record id="seq_transfer_order" model="ir.sequence">
+        <field name="name">Transfer Order</field>
+        <field name="code">transfer.order</field>
+        <field name="padding">3</field>
+        <field name="number_next">1</field>
+        <field name="number_increment">1</field>
+    </record>
+
+</odoo>

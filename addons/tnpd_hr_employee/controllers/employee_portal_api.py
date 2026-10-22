@@ -294,6 +294,8 @@ class EmployeePortalAPI(http.Controller):
         to_central  = rec.requested_central_prison.name if rec.requested_central_prison else ''
         to_prison   = to_sub or to_district or to_central or ''
 
+        issued_order = rec.order_ids.filtered(lambda o: o.state == 'issued')[:1]
+
         def _pref(central_f, district_f, sub_f):
             c = central_f.name  if central_f  else ''
             d = district_f.name if district_f else ''
@@ -324,6 +326,8 @@ class EmployeePortalAPI(http.Controller):
             'remarks':          rec.remarks or '',
             'request_date':     str(rec.create_date)   if rec.create_date   else '',
             'approved_date':    str(rec.approved_date) if rec.approved_date else '',
+            'order_id':         issued_order.id if issued_order else None,
+            'order_number':     issued_order.name if issued_order else '',
         }
 
     # ── POST /api/employee-portal/auth ────────────────────────────────────────
@@ -918,6 +922,28 @@ class EmployeePortalAPI(http.Controller):
             _logger.exception('Error creating employee transfer request')
             return self._err(str(exc))
 
+    # ── GET /api/employee-portal/orders/<id>/pdf ─────────────────────────────
+
+    @http.route(
+        '/api/employee-portal/orders/<int:order_id>/pdf',
+        auth='none', type='http', methods=['GET'], csrf=False,
+    )
+    def download_transfer_order(self, order_id, **_kw):
+        """
+        The issued transfer order (PDF) of the logged-in officer.
+
+        An order that is not issued, is not theirs, or does not exist all answer
+        the same 404, so nobody can find out which orders exist.
+        """
+        emp, err = self._require_employee_session()
+        if err:
+            return err
+        order = request.env['transfer.order'].sudo().browse(order_id).exists()
+        if not order or order.state != 'issued' or emp not in order.employee_ids:
+            return self._err('Transfer order not found', status=404)
+        from .transfer_order_api import render_order_pdf
+        return render_order_pdf(request.env(user=request.session.uid), order)
+
     # ── GET /api/employee-portal/notifications ───────────────────────────────
 
     @http.route(
@@ -974,6 +1000,7 @@ class EmployeePortalAPI(http.Controller):
                 'sent_date':           str(n.sent_date) if n.sent_date else '',
                 'is_read':             n.is_read,
                 'transfer_request_id': n.transfer_request_id.id if n.transfer_request_id else None,
+                'order_id':            n.order_id.id if n.order_id.state == 'issued' else None,
             }
 
         return self._json_response({
