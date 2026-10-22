@@ -54,16 +54,56 @@ class TransferApprovalRequest(models.Model):
         index=True,
     )
 
+    # Reason for a transfer request, with the priority score (out of 10) used to
+    # sort pending requests. Highest score first. Scores are for sorting only;
+    # nothing is approved or rejected because of them.
+    REASON_SCORES = {
+        'illness_self':               8,
+        'retirement_one_year':        7,
+        'spouse_working':             6,
+        'single_parent':              5,
+        'ex_serviceman':              4,
+        'illness_family':             3,
+        'long_service_outside_range': 2,
+        'mutual_request':             1,
+        # Older requests only. Shown as before; it was never split into
+        # "self" or "family" illness, so it keeps the higher score.
+        'medical_reasons':            8,
+        'others':                     0,
+    }
+
+    # Kept so older requests still display, but no longer allowed on new ones.
+    LEGACY_REASONS = ('medical_reasons',)
+
     reason_category = fields.Selection(
         selection=[
-            ('single_parent',   'Single Parent'),
-            ('spouse_working',  'Spouse Working'),
-            ('medical_reasons', 'Medical Reasons'),
-            ('others',          'Others'),
+            ('illness_self',               'Serious illness to self'),
+            ('retirement_one_year',        'Retirement within one year'),
+            ('spouse_working',             'Spouse employed'),
+            ('single_parent',              'Single parent'),
+            ('ex_serviceman',              'Ex-serviceman'),
+            ('illness_family',             'Illness to spouse / children'),
+            ('long_service_outside_range', 'Long service in outside range'),
+            ('mutual_request',             'Mutual request'),
+            ('medical_reasons',            'Medical reasons (older requests)'),
+            ('others',                     'Others'),
         ],
         string='Reason Category',
         index=True,
     )
+
+    reason_score = fields.Integer(
+        string='Priority Score',
+        compute='_compute_reason_score',
+        store=True,
+        index=True,
+        help='Score out of 10 for the reason category. Used only to sort requests.',
+    )
+
+    @api.depends('reason_category')
+    def _compute_reason_score(self):
+        for rec in self:
+            rec.reason_score = self.REASON_SCORES.get(rec.reason_category, 0)
 
     transfer_reason = fields.Text(
         string='Transfer Reason',
@@ -417,13 +457,27 @@ class TransferApprovalRequest(models.Model):
     # _prompt_tenure_candidates()'s own idempotency guard makes it safe for
     # both hooks to potentially fire for the same record.
 
+    def _check_reason_not_legacy(self, vals, records=None):
+        """Refuse to give a request a retired reason. Existing requests keep theirs."""
+        reason = vals.get('reason_category')
+        if reason not in self.LEGACY_REASONS:
+            return
+        if records is None or any(r.reason_category != reason for r in records):
+            raise ValidationError(
+                'Please choose one of the current reasons; "Medical reasons" is no '
+                'longer available for new requests.'
+            )
+
     @api.model_create_multi
     def create(self, vals_list):
+        for vals in vals_list:
+            self._check_reason_not_legacy(vals)
         records = super().create(vals_list)
         records.filtered(lambda r: r.state == 'pending').prompt_tenure_candidates_if_no_vacancy()
         return records
 
     def write(self, vals):
+        self._check_reason_not_legacy(vals, self)
         newly_pending = self.env['transfer.approval.request']
         if vals.get('state') == 'pending':
             newly_pending = self.filtered(lambda r: r.state != 'pending')

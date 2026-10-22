@@ -812,7 +812,8 @@ class EmployeePortalAPI(http.Controller):
         p3_district = _jail_id('p3_district_jail_id')
         p3_sub      = _jail_id('p3_sub_jail_id')
 
-        valid_categories = {'single_parent', 'spouse_working', 'medical_reasons', 'others'}
+        TransferRequest  = request.env['transfer.approval.request']
+        valid_categories = set(TransferRequest.REASON_SCORES) - set(TransferRequest.LEGACY_REASONS)
         if not reason_category or reason_category not in valid_categories:
             return self._err('Please select a reason category')
         if reason_category == 'others' and not reason:
