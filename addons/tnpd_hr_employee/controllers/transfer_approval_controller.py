@@ -1139,6 +1139,7 @@ class TransferApprovalController(http.Controller):
         type='http',
         methods=['POST'],
         csrf=False,
+        readonly=False,   # auth='none' routes are read-only by default; this one writes
     )
     def create_draft_request(self, **_kwargs):
         """
@@ -1178,6 +1179,11 @@ class TransferApprovalController(http.Controller):
                 or reason_category in Transfer.LEGACY_REASONS
             ):
                 return self._err('Invalid reason_category')
+
+            # --- Validate priority (old field; optional, defaults to medium) ---
+            priority = (data.get('priority') or 'medium').strip()
+            if priority not in ('low', 'medium', 'high'):
+                return self._err('Invalid priority')
 
             # --- Validate employee ---
             employee = self._resolve_employee(env, data['employee_id'])
@@ -1232,7 +1238,7 @@ class TransferApprovalController(http.Controller):
                 'transfer_type':           'request',
                 'reason_category':         reason_category or False,
                 'transfer_reason':         data.get('transfer_reason', ''),
-                'priority':                data.get('priority', 'medium'),
+                'priority':                priority,
                 **current_vals,
             }
             if district_id:

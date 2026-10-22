@@ -1,6 +1,8 @@
 # Part of TNPD Prison HR Employee Extension.
 # License: LGPL-3
 
+import json
+
 from odoo.exceptions import ValidationError
 from odoo.tests import HttpCase, TransactionCase, tagged
 
@@ -144,3 +146,87 @@ class TestListAllSort(HttpCase):
         first = [self._id(r) for r in self._list(limit=2, offset=0, sort='priority')]
         second = [self._id(r) for r in self._list(limit=2, offset=2, sort='priority')]
         self.assertEqual(first + second, full[:4])
+
+    def test_reason_filter_returns_only_that_reason(self):
+        self.authenticate('sort_tester', 'Sort-Tester-1')
+        records = self._list(limit=100, reason='illness_self')
+        self.assertGreaterEqual(len(records), 2)  # the two created in setUpClass
+        self.assertEqual({r['reason_category'] for r in records}, {'illness_self'})
+        self.assertEqual({r['reason_score'] for r in records}, {8})
+
+    def test_unknown_reason_filter_is_ignored(self):
+        self.authenticate('sort_tester', 'Sort-Tester-1')
+        everything = [self._id(r) for r in self._list(limit=100)]
+        self.assertEqual([self._id(r) for r in self._list(limit=100, reason='nope')], everything)
+
+
+@tagged('post_install', '-at_install')
+class TestCreateDraft(HttpCase):
+    """POST /api/transfer/create-draft: the reason and priority it accepts."""
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        Jail = cls.env['prison.jail']
+        cls.central = Jail.create({'name': 'Draft Central', 'jail_type': 'central_jail'})
+        cls.sub = Jail.create({
+            'name': 'Draft Sub', 'jail_type': 'sub_jail', 'parent_id': cls.central.id,
+        })
+        cls.user = cls.env['res.users'].create({
+            'name': 'Draft Tester', 'login': 'draft_tester', 'password': 'Draft-Tester-1',
+            'group_ids': [(6, 0, [
+                cls.env.ref('base.group_user').id, cls.env.ref('hr.group_hr_user').id,
+            ])],
+        })
+
+    def _employee(self, n):
+        return self.env['hr.employee'].create({
+            'name': 'Draft Officer %s' % n, 'x_employee_code': 'DRAFT-%s' % n,
+        })
+
+    def _post(self, employee, **extra):
+        body = dict({
+            'employee_id': employee.id,
+            'requested_central_prison': self.central.id,
+            'requested_sub_jail': self.sub.id,
+        }, **extra)
+        self.authenticate('draft_tester', 'Draft-Tester-1')
+        response = self.url_open(
+            '/api/transfer/create-draft', data=json.dumps(body),
+            headers={'Content-Type': 'application/json'},
+        )
+        return response.json()
+
+    def _requests_of(self, employee):
+        return self.env['transfer.approval.request'].search([('employee_id', '=', employee.id)])
+
+    def test_valid_reason_creates_a_draft_with_its_score(self):
+        employee = self._employee(1)
+        result = self._post(employee, reason_category='single_parent', priority='high')
+        self.assertTrue(result['success'], result)
+        request = self._requests_of(employee)
+        self.assertEqual((request.reason_category, request.reason_score), ('single_parent', 5))
+        self.assertEqual(request.priority, 'high')
+
+    def test_reason_is_optional(self):
+        employee = self._employee(2)
+        result = self._post(employee)
+        self.assertTrue(result['success'], result)
+        request = self._requests_of(employee)
+        self.assertFalse(request.reason_category)
+        self.assertEqual((request.reason_score, request.priority), (0, 'medium'))
+
+    def test_retired_and_unknown_reasons_are_refused(self):
+        employee = self._employee(3)
+        for reason in ('medical_reasons', 'nope'):
+            result = self._post(employee, reason_category=reason)
+            self.assertFalse(result['success'])
+            self.assertEqual(result['message'], 'Invalid reason_category')
+        self.assertFalse(self._requests_of(employee))
+
+    def test_unknown_priority_is_refused_cleanly(self):
+        employee = self._employee(4)
+        result = self._post(employee, reason_category='single_parent', priority='urgent')
+        self.assertFalse(result['success'])
+        self.assertEqual(result['message'], 'Invalid priority')
+        self.assertFalse(self._requests_of(employee))
