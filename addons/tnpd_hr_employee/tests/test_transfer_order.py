@@ -367,6 +367,18 @@ class TestTransferOrderAPI(HttpCase):
 
     # ── the officer's download ────────────────────────────────────────────────
 
+    def test_an_unreadable_stored_pdf_is_an_error_not_an_empty_download(self):
+        order = self.env['transfer.order']._draft_for_transfers(self._transfer(self.fx.officers[0]))
+        order.action_issue()
+        stored = self.env['ir.attachment'].search([('res_model', '=', 'transfer.order'), ('res_id', '=', order.id)])
+        # Emptying the content stands in for a stored file that is missing from the file
+        # store: both make the report return an empty PDF (seen on a demo copy).
+        stored.raw = b''
+        self.authenticate('api_officer', 'Api-Officer-1')
+        response = self._call('GET', '/api/employee-portal/orders/%s/pdf' % order.id)
+        self.assertEqual(response.status_code, 500)
+        self.assertFalse(self._json(response)['success'])
+
     def test_the_officer_gets_the_letter_as_it_was_issued(self):
         order = self.env['transfer.order']._draft_for_transfers(self._transfer(self.fx.officers[0]))
         order.action_issue()
