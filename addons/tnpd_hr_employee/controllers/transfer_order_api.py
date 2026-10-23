@@ -46,6 +46,14 @@ def render_order_pdf(env, order):
     """
     report = env['ir.actions.report'].sudo().with_context(force_report_rendering=True)
     pdf, _kind = report._render_qweb_pdf(REPORT_NAME, order.ids)
+    if not pdf:
+        # e.g. the stored file is missing from the file store: say so, never hand out an empty file
+        _logger.error('Transfer order %s: its PDF came out empty (stored file missing?)', order.id)
+        return request.make_response(
+            json.dumps({'success': False, 'message': 'The PDF of this order could not be read. '
+                                                     'Please tell your administrator.'}),
+            headers=[('Content-Type', 'application/json')], status=500,
+        )
     filename = 'Transfer_Order_%s.pdf' % ((order.name or 'DRAFT-%s' % order.id).replace('/', '-'))
     return request.make_response(pdf, headers=[
         ('Content-Type', 'application/pdf'),
