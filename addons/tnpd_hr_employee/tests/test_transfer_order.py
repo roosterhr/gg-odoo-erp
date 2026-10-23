@@ -371,7 +371,9 @@ class TestTransferOrderAPI(HttpCase):
         order = self.env['transfer.order']._draft_for_transfers(self._transfer(self.fx.officers[0]))
         order.action_issue()
         stored = self.env['ir.attachment'].search([('res_model', '=', 'transfer.order'), ('res_id', '=', order.id)])
-        stored.raw = b''                                          # the file is gone from the store
+        # Emptying the content stands in for a stored file that is missing from the file
+        # store: both make the report return an empty PDF (seen on a demo copy).
+        stored.raw = b''
         self.authenticate('api_officer', 'Api-Officer-1')
         response = self._call('GET', '/api/employee-portal/orders/%s/pdf' % order.id)
         self.assertEqual(response.status_code, 500)

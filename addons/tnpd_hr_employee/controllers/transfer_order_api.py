@@ -43,6 +43,9 @@ def render_order_pdf(env, order):
 
     An issued order is served from the file stored when it was issued, so it never
     changes afterwards; a draft is rendered from the current data.
+
+    If the PDF comes out empty (for example the stored file is missing from the file
+    store) the answer is a 500 with a JSON message and a log line, never an empty file.
     """
     report = env['ir.actions.report'].sudo().with_context(force_report_rendering=True)
     pdf, _kind = report._render_qweb_pdf(REPORT_NAME, order.ids)
