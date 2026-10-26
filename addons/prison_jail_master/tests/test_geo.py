@@ -90,6 +90,8 @@ class TestPlaceKey(unittest.TestCase):
             ('Pudukkottai', 'Pudukottai'),
             ('Tirupattur', 'Tirupathur'),
             ('Thiruvallur', 'Tiruvallur'),
+            ('Palayamcottai', 'Palayamkottai'),
+            ('Cuddalore', 'Kuddalore'),
         ]
         for a, b in pairs:
             self.assertEqual(geo.place_key(a), geo.place_key(b), (a, b))
@@ -199,6 +201,19 @@ class TestPlaceCore(unittest.TestCase):
                          'collapsing repeated letters merges these; they share a town')
         self.assertNotEqual(geo.place_core('S.J. Salem'), geo.place_core('S.J. Namakkal'))
         self.assertNotEqual(geo.place_core('D.J. Thoothukudi @ Perurani'), geo.place_core('Thoothukudi District'))
+
+    def test_special_sub_jail_abbreviation_is_ignored(self):
+        self.assertEqual(geo.place_core('SSJ Nanguneri'), geo.place_core('Nanguneri (Men)'))
+        self.assertEqual(geo.place_core('Ssj Nanguneri'), geo.place_core('Special Sub Jail, Nanguneri'))
+
+    def test_a_roman_numeral_is_ignored_before_or_after_the_town(self):
+        same = [
+            'Chennai', 'Chennai - I', 'Chennai - II', 'Central Prison, Chennai-2',
+            'Central Prison - Ii Chennai', 'Central Prison Ii Chennai',
+            'Central Prison-ii Chennai', 'Central Prison - Ii, Chennai',
+            'Central Prison - 2 Chennai',
+        ]
+        self.assertEqual({geo.place_core(n) for n in same}, {geo.place_core('Chennai')})
 
     def test_a_name_made_only_of_kind_words_has_no_place(self):
         self.assertEqual(geo.place_core('Central Prison'), '')

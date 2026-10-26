@@ -78,7 +78,7 @@ def place_key(text):
     """
     key = _NOISE_WORDS.sub(' ', (text or '').lower())
     key = re.sub(r'[^a-z]', '', key)
-    for old, new in (('th', 't'), ('zh', 'l'), ('ee', 'i'), ('oo', 'u')):
+    for old, new in (('th', 't'), ('zh', 'l'), ('ee', 'i'), ('oo', 'u'), ('c', 'k')):
         key = key.replace(old, new)
     return re.sub(r'(.)\1+', r'\1', key)
 
@@ -194,9 +194,14 @@ _KIND_WORDS = frozenset({
     'sub', 'special', 'for', 'the', 'open', 'air', 'farm', 'transit', 'yard',
     'women', 'womens', 'woman', 'female', 'male', 'men', 'mens',
     'annex', 'closed', 'facility',
-    # abbreviations: S.J., D.J., SPW, OAJ, WSJ
-    's', 'j', 'd', 'sj', 'dj', 'spw', 'oaj', 'wsj',
+    # abbreviations: S.J., SSJ, D.J., SPW, OAJ, WSJ
+    's', 'j', 'd', 'sj', 'ssj', 'dj', 'spw', 'oaj', 'wsj',
 })
+
+
+# "Central Prison - II Chennai" and "Chennai - II" are the same town: a roman
+# numeral numbers the institution, wherever it is written.
+_ROMAN_NUMERALS = frozenset({'i', 'ii', 'iii', 'iv'})
 
 
 def place_core(name):
@@ -206,4 +211,5 @@ def place_core(name):
     give the same key. Compare it together with the institution type.
     """
     tokens = re.sub(r'[^a-z0-9]+', ' ', (name or '').lower()).split()
-    return place_key(' '.join(t for t in tokens if t not in _KIND_WORDS))
+    skipped = _KIND_WORDS | _ROMAN_NUMERALS
+    return place_key(' '.join(t for t in tokens if t not in skipped))
