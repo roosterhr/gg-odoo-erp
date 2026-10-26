@@ -1,6 +1,7 @@
 # Part of TNPD Prison HR Employee Extension.
 # License: LGPL-3
 
+from . import tnpd_scope_mixin
 from . import ir_attachment
 from . import hr_employee
 from . import res_users

@@ -15,7 +15,7 @@ _TEXT_FIELDS = ('x_central_prison', 'x_district_jail', 'x_sub_jail')
 class PrisonJail(models.Model):
     """Keep officers posted by name (old text fields) in step with the institutions."""
 
-    _inherit = 'prison.jail'
+    _inherit = ['prison.jail', 'tnpd.scope.mixin']
 
     @api.model
     def _refresh_officer_distances(self, names=None):
@@ -87,3 +87,6 @@ class PrisonJail(models.Model):
         result = super().unlink()
         self.env['prison.jail']._refresh_after_change(names)
         return result
+
+    def _tnpd_scope_domain(self, jail_ids):
+        return [('id', 'in', jail_ids)]

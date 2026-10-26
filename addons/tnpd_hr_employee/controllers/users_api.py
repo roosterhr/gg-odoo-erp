@@ -176,13 +176,33 @@ class UsersApiController(http.Controller):
         return uid, None
 
     def _is_admin_user(self, user):
+        """Admin privileges AND Headquarters scope: only HQ manages logins."""
         try:
             return (
                 user.has_group('base.group_system') or
                 user.has_group('base.group_erp_manager')
-            )
+            ) and request.env['res.users']._tnpd_user_is_hq(user)
         except Exception:
             return False
+
+    def _read_scope(self, body):
+        """
+        (access_scope, jail_ids, error) from an invite / update body.
+        Regional needs at least one existing institution; HQ keeps none.
+        """
+        scope = (body.get('access_scope') or 'hq').strip().lower()
+        if scope not in ('hq', 'regional'):
+            return None, None, 'access_scope must be "hq" or "regional".'
+        if scope == 'hq':
+            return scope, [], None
+        try:
+            ids = sorted({int(i) for i in (body.get('jurisdiction_jail_ids') or [])})
+        except (TypeError, ValueError):
+            return None, None, 'jurisdiction_jail_ids must be a list of numbers.'
+        found = request.env['prison.jail'].sudo().with_context(active_test=False).search([('id', 'in', ids)])
+        if not ids or len(found) != len(ids):
+            return None, None, 'A Regional user needs at least one valid institution.'
+        return scope, ids, None
 
     def _get_user_type(self, user):
         try:
@@ -261,6 +281,8 @@ class UsersApiController(http.Controller):
             'institution_type': institution_type,
             'central_jail_id':   central_jail_id,
             'central_jail_name': central_jail_name,
+            'access_scope':      user.x_access_scope or 'hq',
+            'jurisdiction':      [{'id': j.id, 'name': j.name} for j in user.x_jurisdiction_jail_ids],
         }
 
     # ── GET /api/users ────────────────────────────────────────────────────────
@@ -393,6 +415,14 @@ class UsersApiController(http.Controller):
             user_vals = {'name': name}
             if email:
                 user_vals['email'] = email
+            if 'access_scope' in body:
+                access_scope, jail_ids, scope_err = self._read_scope(body)
+                if scope_err:
+                    return self._err(scope_err)
+                if user.id == uid and access_scope != 'hq':
+                    return self._err('You cannot take away your own Headquarters access.')
+                user_vals['x_access_scope'] = access_scope
+                user_vals['x_jurisdiction_jail_ids'] = [(6, 0, jail_ids)]
             user.write(user_vals)
 
             emp = user.employee_ids[:1] if user.employee_ids else None
@@ -512,6 +542,9 @@ class UsersApiController(http.Controller):
             return self._err('Invalid email address format.')
         if user_type not in ('admin', 'user'):
             return self._err('user_type must be "admin" or "user".')
+        access_scope, jail_ids, scope_err = self._read_scope(body)
+        if scope_err:
+            return self._err(scope_err)
 
         # Block duplicate active invitations for same email
         ICP = request.env['ir.config_parameter'].sudo()
@@ -542,6 +575,8 @@ class UsersApiController(http.Controller):
             'email':           email,
             'name':            name,
             'user_type':       user_type,
+            'access_scope':    access_scope,
+            'jurisdiction_jail_ids': jail_ids,
             'expires':         expires,
             'created_at':      now.isoformat(),
             'used':            False,
@@ -781,6 +816,10 @@ class UsersApiController(http.Controller):
                     "INSERT INTO res_groups_users_rel (gid, uid) VALUES (%s, %s) ON CONFLICT DO NOTHING",
                     (group_erp.id, new_user.id),
                 )
+            new_user.write({
+                'x_access_scope': payload.get('access_scope') or 'hq',
+                'x_jurisdiction_jail_ids': [(6, 0, payload.get('jurisdiction_jail_ids') or [])],
+            })
             from passlib.context import CryptContext
             _crypt_ctx = CryptContext(schemes=['pbkdf2_sha512'], deprecated=['auto'])
             hashed = _crypt_ctx.hash(password)
@@ -1105,6 +1144,9 @@ class UsersApiController(http.Controller):
                 name=user.name,
                 login=user.login,
                 must_change_password=must_change,
+                access_scope=user.x_access_scope or 'hq',
+                is_hq=request.env['res.users']._tnpd_user_is_hq(user),
+                jurisdiction=[{'id': j.id, 'name': j.name} for j in user.x_jurisdiction_jail_ids],
             )
 
         except Exception as exc:

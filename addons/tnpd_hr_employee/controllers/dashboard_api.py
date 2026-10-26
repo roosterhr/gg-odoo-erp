@@ -23,6 +23,8 @@ from datetime import date, timedelta
 from odoo import http
 from odoo.http import request
 
+from ..scope import scoped
+
 _logger = logging.getLogger(__name__)
 
 # Officers with more than this many years at the current posting are eligible
@@ -60,8 +62,8 @@ class DashboardApiController(http.Controller):
             return err
 
         env = request.env(user=uid)
-        Employee = env['hr.employee'].sudo()
-        Transfer = env['transfer.approval.request'].sudo()
+        Employee = scoped(env, 'hr.employee')
+        Transfer = scoped(env, 'transfer.approval.request')
         User = env['res.users'].sudo()
 
         # Employee counts
@@ -99,7 +101,7 @@ class DashboardApiController(http.Controller):
         # Institutions — distinct jails from prison.jail master
         try:
             env.cr.execute('SAVEPOINT dashboard_jail')
-            Jail = env['prison.jail'].sudo()
+            Jail = scoped(env, 'prison.jail')
             central_jails  = Jail.search([('jail_type', '=', 'central_jail'), ('active', '=', True)])
             district_jails = Jail.search([('jail_type', '=', 'district_jail'),  ('active', '=', True)])
             sub_jails      = Jail.search([('jail_type', '=', 'sub_jail'),        ('active', '=', True)])
@@ -287,7 +289,7 @@ class DashboardApiController(http.Controller):
         if params.get('designation'):
             domain.append(('x_designation', '=', params['designation']))
 
-        Employee = env['hr.employee'].sudo()
+        Employee = scoped(env, 'hr.employee')
         employees = Employee.search(domain)
 
         # Group by designation
@@ -335,8 +337,8 @@ class DashboardApiController(http.Controller):
             return err
 
         env = request.env(user=uid)
-        Employee = env['hr.employee'].sudo()
-        Jail = env['prison.jail'].sudo()
+        Employee = scoped(env, 'hr.employee')
+        Jail = scoped(env, 'prison.jail')
 
         all_jails = Jail.search([('active', '=', True)], order='name')
         jail_name_map = {j.name.strip().lower(): j for j in all_jails if j.name}
@@ -404,7 +406,7 @@ class DashboardApiController(http.Controller):
         env = request.env(user=uid)
         category_id = request.httprequest.args.get('categoryId', '')
         try:
-            Jail = env['prison.jail'].sudo()
+            Jail = scoped(env, 'prison.jail')
             domain = [('active', '=', True)]
             if category_id == 'women_prison':
                 # Women's prisons are central_jail with 'special' in name
@@ -443,7 +445,7 @@ class DashboardApiController(http.Controller):
         inst_filter = params.get('institutionId', '')
         status_filter = params.get('status', '')
 
-        Employee = env['hr.employee'].sudo()
+        Employee = scoped(env, 'hr.employee')
 
         emp_domain = [('active', '=', True)]
         _STATUS_MAP = {
@@ -517,7 +519,7 @@ class DashboardApiController(http.Controller):
         # Prison counts per category — women's prisons are central_jail with 'special' in name
         prison_counts = {'central_prison': 6, 'women_prison': 2, 'district_jail': 49, 'sub_jail': 119}
         try:
-            Jail = env['prison.jail'].sudo()
+            Jail = scoped(env, 'prison.jail')
             all_central = Jail.search([('jail_type', '=', 'central_jail'), ('active', '=', True)])
             women = all_central.filtered(lambda j: 'special' in (j.name or '').lower())
             prison_counts['central_prison'] = len(all_central) - len(women)
@@ -556,7 +558,7 @@ class DashboardApiController(http.Controller):
             return err
 
         env = request.env(user=uid)
-        Employee = env['hr.employee'].sudo()
+        Employee = scoped(env, 'hr.employee')
         today = date.today()
 
         employees = Employee.search([('active', '=', True)])

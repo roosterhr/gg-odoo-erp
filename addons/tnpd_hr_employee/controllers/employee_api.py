@@ -12,6 +12,8 @@ from odoo import http
 from odoo.http import request
 from odoo.osv import expression
 
+from ..scope import require_hq, scoped
+
 _logger = logging.getLogger(__name__)
 
 # Institution-type words/abbreviations that prefix legacy free-text jail
@@ -394,7 +396,7 @@ class EmployeeAPI(http.Controller):
         Validate the three-tier jail hierarchy in vals.
         Returns (True, None) on success or (False, error_message) on failure.
         """
-        PrisonJail  = request.env['prison.jail'].sudo()
+        PrisonJail  = scoped(request.env, 'prison.jail')
         central_id  = vals.get('x_central_jail_id')
         district_id = vals.get('x_district_jail_id')
         sub_id      = vals.get('x_sub_jail_id')
@@ -472,7 +474,7 @@ class EmployeeAPI(http.Controller):
         if kwargs.get('jail_id'):
             try:
                 jail_id = int(kwargs['jail_id'])
-                jail = request.env['prison.jail'].sudo().browse(jail_id)
+                jail = scoped(request.env, 'prison.jail').browse(jail_id)
                 if jail.exists():
                     # Match only the employee's actual current posting, at
                     # whichever tier that is — sub > district > central,
@@ -529,7 +531,7 @@ class EmployeeAPI(http.Controller):
         elif kwargs.get('central_jail_id'):
             try:
                 cid = int(kwargs['central_jail_id'])
-                jail = request.env['prison.jail'].sudo().browse(cid)
+                jail = scoped(request.env, 'prison.jail').browse(cid)
                 name = jail.name if jail.exists() else ''
                 domain += ['|',
                     ('x_central_jail_id', '=', cid),
@@ -579,12 +581,12 @@ class EmployeeAPI(http.Controller):
         }
         """
         try:
-            active_officers = request.env['hr.employee'].sudo().search_count([
+            active_officers = scoped(request.env, 'hr.employee').search_count([
                 ('active', '=', True),
                 ('x_employee_code', '!=', False),
                 ('x_employee_code', '!=', ''),
             ])
-            prison_facilities = request.env['prison.jail'].sudo().search_count([
+            prison_facilities = scoped(request.env, 'prison.jail').search_count([
                 ('active', '=', True),
             ])
             return self._json_response({
@@ -706,7 +708,7 @@ class EmployeeAPI(http.Controller):
             }
             order = order_map.get(sort, 'name asc')
 
-            Employee    = request.env['hr.employee'].sudo()
+            Employee    = scoped(request.env, 'hr.employee')
             total_count = Employee.search_count(domain)
             records     = Employee.search(domain, offset=offset, limit=limit, order=order)
 
@@ -743,7 +745,7 @@ class EmployeeAPI(http.Controller):
                 'tenure':      'x_date_present_station asc',
             }
             order  = order_map.get(sort, 'name asc')
-            records = request.env['hr.employee'].sudo().search(domain, order=order)
+            records = scoped(request.env, 'hr.employee').search(domain, order=order)
 
             output = io.StringIO()
             writer = csv.writer(output)
@@ -818,6 +820,9 @@ class EmployeeAPI(http.Controller):
           "errors":   [{"row": <int>, "employee_id": <str>, "name": <str>, "message": <str>}]
         }
         """
+        denied = require_hq(request.session.uid)
+        if denied:
+            return denied
         try:
             file_obj = request.httprequest.files.get('file')
             if not file_obj:
@@ -863,8 +868,8 @@ class EmployeeAPI(http.Controller):
                     status=400,
                 )
 
-            Employee   = request.env['hr.employee'].sudo()
-            PrisonJail = request.env['prison.jail'].sudo()
+            Employee   = scoped(request.env, 'hr.employee')
+            PrisonJail = scoped(request.env, 'prison.jail')
 
             # Pre-load jail name→ID lookup map (case-insensitive)
             jail_name_map = {
@@ -977,7 +982,7 @@ class EmployeeAPI(http.Controller):
     def get_employee(self, employee_id, **kwargs):
         """Fetch a single employee by x_employee_code."""
         try:
-            emp = request.env['hr.employee'].sudo().search(
+            emp = scoped(request.env, 'hr.employee').search(
                 [('x_employee_code', '=', employee_id), ('active', '=', True)],
                 limit=1,
             )
@@ -1011,6 +1016,9 @@ class EmployeeAPI(http.Controller):
         employee_id* str  Unique employee code (required)
         + any fields listed in _SCALAR_FIELDS, _DATE_FIELDS, _M2O_FIELDS
         """
+        denied = require_hq(request.session.uid)
+        if denied:
+            return denied
         try:
             raw = request.httprequest.get_data(as_text=True)
             try:
@@ -1034,7 +1042,7 @@ class EmployeeAPI(http.Controller):
                 )
 
             # Uniqueness check
-            existing = request.env['hr.employee'].sudo().search(
+            existing = scoped(request.env, 'hr.employee').search(
                 [('x_employee_code', '=', data['employee_id'].strip())], limit=1,
             )
             if existing:
@@ -1051,7 +1059,7 @@ class EmployeeAPI(http.Controller):
             if not ok:
                 return self._json_response({'success': False, 'message': err}, status=400)
 
-            emp = request.env['hr.employee'].sudo().create(vals)
+            emp = scoped(request.env, 'hr.employee').create(vals)
             self._update_vacancy(None, self._get_assigned_jail_id(emp))
             return self._json_response(
                 {'success': True, 'message': 'Employee created', 'employee': self._format_employee(emp)},
@@ -1079,8 +1087,11 @@ class EmployeeAPI(http.Controller):
 
         Request body (JSON) — any subset of writable fields.
         """
+        denied = require_hq(request.session.uid)
+        if denied:
+            return denied
         try:
-            emp = request.env['hr.employee'].sudo().search(
+            emp = scoped(request.env, 'hr.employee').search(
                 [('x_employee_code', '=', employee_id)], limit=1,
             )
             if not emp:
@@ -1101,7 +1112,7 @@ class EmployeeAPI(http.Controller):
             # If employee_id is being changed, check uniqueness
             new_code = str(data.get('employee_id', '')).strip()
             if new_code and new_code != employee_id:
-                conflict = request.env['hr.employee'].sudo().search(
+                conflict = scoped(request.env, 'hr.employee').search(
                     [('x_employee_code', '=', new_code), ('id', '!=', emp.id)], limit=1,
                 )
                 if conflict:
@@ -1147,7 +1158,7 @@ class EmployeeAPI(http.Controller):
                 return err
 
             env = request.env(user=uid)
-            emp = env['hr.employee'].sudo().search(
+            emp = scoped(env, 'hr.employee').search(
                 [('x_employee_code', '=', employee_id), ('active', '=', True)], limit=1,
             )
             if not emp:
@@ -1294,13 +1305,13 @@ class EmployeeAPI(http.Controller):
                 return err
 
             env = request.env(user=uid)
-            emp = env['hr.employee'].sudo().search(
+            emp = scoped(env, 'hr.employee').search(
                 [('x_employee_code', '=', employee_id), ('active', '=', True)], limit=1,
             )
             if not emp:
                 return self._json_response({'success': False, 'message': 'Employee not found'}, status=404)
 
-            requests = env['transfer.approval.request'].sudo().search(
+            requests = scoped(env, 'transfer.approval.request').search(
                 [('employee_id', '=', emp.id)],
                 order='create_date desc',
             )
@@ -1362,13 +1373,16 @@ class EmployeeAPI(http.Controller):
     )
     def delete_employee(self, employee_id, **kwargs):
         """Archive (soft-delete) an employee record identified by x_employee_code."""
+        denied = require_hq(request.session.uid)
+        if denied:
+            return denied
         try:
             uid, err = self._require_auth()
             if err:
                 return err
 
             env = request.env(user=uid)
-            emp = env['hr.employee'].sudo().search(
+            emp = scoped(env, 'hr.employee').search(
                 [('x_employee_code', '=', employee_id), ('active', '=', True)], limit=1,
             )
             if not emp:
