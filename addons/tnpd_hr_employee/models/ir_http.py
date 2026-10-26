@@ -6,8 +6,6 @@ from werkzeug.exceptions import Forbidden
 from odoo import models
 from odoo.http import request
 
-from .tnpd_scope_mixin import SCOPE_CTX
-
 _READ_ONLY_METHODS = ('GET', 'HEAD', 'OPTIONS')
 # What a Regional user may still change: their own password and profile.
 _REGIONAL_MAY_WRITE = ('/api/change-password', '/api/auth/change-password', '/api/profile')
@@ -18,9 +16,10 @@ class IrHttp(models.AbstractModel):
     The safety net under the per-endpoint scoping, for every /api/ route of every
     module (vacancy, institutions, ...):
 
-    * a Regional session is view only: anything but a read is refused;
-    * a Regional session's searches on employees, transfers and orders are limited
-      to its area (institutions and vacancies are the same for everyone).
+    A Regional session is view only: anything but a read is refused. Which screens a
+    Regional user sees limited to their area is decided by the endpoints themselves
+    (scope.scoped): personnel, transfers, orders and the dashboard. Everything else
+    (analytics, vacancy, institutions) is the same for everyone.
     """
 
     _inherit = 'ir.http'
@@ -37,4 +36,3 @@ class IrHttp(models.AbstractModel):
         if request.httprequest.method not in _READ_ONLY_METHODS \
                 and request.httprequest.path.rstrip('/') not in _REGIONAL_MAY_WRITE:
             raise Forbidden('Only Headquarters can do this.')
-        request.update_context(**{SCOPE_CTX: uid})

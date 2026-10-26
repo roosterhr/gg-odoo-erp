@@ -143,6 +143,17 @@ class TestJurisdictionHttp(HttpCase):
         self.authenticate('http_hq@test.local', 'http_hq@test.local')
         self.assertNotEqual(self._post('/api/vacancy/update').status_code, 403)
 
+    def test_analytics_and_vacancy_are_the_same_for_everyone(self):
+        seen = {}
+        for who in ('http_reg@test.local', 'http_hq@test.local'):
+            self.authenticate(who, who)
+            seen[who] = [self.url_open(path).json() for path in (
+                '/api/analytics/rank-distribution', '/api/analytics/institution-headcount',
+                '/api/analytics/retirement-forecast', '/api/analytics/vacancy-trend',
+                '/api/vacancy/dashboard',
+            )]
+        self.assertEqual(seen['http_reg@test.local'], seen['http_hq@test.local'])
+
     def test_regional_sees_all_prisons_in_the_lists_like_headquarters(self):
         names = {}
         for who in ('http_reg@test.local', 'http_hq@test.local'):

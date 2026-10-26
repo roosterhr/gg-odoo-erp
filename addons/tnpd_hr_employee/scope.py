@@ -42,11 +42,3 @@ def require_hq(uid):
         json.dumps({'success': False, 'message': 'Only Headquarters can do this.'}),
         headers=[('Content-Type', 'application/json')], status=403,
     )
-
-
-def scope_ids(uid, model):
-    """None for Headquarters, otherwise the ids of ``model`` records inside the caller's area.
-    For raw SQL, which the model filter cannot reach: ``AND id = ANY(%s)``."""
-    if is_hq(uid):
-        return None
-    return scoped(request.env, model, uid).with_context(active_test=False).search([]).ids

@@ -11,8 +11,6 @@ from dateutil.relativedelta import relativedelta
 from odoo import http
 from odoo.http import request
 
-from ..scope import is_hq, scope_ids, scoped
-
 _logger = logging.getLogger(__name__)
 
 
@@ -39,8 +37,8 @@ class AnalyticsAPI(http.Controller):
             return err
         try:
             env = request.env(user=uid)
-            emp_model = scoped(env, 'hr.employee')
-            tar_model = scoped(env, 'transfer.approval.request')
+            emp_model = env['hr.employee'].sudo()
+            tar_model = env['transfer.approval.request'].sudo()
 
             today      = date.today()
             year_start = date(today.year, 1, 1)
@@ -120,14 +118,12 @@ class AnalyticsAPI(http.Controller):
             month_keys   = [m.strftime('%Y-%m') for m in months_list]
             month_labels = [m.strftime('%b') for m in months_list]
 
-            tar_ids = scope_ids(uid, 'transfer.approval.request')
             cr.execute("""
                 SELECT TO_CHAR(create_date, 'YYYY-MM') AS mk, COUNT(*) AS cnt
                 FROM transfer_approval_request
                 WHERE create_date >= %s AND create_date < %s
-                  AND (%s::int[] IS NULL OR id = ANY(%s))
                 GROUP BY mk
-            """, (str(start), str(end_excl), tar_ids, tar_ids))
+            """, (str(start), str(end_excl)))
             data_map = {r[0]: r[1] for r in cr.fetchall()}
 
             data = [{'month': month_labels[i], 'value': data_map.get(mk, 0)}
@@ -146,7 +142,6 @@ class AnalyticsAPI(http.Controller):
         try:
             cr = request.env.cr
             rank_type = kw.get('rank_type', 'all')
-            emp_ids = scope_ids(uid, 'hr.employee')
 
             rank_filter = ''
             if rank_type == 'officers':
@@ -163,18 +158,16 @@ class AnalyticsAPI(http.Controller):
                       OR x_designation ILIKE '%constable%')
                 """
 
-            rank_filter = rank_filter.replace('%', '%%')  # literal % once params are passed
             cr.execute(f"""
                 SELECT x_designation, COUNT(*) as count
                 FROM hr_employee
                 WHERE active = true AND x_designation IS NOT NULL AND x_designation != ''
                   AND x_employee_code IS NOT NULL AND x_employee_code != ''
-                  AND (%s::int[] IS NULL OR id = ANY(%s))
                 {rank_filter}
                 GROUP BY x_designation
                 ORDER BY count DESC
                 LIMIT 100
-            """, (emp_ids, emp_ids))
+            """)
             rows = cr.fetchall()
             total = sum(r[1] for r in rows)
             data = [{'name': r[0], 'value': r[1]} for r in rows]
@@ -192,7 +185,6 @@ class AnalyticsAPI(http.Controller):
         try:
             cr = request.env.cr
             inst_type = kw.get('inst_type', 'all')
-            emp_ids = scope_ids(uid, 'hr.employee')
 
             inst_filter = ''
             if inst_type == 'central':
@@ -202,7 +194,6 @@ class AnalyticsAPI(http.Controller):
             elif inst_type == 'sub':
                 inst_filter = "AND (pj.name ILIKE '%sub jail%' OR e.x_sub_jail ILIKE '%sub%')"
 
-            inst_filter = inst_filter.replace('%', '%%')
             cr.execute(f"""
                 SELECT
                     COALESCE(
@@ -215,7 +206,6 @@ class AnalyticsAPI(http.Controller):
                 WHERE e.active = true
                   AND e.x_employee_code IS NOT NULL
                   AND e.x_employee_code != ''
-                  AND (%s::int[] IS NULL OR e.id = ANY(%s))
                   {inst_filter}
                 GROUP BY institution
                 HAVING COALESCE(
@@ -225,7 +215,7 @@ class AnalyticsAPI(http.Controller):
                 ) != 'Unknown'
                 ORDER BY count DESC
                 LIMIT 100
-            """, (emp_ids, emp_ids))
+            """)
             rows = cr.fetchall()
             data = [{'name': r[0], 'count': r[1]} for r in rows]
             return self._json({'success': True, 'data': data})
@@ -242,7 +232,6 @@ class AnalyticsAPI(http.Controller):
         try:
             cr = request.env.cr
             today = date.today()
-            emp_ids = scope_ids(uid, 'hr.employee')
             data = []
             for i in range(6):
                 year_start = date(today.year + i, 1, 1)
@@ -252,8 +241,7 @@ class AnalyticsAPI(http.Controller):
                     WHERE active = true
                     AND x_date_of_retirement >= %s
                     AND x_date_of_retirement <= %s
-                    AND (%s::int[] IS NULL OR id = ANY(%s))
-                """, (str(year_start), str(year_end), emp_ids, emp_ids))
+                """, (str(year_start), str(year_end)))
                 count = cr.fetchone()[0]
                 data.append({'year': str(today.year + i), 'exits': count})
             return self._json({'success': True, 'data': data})
@@ -333,7 +321,6 @@ class AnalyticsAPI(http.Controller):
         try:
             cr = request.env.cr
             today = date.today()
-            tar_ids = scope_ids(uid, 'transfer.approval.request')
 
             last_6     = [(today - relativedelta(months=i)) for i in range(5, -1, -1)]
             months     = [m.strftime('%b') for m in last_6]
@@ -349,10 +336,9 @@ class AnalyticsAPI(http.Controller):
                 LEFT JOIN prison_jail pj ON pj.id = emp.x_district_jail_id
                 WHERE tar.create_date >= NOW() - INTERVAL '6 months'
                   AND emp.x_employee_code IS NOT NULL AND emp.x_employee_code != ''
-                  AND (%s::int[] IS NULL OR tar.id = ANY(%s))
                 GROUP BY month_key, emp.x_district_jail_id, emp.x_district_jail, emp.x_central_prison
                 ORDER BY district, month_key
-            """, (tar_ids, tar_ids))
+            """)
             rows = cr.fetchall()
 
             dist_map = {}
