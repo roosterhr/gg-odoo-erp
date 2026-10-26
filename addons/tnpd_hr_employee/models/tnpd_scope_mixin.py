@@ -42,15 +42,22 @@ class TnpdScopeMixin(models.AbstractModel):
         return cache[uid]
 
     @staticmethod
-    def _tnpd_is_id_lookup(domain):
-        """True for ``[('id', 'in', ids)]``: Odoo loading records it already holds (a related
-        officer, jail, ...), which must work whatever the area. Real searches never look like this."""
+    def _tnpd_is_record_load(domain, offset, limit, order, kwargs):
+        """
+        True for exactly what Odoo itself runs to load records it already holds (a related
+        officer or jail): ``_search([('id', 'in', ids)], active_test=False)``, with no
+        offset, limit or order. That must work whatever the area. A search by id written in
+        an endpoint has the default ``active_test`` and is therefore still limited.
+        """
+        if offset or limit or order or kwargs.get('active_test', True) is not False:
+            return False
         cond = Domain(domain)
         return isinstance(cond, DomainCondition) and cond.field_expr == 'id' and cond.operator == 'in'
 
     def _search(self, domain, offset=0, limit=None, order=None, **kwargs):
         uid = self.env.context.get(SCOPE_CTX)
-        if uid and self._tnpd_scope_applies() and not self._tnpd_is_id_lookup(domain):
+        if uid and self._tnpd_scope_applies() and not self._tnpd_is_record_load(
+                domain, offset, limit, order, kwargs):
             jail_ids = self._tnpd_scope_ids_of(uid)
             if jail_ids is not None:
                 domain = Domain(domain) & Domain(self._tnpd_scope_domain(jail_ids))

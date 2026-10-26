@@ -13,14 +13,24 @@ their institutions and everything under them, and cannot act.
 
 import json
 
+from werkzeug.exceptions import Forbidden
+
 from odoo.http import request
 
 from .models.tnpd_scope_mixin import SCOPE_CTX
 
 
 def scoped(env, model, uid=None):
-    """``env[model]`` as sudo, but every search limited to the caller's area."""
-    uid = uid or request.session.uid
+    """
+    ``env[model]`` as sudo, but every search limited to the caller's area.
+
+    Fails closed: with no signed-in user there is no area to apply, so it refuses
+    rather than quietly returning everything. Public endpoints must not call it.
+    """
+    if not uid and request:
+        uid = request.session.uid
+    if not uid:
+        raise Forbidden('Authentication required.')
     return env[model].sudo().with_context(**{SCOPE_CTX: uid})
 
 
@@ -31,12 +41,16 @@ def scoped_jails(env, uid=None):
 
 
 def is_hq(uid):
+    """True if the user ``uid`` has Headquarters access (Odoo system admins always do)."""
     return request.env['res.users']._tnpd_user_is_hq(request.env['res.users'].sudo().browse(uid))
 
 
 def require_hq(uid):
-    """None for Headquarters, otherwise a 403 response."""
-    if is_hq(uid):
+    """
+    None for Headquarters, otherwise a 403 response. With no signed-in user it also
+    returns None: the handler's own sign-in check then answers 401, as it always did.
+    """
+    if not uid or is_hq(uid):
         return None
     return request.make_response(
         json.dumps({'success': False, 'message': 'Only Headquarters can do this.'}),

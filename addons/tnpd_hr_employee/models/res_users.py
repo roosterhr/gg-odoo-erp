@@ -2,6 +2,8 @@
 # License: LGPL-3
 
 from odoo import api, fields, models
+from odoo.exceptions import AccessDenied, AccessError
+from odoo.http import request
 
 
 class ResUsers(models.Model):
@@ -65,3 +67,46 @@ class ResUsers(models.Model):
             level = Jail.search([('parent_id', 'in', level.ids)]) - found
             found |= level
         return found.ids
+
+    # Who may change a login's area: Headquarters (or code running as superuser).
+    _TNPD_SCOPE_FIELDS = ('x_access_scope', 'x_jurisdiction_jail_ids')
+
+    # The only ways a Regional login may prove who it is: the app's own sign-in, and
+    # re-checking the password when changing it. Odoo's /jsonrpc, /xmlrpc and API keys
+    # are not among them, so those doors stay shut for a Regional login.
+    _TNPD_REGIONAL_SIGN_IN = (
+        '/web/session/authenticate', '/web/login',
+        '/api/change-password', '/api/auth/change-password',
+    )
+
+    def _tnpd_check_may_change_scope(self, vals):
+        if not self.env.su and any(f in vals for f in self._TNPD_SCOPE_FIELDS) \
+                and not self._tnpd_user_is_hq(self.env.user):
+            raise AccessError("Only Headquarters can change a login's access scope.")
+
+    def write(self, vals):
+        self._tnpd_check_may_change_scope(vals)
+        return super().write(vals)
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        for vals in vals_list:
+            self._tnpd_check_may_change_scope(vals)
+        return super().create(vals_list)
+
+    def _check_credentials(self, credential, env):
+        """
+        A Regional login signs in through the app only. Without this, its own password
+        would open Odoo's standard RPC (``/jsonrpc``, ``/xmlrpc``, API keys), which knows
+        nothing about the area.
+
+        A sign-in page is ``interactive``; RPC and API keys are not, and Odoo runs them
+        without a web request attached, so the request cannot be used to tell them apart.
+        The one non-interactive check allowed is the app's own change-password route.
+        """
+        interactive = bool((env or {}).get('interactive'))
+        if not interactive and self.sudo().x_access_scope == 'regional' \
+                and not self.sudo().has_group('base.group_system') \
+                and not (request and request.httprequest.path.rstrip('/') in self._TNPD_REGIONAL_SIGN_IN):
+            raise AccessDenied()
+        return super()._check_credentials(credential, env)

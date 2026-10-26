@@ -396,7 +396,7 @@ class EmployeeAPI(http.Controller):
         Validate the three-tier jail hierarchy in vals.
         Returns (True, None) on success or (False, error_message) on failure.
         """
-        PrisonJail  = scoped(request.env, 'prison.jail')
+        PrisonJail  = request.env['prison.jail'].sudo()
         central_id  = vals.get('x_central_jail_id')
         district_id = vals.get('x_district_jail_id')
         sub_id      = vals.get('x_sub_jail_id')
@@ -474,7 +474,7 @@ class EmployeeAPI(http.Controller):
         if kwargs.get('jail_id'):
             try:
                 jail_id = int(kwargs['jail_id'])
-                jail = scoped(request.env, 'prison.jail').browse(jail_id)
+                jail = request.env['prison.jail'].sudo().browse(jail_id)
                 if jail.exists():
                     # Match only the employee's actual current posting, at
                     # whichever tier that is — sub > district > central,
@@ -531,7 +531,7 @@ class EmployeeAPI(http.Controller):
         elif kwargs.get('central_jail_id'):
             try:
                 cid = int(kwargs['central_jail_id'])
-                jail = scoped(request.env, 'prison.jail').browse(cid)
+                jail = request.env['prison.jail'].sudo().browse(cid)
                 name = jail.name if jail.exists() else ''
                 domain += ['|',
                     ('x_central_jail_id', '=', cid),
@@ -581,12 +581,12 @@ class EmployeeAPI(http.Controller):
         }
         """
         try:
-            active_officers = scoped(request.env, 'hr.employee').search_count([
+            active_officers = request.env['hr.employee'].sudo().search_count([
                 ('active', '=', True),
                 ('x_employee_code', '!=', False),
                 ('x_employee_code', '!=', ''),
             ])
-            prison_facilities = scoped(request.env, 'prison.jail').search_count([
+            prison_facilities = request.env['prison.jail'].sudo().search_count([
                 ('active', '=', True),
             ])
             return self._json_response({
@@ -651,17 +651,12 @@ class EmployeeAPI(http.Controller):
             if err:
                 return err
 
-            request.env.cr.execute("""
-                SELECT DISTINCT x_designation
-                FROM hr_employee
-                WHERE active = true
-                  AND x_employee_code IS NOT NULL
-                  AND x_employee_code != ''
-                  AND x_designation IS NOT NULL
-                  AND x_designation != ''
-                ORDER BY x_designation ASC
-            """)
-            designations = [row[0] for row in request.env.cr.fetchall()]
+            rows = scoped(request.env, 'hr.employee', uid).search_read([
+                ('active', '=', True),
+                ('x_employee_code', '!=', False), ('x_employee_code', '!=', ''),
+                ('x_designation', '!=', False), ('x_designation', '!=', ''),
+            ], ['x_designation'])
+            designations = sorted({row['x_designation'] for row in rows})
             return self._json_response({'success': True, 'designations': designations})
         except Exception as exc:
             _logger.exception('GET /api/employees/designations failed: %s', exc)
@@ -869,7 +864,7 @@ class EmployeeAPI(http.Controller):
                 )
 
             Employee   = scoped(request.env, 'hr.employee')
-            PrisonJail = scoped(request.env, 'prison.jail')
+            PrisonJail = request.env['prison.jail'].sudo()
 
             # Pre-load jail name→ID lookup map (case-insensitive)
             jail_name_map = {

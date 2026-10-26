@@ -286,7 +286,7 @@ class TransferApprovalController(http.Controller):
         }
         """
         try:
-            Jail = scoped(request.env, 'prison.jail')
+            Jail = request.env['prison.jail'].sudo()
 
             def _fetch(jail_type):
                 records = Jail.search(
@@ -380,7 +380,7 @@ class TransferApprovalController(http.Controller):
                 return self._err('Approval user not found', status=404)
 
             # --- Validate jail records and hierarchy -----------------------
-            Jail = scoped(env, 'prison.jail')
+            Jail = env['prison.jail'].sudo()
 
             central = Jail.browse(int(data['requested_central_prison']))
             if not central.exists() or central.jail_type not in ('central_jail', 'spw'):
@@ -584,7 +584,7 @@ class TransferApprovalController(http.Controller):
         """
         try:
             Vacancy  = env['prison.vacancy'].sudo()
-            PrisonJail = scoped(env, 'prison.jail')
+            PrisonJail = env['prison.jail'].sudo()
 
             jail_id = prison_id
             visited = set()                    # guard against circular refs
@@ -1214,7 +1214,7 @@ class TransferApprovalController(http.Controller):
                 return self._err('Approval user not found', status=404)
 
             # --- Validate jails ---
-            Jail = scoped(env, 'prison.jail')
+            Jail = env['prison.jail'].sudo()
 
             central = Jail.browse(int(data['requested_central_prison']))
             if not central.exists() or central.jail_type not in ('central_jail', 'spw'):
@@ -1770,7 +1770,7 @@ class TransferApprovalController(http.Controller):
             if not employee.exists():
                 return self._err('Employee not found', status=404)
 
-            Jail = scoped(env, 'prison.jail')
+            Jail = env['prison.jail'].sudo()
 
             central = Jail.browse(int(data['requested_central_prison']))
             if not central.exists() or central.jail_type not in ('central_jail', 'spw'):
@@ -1990,7 +1990,7 @@ class TransferApprovalController(http.Controller):
             env = request.env(user=uid)
 
             # Validate the prison.jail record exists
-            jail = scoped(env, 'prison.jail').browse(prison_id)
+            jail = env['prison.jail'].sudo().browse(prison_id)
             if not jail.exists():
                 return self._err(f'Prison not found: prison_id={prison_id}', status=404)
 
@@ -2096,7 +2096,7 @@ class TransferApprovalController(http.Controller):
                 return self._err('Missing or invalid prison_id')
 
             env = request.env(user=uid)
-            jail = scoped(env, 'prison.jail').browse(prison_id)
+            jail = env['prison.jail'].sudo().browse(prison_id)
             if not jail.exists():
                 return self._err('Prison not found', status=404)
 
@@ -2206,7 +2206,7 @@ class TransferApprovalController(http.Controller):
             request_id = data.get('request_id') or False
 
             env = request.env(user=uid)
-            jail = scoped(env, 'prison.jail').browse(prison_id)
+            jail = env['prison.jail'].sudo().browse(prison_id)
             if not jail.exists():
                 return self._err('Prison not found', status=404)
 

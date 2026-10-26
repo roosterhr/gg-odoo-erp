@@ -52,3 +52,20 @@ def approved_transfer(env, fx, employee, transfer_type='request'):
     })
     request.write({'state': 'approved', 'approved_date': fields.Datetime.now()})
     return request
+
+
+def http_login(case, login, password=None):
+    """
+    Sign ``login`` in through the app's own sign-in URL, as the browser does.
+
+    ``HttpCase.authenticate`` signs in without a web request and as non-interactive, which
+    is exactly what a Regional login is refused (it must use the app's sign-in, not RPC).
+    """
+    import json
+    reply = case.url_open(
+        '/web/session/authenticate',
+        data=json.dumps({'jsonrpc': '2.0', 'params': {
+            'db': case.env.cr.dbname, 'login': login, 'password': password or login}}),
+        headers={'Content-Type': 'application/json'},
+    ).json()
+    assert reply.get('result', {}).get('uid'), 'sign-in failed for %s: %s' % (login, reply)
