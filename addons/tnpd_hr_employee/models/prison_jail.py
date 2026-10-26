@@ -90,3 +90,12 @@ class PrisonJail(models.Model):
 
     def _tnpd_scope_domain(self, jail_ids):
         return [('id', 'in', jail_ids)]
+
+    @api.model
+    def _tnpd_visible_ids(self):
+        """
+        None when the caller sees every institution, otherwise their ids. A hook for
+        code that cannot reach the ORM filter (raw SQL in the vacancy module).
+        """
+        uid = self.env.context.get('tnpd_scope_uid')
+        return self._tnpd_scope_ids_of(uid) if uid else None

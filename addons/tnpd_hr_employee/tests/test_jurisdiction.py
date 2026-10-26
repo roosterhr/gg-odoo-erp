@@ -1,7 +1,7 @@
 # Part of TNPD Prison HR Employee Extension.
 # License: LGPL-3
 
-from odoo.tests import TransactionCase, tagged
+from odoo.tests import HttpCase, TransactionCase, tagged
 
 from ..models.tnpd_scope_mixin import SCOPE_CTX
 from .common import approved_transfer, make_fixtures
@@ -83,3 +83,42 @@ class TestJurisdiction(TransactionCase):
     def test_a_search_by_id_is_still_limited(self):
         found = self._as(self.regional, 'hr.employee').search([('id', '=', self.far_officer.id)])
         self.assertFalse(found)
+
+
+@tagged('post_install', '-at_install')
+class TestJurisdictionHttp(HttpCase):
+    """The net under every /api/ route: a Regional session reads its area and cannot change anything."""
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        fx = make_fixtures(cls.env, 'ScopeHttp')
+        erp = cls.env.ref('base.group_erp_manager')
+        for login, scope, jails in (('http_hq@test.local', 'hq', []),
+                                    ('http_reg@test.local', 'regional', fx.src_central.ids)):
+            cls.env['res.users'].create({
+                'name': login, 'login': login, 'password': login, 'x_access_scope': scope,
+                'x_jurisdiction_jail_ids': [(6, 0, jails)], 'group_ids': [(4, erp.id)],
+            })
+        cls.fx = fx
+
+    def _post(self, path):
+        return self.url_open(path, data='{}', headers={'Content-Type': 'application/json'})
+
+    def test_regional_cannot_write_anywhere(self):
+        self.authenticate('http_reg@test.local', 'http_reg@test.local')
+        for path in ('/api/vacancy/update', '/api/employees', '/api/transfer/orders/create'):
+            self.assertEqual(self._post(path).status_code, 403, path)
+
+    def test_regional_may_still_read(self):
+        self.authenticate('http_reg@test.local', 'http_reg@test.local')
+        self.assertEqual(self.url_open('/api/employees?limit=1').status_code, 200)
+
+    def test_headquarters_is_not_blocked(self):
+        self.authenticate('http_hq@test.local', 'http_hq@test.local')
+        self.assertNotEqual(self._post('/api/vacancy/update').status_code, 403)
+
+    def test_regional_sees_only_their_prison_in_the_lists(self):
+        self.authenticate('http_reg@test.local', 'http_reg@test.local')
+        names = [p['name'] for p in self.url_open('/api/jails/hierarchy-with-vacancy').json().get('data', [])]
+        self.assertEqual(names, [self.fx.src_central.name])

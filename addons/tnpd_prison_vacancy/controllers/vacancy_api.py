@@ -68,6 +68,12 @@ def _clear_canonical_roles(env):
     recs.unlink()
 
 
+def _visible_prison_ids():
+    """None for a caller who sees every prison, else their prison ids (set by tnpd_hr_employee)."""
+    hook = getattr(request.env['prison.jail'], '_tnpd_visible_ids', None)
+    return hook() if hook else None
+
+
 class VacancyApiController(http.Controller):
 
     # ── Helpers ───────────────────────────────────────────────────────────────
@@ -191,6 +197,7 @@ class VacancyApiController(http.Controller):
         csrf=False,
     )
     def get_dashboard(self, **kwargs):
+        visible = _visible_prison_ids()
         # Stat cards — totals scoped to the 6 canonical roles only
         request.env.cr.execute("""
             SELECT
@@ -201,7 +208,8 @@ class VacancyApiController(http.Controller):
               FROM prison_designation_vacancy dv
              WHERE dv.role_id IN %s
                AND dv.hierarchy_type IN %s
-        """, [_CANONICAL_IDS, _COUNTED_HIERARCHY_TYPES])
+               AND (%s::int[] IS NULL OR dv.prison_id = ANY(%s))
+        """, [_CANONICAL_IDS, _COUNTED_HIERARCHY_TYPES, visible, visible])
         row = request.env.cr.fetchone()
         total_sanctioned = int(row[0] or 0)
         total_filled     = int(row[1] or 0)
@@ -218,8 +226,9 @@ class VacancyApiController(http.Controller):
                   JOIN prison_role r ON r.id = dv.role_id
                  WHERE dv.role_id IN %s
                    AND dv.hierarchy_type IN %s
+                   AND (%s::int[] IS NULL OR dv.prison_id = ANY(%s))
             """
-            params = [_CANONICAL_IDS, _COUNTED_HIERARCHY_TYPES]
+            params = [_CANONICAL_IDS, _COUNTED_HIERARCHY_TYPES, visible, visible]
             if hierarchy_filter:
                 sql += " AND dv.hierarchy_type = %s"
                 params.append(hierarchy_filter)
