@@ -89,7 +89,18 @@ class PrisonJail(models.Model):
         return result
 
     def _tnpd_scope_domain(self, jail_ids):
-        return [('id', 'in', jail_ids)]
+        """
+        The user's institutions, plus the ones above them by name only, so lists built from
+        the top (central prison, then its jails) still reaches a district or sub-jail login.
+        Employees, transfers and vacancies stay limited to ``jail_ids``.
+        """
+        plain = self.env['prison.jail'].sudo().with_context(tnpd_scope_uid=False, active_test=False)
+        above = plain.browse(jail_ids)
+        parents = above.parent_id
+        while parents - above:
+            above |= parents
+            parents = above.parent_id
+        return [('id', 'in', above.ids)]
 
     @api.model
     def _tnpd_visible_ids(self):

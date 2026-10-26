@@ -80,6 +80,18 @@ class TestJurisdiction(TransactionCase):
         transfer = self._as(self.regional, 'transfer.approval.request').search([('id', '=', self.transfer.id)])
         self.assertEqual(transfer.requested_central_prison.name, self.fx.dst_central.name)
 
+    def test_a_sub_jail_login_sees_only_itself_and_its_parent_by_name(self):
+        sub_user = self.env['res.users'].create({
+            'name': 'Scope Sub', 'login': 'scope_sub_t@test.local', 'x_access_scope': 'regional',
+            'x_jurisdiction_jail_ids': [(6, 0, [self.fx.src_sub.id])],
+        })
+        self.assertEqual(sub_user._tnpd_scope_jail_ids(), [self.fx.src_sub.id])
+        jails = self._as(sub_user, 'prison.jail').search([])
+        self.assertEqual(set(jails.ids), {self.fx.src_sub.id, self.fx.src_central.id})
+        # the parent's name shows, its officers and the sibling jails' do not
+        self.assertEqual(self._as(sub_user, 'hr.employee').search_count([]), len(self.fx.officers) + 1)
+        self.assertNotIn(self.fx.dst_sub, jails)
+
     def test_a_search_by_id_is_still_limited(self):
         found = self._as(self.regional, 'hr.employee').search([('id', '=', self.far_officer.id)])
         self.assertFalse(found)
