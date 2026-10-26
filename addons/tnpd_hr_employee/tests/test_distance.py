@@ -155,6 +155,10 @@ class TestOfficerDistance(TransactionCase):
         emp = self._officer('Vellore', x_central_prison='Central Prison, Gamma')
         self.assertEqual(emp.x_distance_band, 'yellow', 'the central prison, not the women\'s one')
 
+    def test_roman_numeral_before_the_town_still_matches(self):
+        emp = self._officer('Vellore', x_central_prison='Central Prison - Ii Gamma')
+        self.assertEqual(emp.x_distance_band, 'yellow')
+
     def test_a_name_that_says_women_looks_among_the_women_prisons(self):
         self._women_prison()
         emp = self._officer('Vellore', x_central_prison='Special Prison for Women, Gamma')
