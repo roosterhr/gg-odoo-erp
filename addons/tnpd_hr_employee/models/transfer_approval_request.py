@@ -36,6 +36,7 @@ class TransferApprovalRequest(models.Model):
     """
 
     _name = 'transfer.approval.request'
+    _inherit = ['tnpd.scope.mixin']
     _description = 'Transfer Approval Request'
     _rec_name = 'employee_id'
     _order = 'create_date desc'
@@ -927,3 +928,12 @@ class TransferApprovalRequest(models.Model):
             limit=1,
         )
         return record.id if record else False
+
+    def _tnpd_scope_domain(self, jail_ids):
+        """Officers in the area, or posted there when the transfer was raised."""
+        employees = self.env['hr.employee']._tnpd_scope_domain(jail_ids)
+        return ['|', '|', '|',
+                ('current_central_prison', 'in', jail_ids),
+                ('current_district_jail', 'in', jail_ids),
+                ('current_sub_jail', 'in', jail_ids),
+                ('employee_id', 'any', employees)]

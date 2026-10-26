@@ -33,6 +33,7 @@ class TransferOrder(models.Model):
     """
 
     _name = 'transfer.order'
+    _inherit = ['tnpd.scope.mixin']
     _description = 'Transfer Order (Proceedings)'
     _order = 'id desc'
 
@@ -259,3 +260,8 @@ class TransferOrder(models.Model):
         if any(o.state != 'draft' for o in self):
             raise UserError('Issued and cancelled orders are kept for the record and cannot be deleted.')
         return super().unlink()
+
+    def _tnpd_scope_domain(self, jail_ids):
+        """Orders that carry at least one transfer inside the area."""
+        requests = self.env['transfer.approval.request']._tnpd_scope_domain(jail_ids)
+        return [('transfer_ids', 'any', requests)]

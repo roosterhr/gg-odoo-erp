@@ -9,6 +9,8 @@ from datetime import date, timedelta
 from odoo import fields, http
 from odoo.http import request
 
+from ..scope import require_hq, scoped
+
 _logger = logging.getLogger(__name__)
 
 # Hard cap on records returned per page.
@@ -347,6 +349,9 @@ class TransferApprovalController(http.Controller):
         • district jail must be a child of the given central jail
         • sub jail must be a child of the given district jail
         """
+        denied = require_hq(request.session.uid)
+        if denied:
+            return denied
         try:
             uid, err = self._require_auth()
             if err:
@@ -400,7 +405,7 @@ class TransferApprovalController(http.Controller):
             transfer_type = data.get('transfer_type', 'tenure')
 
             # --- Prevent duplicate pending requests (same type) -----------
-            existing = env['transfer.approval.request'].sudo().search([
+            existing = scoped(env, 'transfer.approval.request').search([
                 ('employee_id', '=', employee.id),
                 ('transfer_type', '=', transfer_type),
                 ('state', '=', 'pending'),
@@ -514,7 +519,7 @@ class TransferApprovalController(http.Controller):
                 ('active',           '=', True),
             ]
 
-            TransferRequest = env['transfer.approval.request'].sudo()
+            TransferRequest = scoped(env, 'transfer.approval.request')
             total_count     = TransferRequest.search_count(domain)
             records         = TransferRequest.search(
                 domain, offset=offset, limit=limit
@@ -548,7 +553,7 @@ class TransferApprovalController(http.Controller):
 
         Returns the hr.employee recordset (may be empty — caller must check .exists()).
         """
-        Employee = env['hr.employee'].sudo()
+        Employee = scoped(env, 'hr.employee')
         raw = str(employee_id_raw).strip()
 
         # Try x_employee_code lookup first (handles string codes from the Personnel API)
@@ -635,6 +640,9 @@ class TransferApprovalController(http.Controller):
         request_id  int     required
         remarks     string  required  (approval remarks, mandatory)
         """
+        denied = require_hq(request.session.uid)
+        if denied:
+            return denied
         try:
             uid, err = self._require_auth()
             if err:
@@ -653,7 +661,7 @@ class TransferApprovalController(http.Controller):
 
             env = request.env(user=uid)
 
-            tar = env['transfer.approval.request'].sudo().browse(
+            tar = scoped(env, 'transfer.approval.request').browse(
                 int(data['request_id'])
             )
             if not tar.exists():
@@ -855,6 +863,9 @@ class TransferApprovalController(http.Controller):
         ``approved_by`` / ``approved_date`` fields (same pattern as the
         approve flow; the ``state`` field disambiguates the action).
         """
+        denied = require_hq(request.session.uid)
+        if denied:
+            return denied
         try:
             uid, err = self._require_auth()
             if err:
@@ -869,7 +880,7 @@ class TransferApprovalController(http.Controller):
 
             env = request.env(user=uid)
 
-            tar = env['transfer.approval.request'].sudo().browse(
+            tar = scoped(env, 'transfer.approval.request').browse(
                 int(data['request_id'])
             )
             if not tar.exists():
@@ -994,6 +1005,9 @@ class TransferApprovalController(http.Controller):
         -----------
         request_id  int  required   Either request in the swap pair.
         """
+        denied = require_hq(request.session.uid)
+        if denied:
+            return denied
         try:
             uid, err = self._require_auth()
             if err:
@@ -1008,7 +1022,7 @@ class TransferApprovalController(http.Controller):
 
             env = request.env(user=uid)
 
-            tar = env['transfer.approval.request'].sudo().browse(int(data['request_id']))
+            tar = scoped(env, 'transfer.approval.request').browse(int(data['request_id']))
             if not tar.exists():
                 return self._err('Transfer request not found', status=404)
 
@@ -1107,7 +1121,7 @@ class TransferApprovalController(http.Controller):
                 if kwargs['reason'] in valid_cats:
                     domain.append(('reason_category', '=', kwargs['reason']))
 
-            TransferRequest = env['transfer.approval.request'].sudo()
+            TransferRequest = scoped(env, 'transfer.approval.request')
             total_count     = TransferRequest.search_count(domain)
             order = 'reason_score desc, id asc' if kwargs.get('sort') == 'priority' else 'id desc'
             records         = TransferRequest.search(
@@ -1155,6 +1169,9 @@ class TransferApprovalController(http.Controller):
         priority                  str  optional (default='medium')
         approval_user_id          int  required
         """
+        denied = require_hq(request.session.uid)
+        if denied:
+            return denied
         try:
             uid, err = self._require_auth()
             if err:
@@ -1215,7 +1232,7 @@ class TransferApprovalController(http.Controller):
                 return self._err('Invalid requested_sub_jail')
 
             # --- Check no existing draft/pending request ---
-            existing = env['transfer.approval.request'].sudo().search([
+            existing = scoped(env, 'transfer.approval.request').search([
                 ('employee_id', '=', employee.id),
                 ('state', 'in', ['draft', 'pending']),
                 ('active', '=', True),
@@ -1277,6 +1294,9 @@ class TransferApprovalController(http.Controller):
         -----------
         request_id  int  required
         """
+        denied = require_hq(request.session.uid)
+        if denied:
+            return denied
         try:
             uid, err = self._require_auth()
             if err:
@@ -1291,7 +1311,7 @@ class TransferApprovalController(http.Controller):
 
             env = request.env(user=uid)
 
-            tar = env['transfer.approval.request'].sudo().browse(int(data['request_id']))
+            tar = scoped(env, 'transfer.approval.request').browse(int(data['request_id']))
             if not tar.exists():
                 return self._err('Transfer request not found', status=404)
 
@@ -1342,6 +1362,9 @@ class TransferApprovalController(http.Controller):
         request_id  int  required
         remarks     str  optional
         """
+        denied = require_hq(request.session.uid)
+        if denied:
+            return denied
         try:
             uid, err = self._require_auth()
             if err:
@@ -1356,7 +1379,7 @@ class TransferApprovalController(http.Controller):
 
             env = request.env(user=uid)
 
-            tar = env['transfer.approval.request'].sudo().browse(int(data['request_id']))
+            tar = scoped(env, 'transfer.approval.request').browse(int(data['request_id']))
             if not tar.exists():
                 return self._err('Transfer request not found', status=404)
 
@@ -1507,7 +1530,7 @@ class TransferApprovalController(http.Controller):
         if search:
             emp_domain.extend(['|', ('name', 'ilike', search), ('x_employee_code', 'ilike', search)])
 
-        all_employees = env['hr.employee'].sudo().search(emp_domain)
+        all_employees = scoped(env, 'hr.employee').search(emp_domain)
 
         # Filter by tenure threshold (hill stations: 18 months, standard: 36 months)
         eligible = []
@@ -1544,7 +1567,7 @@ class TransferApprovalController(http.Controller):
                 ('active', '=', True),
             ]
 
-        blocked_requests = env['transfer.approval.request'].sudo().search(tenure_blocked_domain)
+        blocked_requests = scoped(env, 'transfer.approval.request').search(tenure_blocked_domain)
         blocked_emp_ids  = set(blocked_requests.mapped('employee_id').ids)
 
         # Filter out blocked employees
@@ -1724,6 +1747,9 @@ class TransferApprovalController(http.Controller):
         remarks                   str  optional
         priority                  str  optional (default='high')
         """
+        denied = require_hq(request.session.uid)
+        if denied:
+            return denied
         try:
             uid, err = self._require_auth()
             if err:
@@ -2081,7 +2107,7 @@ class TransferApprovalController(http.Controller):
             # officers are the most likely cohort still linked via the
             # pre-migration Char fields (same six-branch pattern as
             # employee_api.py, see PR #76).
-            occupants = env['hr.employee'].sudo().search([
+            occupants = scoped(env, 'hr.employee').search([
                 ('active', '=', True),
                 ('x_employee_code', '!=', False),
                 ('x_date_present_station', '!=', False),
@@ -2103,7 +2129,7 @@ class TransferApprovalController(http.Controller):
             # tenure-prompt matching.
             occupants = self._filter_occupants_by_role(env, occupants, kwargs.get('role_id'))
 
-            open_reqs = env['transfer.approval.request'].sudo().search([
+            open_reqs = scoped(env, 'transfer.approval.request').search([
                 ('employee_id', 'in', occupants.ids),
                 ('state', 'in', ['draft', 'pending']),
                 ('active', '=', True),
@@ -2158,6 +2184,9 @@ class TransferApprovalController(http.Controller):
         prison_id   int  required  (prison.jail id)
         request_id  int  optional  (transfer request that triggered this)
         """
+        denied = require_hq(request.session.uid)
+        if denied:
+            return denied
         try:
             uid, err = self._require_auth()
             if err:
@@ -2186,7 +2215,7 @@ class TransferApprovalController(http.Controller):
             years_label = '18 months' if jail.is_hill_station else '3 years'
 
             # Same six-branch M2O + legacy-text domain as overstay_occupants
-            occupants = env['hr.employee'].sudo().search([
+            occupants = scoped(env, 'hr.employee').search([
                 ('active', '=', True),
                 ('x_employee_code', '!=', False),
                 ('x_date_present_station', '!=', False),
@@ -2204,7 +2233,7 @@ class TransferApprovalController(http.Controller):
             occupants = self._filter_occupants_by_role(env, occupants, data.get('role_id'))
 
             # Skip occupants with an open transfer request of their own
-            open_reqs = env['transfer.approval.request'].sudo().search([
+            open_reqs = scoped(env, 'transfer.approval.request').search([
                 ('employee_id', 'in', occupants.ids),
                 ('state', 'in', ['draft', 'pending']),
                 ('active', '=', True),
@@ -2291,6 +2320,9 @@ class TransferApprovalController(http.Controller):
           "sent_date": "<datetime str>"
         }
         """
+        denied = require_hq(request.session.uid)
+        if denied:
+            return denied
         try:
             uid, err = self._require_auth()
             if err:
@@ -2332,7 +2364,7 @@ class TransferApprovalController(http.Controller):
             req_id = data.get('transfer_request_id')
             if req_id:
                 try:
-                    tar = env['transfer.approval.request'].sudo().browse(int(req_id))
+                    tar = scoped(env, 'transfer.approval.request').browse(int(req_id))
                     if tar.exists():
                         vals['transfer_request_id'] = tar.id
                 except (TypeError, ValueError):

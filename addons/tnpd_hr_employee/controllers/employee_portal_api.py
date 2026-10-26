@@ -19,6 +19,8 @@ from datetime import date
 from odoo import http, SUPERUSER_ID
 from odoo.http import request
 
+from ..scope import require_hq
+
 _logger = logging.getLogger(__name__)
 
 
@@ -1353,6 +1355,9 @@ class EmployeePortalAPI(http.Controller):
         uid = request.session.uid
         if not uid:
             return self._err('Authentication required', status=401)
+        denied = require_hq(uid)
+        if denied:
+            return denied
 
         request.update_env(user=uid)
         su_env = request.env

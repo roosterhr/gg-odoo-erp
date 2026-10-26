@@ -20,7 +20,7 @@ class HrEmployee(models.Model):
     view via XPath and do not need to be redeclared here.
     """
 
-    _inherit = 'hr.employee'
+    _inherit = ['hr.employee', 'tnpd.scope.mixin']
 
     # ── Gender (custom field since base sex field may not be in local DB) ──
 
@@ -492,3 +492,9 @@ class HrEmployee(models.Model):
                 return (point[0], point[1], point[2] or skipped)
             skipped = True
         return None
+
+    def _tnpd_scope_domain(self, jail_ids):
+        return ['|', '|',
+                ('x_central_jail_id', 'in', jail_ids),
+                ('x_district_jail_id', 'in', jail_ids),
+                ('x_sub_jail_id', 'in', jail_ids)]

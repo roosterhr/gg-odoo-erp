@@ -30,6 +30,8 @@ from odoo import fields, http
 from odoo.exceptions import UserError, ValidationError
 from odoo.http import content_disposition, request
 
+from ..scope import require_hq, scoped
+
 _logger = logging.getLogger(__name__)
 
 REPORT_NAME = 'tnpd_hr_employee.report_transfer_offer_letter'
@@ -100,7 +102,7 @@ class TransferOrderAPI(http.Controller):
 
     def _order(self, env, order_id):
         """(order, None), or (empty, 404 response) when there is no such order."""
-        order = env['transfer.order'].sudo().browse(order_id).exists()
+        order = scoped(env, 'transfer.order').search([('id', '=', order_id)])  # search, not exists(): applies the area
         return order, (None if order else self._err('Transfer order not found.', status=404))
 
     @staticmethod
@@ -164,7 +166,7 @@ class TransferOrderAPI(http.Controller):
         if kwargs.get('search'):
             domain += ['|', ('name', 'ilike', kwargs['search']),
                        ('transfer_ids.employee_id.name', 'ilike', kwargs['search'])]
-        Order = env['transfer.order'].sudo()
+        Order = scoped(env, 'transfer.order')
         orders = Order.search(domain, offset=(page - 1) * limit, limit=limit)
         return self._json({
             'success': True, 'page': page, 'limit': limit, 'total': Order.search_count(domain),
@@ -181,7 +183,7 @@ class TransferOrderAPI(http.Controller):
             limit = max(1, min(_MAX_LIMIT, int(kwargs.get('limit', 50))))
         except (TypeError, ValueError):
             return self._err('Invalid limit.')
-        issued = env['transfer.order'].sudo().search([('state', '=', 'issued')]).transfer_ids.ids
+        issued = scoped(env, 'transfer.order').search([('state', '=', 'issued')]).transfer_ids.ids
         domain = [('state', '=', 'approved'), ('id', 'not in', issued)]
         if kwargs.get('search'):
             domain += ['|', ('employee_id.name', 'ilike', kwargs['search']),
@@ -191,7 +193,7 @@ class TransferOrderAPI(http.Controller):
             domain += ['|', ('employee_id.x_role_id.name', '=', designation),
                        '&', ('employee_id.x_role_id', '=', False),
                        ('employee_id.x_designation', '=', designation)]
-        transfers = env['transfer.approval.request'].sudo().search(domain, order='id desc', limit=limit)
+        transfers = scoped(env, 'transfer.approval.request').search(domain, order='id desc', limit=limit)
         result = []
         for transfer in transfers:
             line = self._fmt_line(env, transfer)
@@ -216,6 +218,9 @@ class TransferOrderAPI(http.Controller):
     @http.route('/api/transfer/orders/create', auth='none', type='http', methods=['POST'],
                 csrf=False, readonly=False)
     def create_order(self, **_kw):
+        denied = require_hq(request.session.uid)
+        if denied:
+            return denied
         env, err = self._require_admin()
         if err:
             return err
@@ -228,12 +233,12 @@ class TransferOrderAPI(http.Controller):
             return self._err('request_ids must be a list of numbers.')
         if not ids:
             return self._err('request_ids is required.')
-        transfers = env['transfer.approval.request'].sudo().browse(ids).exists()
+        transfers = scoped(env, 'transfer.approval.request').browse(ids).exists()
         if len(transfers) != len(set(ids)):
             return self._err('Transfer not found.', status=404)
         try:
             with env.cr.savepoint():
-                order = env['transfer.order'].sudo()._draft_for_transfers(transfers)
+                order = scoped(env, 'transfer.order')._draft_for_transfers(transfers)
         except (UserError, ValidationError) as exc:
             return self._err(self._message(exc))
         return self._json({'success': True, 'order': self._fmt_order(env, order)})
@@ -241,6 +246,9 @@ class TransferOrderAPI(http.Controller):
     @http.route('/api/transfer/orders/<int:order_id>/update', auth='none', type='http',
                 methods=['POST'], csrf=False, readonly=False)
     def update_order(self, order_id, **_kw):
+        denied = require_hq(request.session.uid)
+        if denied:
+            return denied
         env, err = self._require_admin()
         if err:
             return err
@@ -301,11 +309,17 @@ class TransferOrderAPI(http.Controller):
     @http.route('/api/transfer/orders/<int:order_id>/issue', auth='none', type='http',
                 methods=['POST'], csrf=False, readonly=False)
     def issue_order(self, order_id, **_kw):
+        denied = require_hq(request.session.uid)
+        if denied:
+            return denied
         return self._transition(order_id, 'action_issue')
 
     @http.route('/api/transfer/orders/<int:order_id>/cancel', auth='none', type='http',
                 methods=['POST'], csrf=False, readonly=False)
     def cancel_order(self, order_id, **_kw):
+        denied = require_hq(request.session.uid)
+        if denied:
+            return denied
         return self._transition(order_id, 'action_cancel')
 
     # ── PDF ───────────────────────────────────────────────────────────────────
