@@ -24,6 +24,12 @@ def scoped(env, model, uid=None):
     return env[model].sudo().with_context(**{SCOPE_CTX: uid})
 
 
+def scoped_jails(env, uid=None):
+    """``prison.jail`` limited to the caller's area. Only the dashboard uses this; every
+    other institution list is the same for everyone."""
+    return scoped(env, 'prison.jail', uid).with_context(tnpd_scope_jails=True)
+
+
 def is_hq(uid):
     return request.env['res.users']._tnpd_user_is_hq(request.env['res.users'].sudo().browse(uid))
 
@@ -44,11 +50,3 @@ def scope_ids(uid, model):
     if is_hq(uid):
         return None
     return scoped(request.env, model, uid).with_context(active_test=False).search([]).ids
-
-
-def scope_jail_names(uid):
-    """None for Headquarters, otherwise the names of the caller's institutions
-    (for tables that record a posting by name, such as vacancies)."""
-    if is_hq(uid):
-        return None
-    return scoped(request.env, 'prison.jail', uid).with_context(active_test=False).search([]).mapped('name')

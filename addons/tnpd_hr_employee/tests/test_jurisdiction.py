@@ -4,6 +4,7 @@
 from odoo.tests import HttpCase, TransactionCase, tagged
 
 from ..models.tnpd_scope_mixin import SCOPE_CTX
+from ..scope import scoped_jails
 from .common import approved_transfer, make_fixtures
 
 
@@ -80,17 +81,29 @@ class TestJurisdiction(TransactionCase):
         transfer = self._as(self.regional, 'transfer.approval.request').search([('id', '=', self.transfer.id)])
         self.assertEqual(transfer.requested_central_prison.name, self.fx.dst_central.name)
 
-    def test_a_sub_jail_login_sees_only_itself_and_its_parent_by_name(self):
+    def test_a_sub_jail_login_sees_only_its_own_officers(self):
         sub_user = self.env['res.users'].create({
             'name': 'Scope Sub', 'login': 'scope_sub_t@test.local', 'x_access_scope': 'regional',
             'x_jurisdiction_jail_ids': [(6, 0, [self.fx.src_sub.id])],
         })
         self.assertEqual(sub_user._tnpd_scope_jail_ids(), [self.fx.src_sub.id])
-        jails = self._as(sub_user, 'prison.jail').search([])
-        self.assertEqual(set(jails.ids), {self.fx.src_sub.id, self.fx.src_central.id})
-        # the parent's name shows, its officers and the sibling jails' do not
         self.assertEqual(self._as(sub_user, 'hr.employee').search_count([]), len(self.fx.officers) + 1)
-        self.assertNotIn(self.fx.dst_sub, jails)
+
+    def test_institutions_are_the_same_for_everyone(self):
+        jails = self._as(self.regional, 'prison.jail').search([])
+        self.assertIn(self.fx.dst_central, jails)
+        self.assertEqual(len(jails), self.env['prison.jail'].sudo().search_count([]))
+
+    def test_only_the_dashboard_limits_institutions(self):
+        limited = self._as(self.regional, 'prison.jail').with_context(tnpd_scope_jails=True).search([])
+        self.assertEqual(set(limited.ids), {self.fx.src_central.id, self.fx.src_sub.id})
+
+    def test_dashboard_institution_lists_follow_the_area(self):
+        """Only the dashboard asks for institutions limited to the area."""
+        jails = scoped_jails(self.env, self.regional.id).search([])
+        self.assertEqual(set(jails.ids), {self.fx.src_central.id, self.fx.src_sub.id})
+        self.assertEqual(scoped_jails(self.env, self.hq.id).search_count([]),
+                         self.env['prison.jail'].sudo().search_count([]))
 
     def test_a_search_by_id_is_still_limited(self):
         found = self._as(self.regional, 'hr.employee').search([('id', '=', self.far_officer.id)])
@@ -130,7 +143,10 @@ class TestJurisdictionHttp(HttpCase):
         self.authenticate('http_hq@test.local', 'http_hq@test.local')
         self.assertNotEqual(self._post('/api/vacancy/update').status_code, 403)
 
-    def test_regional_sees_only_their_prison_in_the_lists(self):
-        self.authenticate('http_reg@test.local', 'http_reg@test.local')
-        names = [p['name'] for p in self.url_open('/api/jails/hierarchy-with-vacancy').json().get('data', [])]
-        self.assertEqual(names, [self.fx.src_central.name])
+    def test_regional_sees_all_prisons_in_the_lists_like_headquarters(self):
+        names = {}
+        for who in ('http_reg@test.local', 'http_hq@test.local'):
+            self.authenticate(who, who)
+            names[who] = [p['name'] for p in self.url_open('/api/jails/hierarchy-with-vacancy').json().get('data', [])]
+        self.assertEqual(names['http_reg@test.local'], names['http_hq@test.local'])
+        self.assertIn(self.fx.dst_central.name, names['http_reg@test.local'])

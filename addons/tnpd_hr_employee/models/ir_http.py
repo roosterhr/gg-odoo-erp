@@ -19,8 +19,8 @@ class IrHttp(models.AbstractModel):
     module (vacancy, institutions, ...):
 
     * a Regional session is view only: anything but a read is refused;
-    * a Regional session's searches on employees, transfers, orders, institutions
-      and vacancies are limited to its area.
+    * a Regional session's searches on employees, transfers and orders are limited
+      to its area (institutions and vacancies are the same for everyone).
     """
 
     _inherit = 'ir.http'

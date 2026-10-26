@@ -10,7 +10,9 @@ SCOPE_CTX = 'tnpd_scope_uid'
 
 class TnpdScopeMixin(models.AbstractModel):
     """
-    Limits every search on the model to the caller's jurisdiction.
+    Limits every search on the model to the caller's jurisdiction. Used for personnel
+    (employees) and transfers (requests, orders) only; institutions and vacancies are
+    the same for everyone.
 
     Active only when the context carries ``tnpd_scope_uid`` (set by
     ``scope.scoped``) and that user is Regional; Headquarters is never limited.
@@ -21,6 +23,10 @@ class TnpdScopeMixin(models.AbstractModel):
 
     _name = 'tnpd.scope.mixin'
     _description = 'TNPD jurisdiction filter'
+
+    def _tnpd_scope_applies(self):
+        """Whether this model is limited right now; a model can opt in per call."""
+        return True
 
     def _tnpd_scope_domain(self, jail_ids):
         """Domain that keeps only records inside ``jail_ids``. Set per model."""
@@ -44,7 +50,7 @@ class TnpdScopeMixin(models.AbstractModel):
 
     def _search(self, domain, offset=0, limit=None, order=None, **kwargs):
         uid = self.env.context.get(SCOPE_CTX)
-        if uid and not self._tnpd_is_id_lookup(domain):
+        if uid and self._tnpd_scope_applies() and not self._tnpd_is_id_lookup(domain):
             jail_ids = self._tnpd_scope_ids_of(uid)
             if jail_ids is not None:
                 domain = Domain(domain) & Domain(self._tnpd_scope_domain(jail_ids))

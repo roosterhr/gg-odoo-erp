@@ -11,7 +11,7 @@ from dateutil.relativedelta import relativedelta
 from odoo import http
 from odoo.http import request
 
-from ..scope import is_hq, scope_ids, scope_jail_names, scoped
+from ..scope import is_hq, scope_ids, scoped
 
 _logger = logging.getLogger(__name__)
 
@@ -269,7 +269,6 @@ class AnalyticsAPI(http.Controller):
             return err
         try:
             cr = request.env.cr
-            names = scope_jail_names(uid)
             # Show vacancy by institution (current snapshot) — more useful than sparse quarterly trend
             cr.execute("""
                 SELECT
@@ -279,7 +278,6 @@ class AnalyticsAPI(http.Controller):
                     SUM(sanctioned_strength) AS sanctioned
                 FROM prison_vacancy
                 WHERE active = true
-                  AND (%s::text[] IS NULL OR prison_name = ANY(%s))
                 GROUP BY prison_name, prison_type
                 HAVING SUM(vacancy_count) > 0
                 ORDER BY
@@ -292,7 +290,7 @@ class AnalyticsAPI(http.Controller):
                     END,
                     vacant DESC
                 LIMIT 100
-            """, (names, names))
+            """)
             rows = cr.fetchall()
 
             TYPE_LABEL = {
@@ -311,8 +309,7 @@ class AnalyticsAPI(http.Controller):
                 for r in rows
             ]
 
-            cr.execute("SELECT SUM(vacancy_count), SUM(sanctioned_strength) FROM prison_vacancy "
-                       "WHERE active = true AND (%s::text[] IS NULL OR prison_name = ANY(%s))", (names, names))
+            cr.execute("SELECT SUM(vacancy_count), SUM(sanctioned_strength) FROM prison_vacancy WHERE active = true")
             totals = cr.fetchone()
             total_vacant     = int(totals[0] or 0)
             total_sanctioned = int(totals[1] or 0)

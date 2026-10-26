@@ -23,7 +23,7 @@ from datetime import date, timedelta
 from odoo import http
 from odoo.http import request
 
-from ..scope import scoped
+from ..scope import scoped, scoped_jails
 
 _logger = logging.getLogger(__name__)
 
@@ -101,7 +101,7 @@ class DashboardApiController(http.Controller):
         # Institutions — distinct jails from prison.jail master
         try:
             env.cr.execute('SAVEPOINT dashboard_jail')
-            Jail = scoped(env, 'prison.jail')
+            Jail = scoped_jails(env)
             central_jails  = Jail.search([('jail_type', '=', 'central_jail'), ('active', '=', True)])
             district_jails = Jail.search([('jail_type', '=', 'district_jail'),  ('active', '=', True)])
             sub_jails      = Jail.search([('jail_type', '=', 'sub_jail'),        ('active', '=', True)])
@@ -338,7 +338,7 @@ class DashboardApiController(http.Controller):
 
         env = request.env(user=uid)
         Employee = scoped(env, 'hr.employee')
-        Jail = scoped(env, 'prison.jail')
+        Jail = scoped_jails(env)
 
         all_jails = Jail.search([('active', '=', True)], order='name')
         jail_name_map = {j.name.strip().lower(): j for j in all_jails if j.name}
@@ -406,7 +406,7 @@ class DashboardApiController(http.Controller):
         env = request.env(user=uid)
         category_id = request.httprequest.args.get('categoryId', '')
         try:
-            Jail = scoped(env, 'prison.jail')
+            Jail = scoped_jails(env)
             domain = [('active', '=', True)]
             if category_id == 'women_prison':
                 # Women's prisons are central_jail with 'special' in name
@@ -519,7 +519,7 @@ class DashboardApiController(http.Controller):
         # Prison counts per category — women's prisons are central_jail with 'special' in name
         prison_counts = {'central_prison': 6, 'women_prison': 2, 'district_jail': 49, 'sub_jail': 119}
         try:
-            Jail = scoped(env, 'prison.jail')
+            Jail = scoped_jails(env)
             all_central = Jail.search([('jail_type', '=', 'central_jail'), ('active', '=', True)])
             women = all_central.filtered(lambda j: 'special' in (j.name or '').lower())
             prison_counts['central_prison'] = len(all_central) - len(women)

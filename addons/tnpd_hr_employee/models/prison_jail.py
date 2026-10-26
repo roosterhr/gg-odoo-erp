@@ -89,24 +89,8 @@ class PrisonJail(models.Model):
         return result
 
     def _tnpd_scope_domain(self, jail_ids):
-        """
-        The user's institutions, plus the ones above them by name only, so lists built from
-        the top (central prison, then its jails) still reaches a district or sub-jail login.
-        Employees, transfers and vacancies stay limited to ``jail_ids``.
-        """
-        plain = self.env['prison.jail'].sudo().with_context(tnpd_scope_uid=False, active_test=False)
-        above = plain.browse(jail_ids)
-        parents = above.parent_id
-        while parents - above:
-            above |= parents
-            parents = above.parent_id
-        return [('id', 'in', above.ids)]
+        return [('id', 'in', jail_ids)]
 
-    @api.model
-    def _tnpd_visible_ids(self):
-        """
-        None when the caller sees every institution, otherwise their ids. A hook for
-        code that cannot reach the ORM filter (raw SQL in the vacancy module).
-        """
-        uid = self.env.context.get('tnpd_scope_uid')
-        return self._tnpd_scope_ids_of(uid) if uid else None
+    def _tnpd_scope_applies(self):
+        """Institution lists are the same for everyone, except where a screen asks (the dashboard)."""
+        return bool(self.env.context.get('tnpd_scope_jails'))
