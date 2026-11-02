@@ -92,7 +92,7 @@ class TestTransferOrder(TransactionCase):
         self.assertRegex(order.name, r'^\d{3}/\d{4}$')
         self.assertEqual(order.issued_by, self.env.user)
         self.assertTrue(order.order_date and order.issued_date)
-        notice = self.Notification.search([('order_id', '=', order.id)])
+        notice = self.Notification.search([('order_id', '=', order.id), ('employee_id', '!=', False)])
         self.assertEqual(notice.employee_id, self.fx.officers[0])
         self.assertEqual(notice.notification_type, 'transfer_order')
         self.assertIn(order.name, notice.message)

@@ -2,6 +2,7 @@
 # License: LGPL-3
 
 import logging
+import re
 
 from odoo import api, fields, models
 from odoo.exceptions import UserError, ValidationError
@@ -190,6 +191,7 @@ class TransferOrder(models.Model):
                 'You can download it from your transfers.'
                 % (order.name, when.strftime('%d.%m.%Y'))
             )
+            order._notify_letter_recipients()
         return True
 
     def _freeze_pdf(self):
@@ -220,6 +222,7 @@ class TransferOrder(models.Model):
                     'Transfer order No. %s has been cancelled. Please contact your '
                     'administrator for the new order.' % order.name
                 )
+                order._notify_letter_recipients(cancelled=True)
         return True
 
     def action_print(self):
@@ -244,6 +247,106 @@ class TransferOrder(models.Model):
                 except Exception:  # a failed notice must never block the order
                     _logger.exception('Could not notify employee %s about order %s',
                                       transfer.employee_id.id, order.id)
+
+    # ── the people named on the letter ────────────────────────────────────────
+
+    # Posts printed on the letter, as they are written in the employee's designation.
+    _POST_SUPERINTENDENT = 'superintendent of prisons'
+    _POST_DIG = 'deputy inspector general'
+    _POST_IG = 'inspector general'
+    _POST_DSP = 'deputy superintendent of police'
+    # The letter copies the DSP of this wing only; DSP is a common rank, so the wing must be
+    # in the designation (e.g. "Deputy Superintendent of Police (i/c), Intelligence-cum-Vigilance Wing").
+    _DSP_WING_WORDS = ('vigilance', 'intelligence')
+    # Words that do not tell one range or prison from another when they are compared.
+    _PLACE_NOISE = {'range', 'central', 'prison', 'prisons', 'dig', 'of', 'the'}
+
+    @classmethod
+    def _place_key(cls, text):
+        """A place name without the filler words, lower case: 'Vellore Range' and 'Vellore Central Prison' agree."""
+        words = re.findall(r'[a-z0-9]+', (text or '').lower())
+        return ' '.join(w for w in words if w not in cls._PLACE_NOISE)
+
+    def _letter_recipients(self):
+        """
+        The admin users the letter is addressed or copied to, as {user: 'to' | 'copy'}.
+
+        To: the Superintendent of each central prison named on the order (the officer's
+        present and new prison). Copy to: the DIG of the range typed on the order, the IG
+        at Headquarters and the DSP of the Intelligence-cum-Vigilance Wing. They are found by
+        their post in the employee records and told in the Admin login, so each needs an
+        internal (admin) user; a post nobody holds, or whose holder has no admin login, is
+        left out. The officers on the order are told in the Employee login, not here.
+        """
+        self.ensure_one()
+        Employee = self.env['hr.employee'].sudo()
+
+        def holders(post, domain=()):
+            """Active employees whose designation is ``post``, not a deputy / assistant of it."""
+            found = Employee.search([('x_designation', 'ilike', post), *domain])
+            return found.filtered(
+                lambda e: (e.x_designation or '').strip().lower().startswith(post)
+            )
+
+        centrals = (self.transfer_ids.current_central_prison | self.transfer_ids.requested_central_prison)
+        found = {}  # employee -> role
+        for emp in holders(self._POST_SUPERINTENDENT, [('x_central_jail_id', 'in', centrals.ids)]):
+            found[emp] = 'to'
+        rng = self._place_key(self.dig_range)
+        if rng:
+            for emp in holders(self._POST_DIG):
+                if rng in (self._place_key(emp.x_central_jail_id.name), self._place_key(emp.x_central_prison)):
+                    found.setdefault(emp, 'copy')
+        for emp in holders(self._POST_IG):
+            found.setdefault(emp, 'copy')
+        for emp in holders(self._POST_DSP).filtered(
+            lambda e: any(w in (e.x_designation or '').lower() for w in self._DSP_WING_WORDS)
+        ):
+            found.setdefault(emp, 'copy')
+
+        recipients = {}
+        for emp, role in found.items():
+            user = emp.user_id
+            if user and user.active and not user.share and user not in self.employee_ids.user_id:
+                recipients[user] = 'to' if recipients.get(user) == 'to' else role
+        return recipients
+
+    def _notify_letter_recipients(self, cancelled=False):
+        """Tell the people on the letter, in the Admin login, that it was issued (or cancelled)."""
+        Notification = self.env['tnpd.notification'].sudo()
+        for order in self:
+            names = order.employee_ids.mapped('name')
+            who = ', '.join(names[:3]) + (' and %s more' % (len(names) - 3) if len(names) > 3 else '')
+            on = order.order_date.strftime('%d.%m.%Y') if order.order_date else ''
+            recipients = order._letter_recipients()
+            _logger.info('Order %s: letter goes to %s', order.name or order.id,
+                         [(u.login, role) for u, role in recipients.items()] or 'nobody found')
+            for user, role in recipients.items():
+                if cancelled:
+                    message = 'Transfer order No. %s (%s) has been cancelled.' % (order.name, who)
+                else:
+                    message = (
+                        'Transfer order No. %s dated %s for %s has been issued. This letter is %s.'
+                        % (order.name, on, who, 'addressed to you' if role == 'to' else 'copied to you')
+                    )
+                try:
+                    Notification.create({
+                        'user_id': user.id,
+                        'order_id': order.id,
+                        'notification_type': 'transfer_order',
+                        'action_type': 'transfer_order_copy',
+                        'message': message,
+                        'sent_by': self.env.user.id,
+                    })
+                except Exception:  # a failed notice must never block the order
+                    _logger.exception('Could not notify user %s about order %s', user.id, order.id)
+
+    def _letter_recipient_users(self):
+        """Admin users who were sent this letter (allowed to open its PDF)."""
+        self.ensure_one()
+        return self.env['tnpd.notification'].sudo().search([
+            ('order_id', '=', self.id), ('action_type', '=', 'transfer_order_copy'),
+        ]).user_id
 
     # ── protection ────────────────────────────────────────────────────────────
 

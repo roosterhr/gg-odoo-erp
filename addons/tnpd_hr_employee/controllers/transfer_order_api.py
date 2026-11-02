@@ -100,9 +100,15 @@ class TransferOrderAPI(http.Controller):
             return None, self._err('Admin privileges required.', status=403)
         return request.env(user=uid), None
 
-    def _order(self, env, order_id):
+    def _order(self, env, order_id, allow_letter_recipient=False):
         """(order, None), or (empty, 404 response) when there is no such order."""
         order = scoped(env, 'transfer.order').search([('id', '=', order_id)])  # search, not exists(): applies the area
+        if not order and allow_letter_recipient:
+            # the letter was sent to this user (Superintendent, DIG, IG, DSP): they may open its
+            # PDF even when the order is outside their area. Only the PDF route asks for this.
+            sent = scoped(env, 'transfer.order').browse(order_id).exists()
+            if sent and sent.state == 'issued' and request.session.uid in sent._letter_recipient_users().ids:
+                order = sent
         return order, (None if order else self._err('Transfer order not found.', status=404))
 
     @staticmethod
@@ -330,7 +336,7 @@ class TransferOrderAPI(http.Controller):
         env, err = self._require_admin()
         if err:
             return err
-        order, err = self._order(env, order_id)
+        order, err = self._order(env, order_id, allow_letter_recipient=True)
         if err:
             return err
         if order.state == 'cancelled':
