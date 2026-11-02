@@ -45,7 +45,7 @@ class TestOrderLetterRecipients(TransactionCase):
         cls.dig_here = cls.post('DIG1', 'Deputy Inspector General of Prisons', cls.fx.src_central)
         cls.dig_far = cls.post('DIG2', 'Deputy Inspector General of Prisons', cls.fx.dst_central)
         cls.ig = cls.post('IG', 'Inspector General of Prisons (H.Q)')
-        cls.dsp = cls.post('DSP', 'Deputy Superintendent of Police (i/c)')
+        cls.dsp = cls.post('DSP', 'Deputy Superintendent of Police (i/c), Intelligence-cum-Vigilance Wing')
         cls.transfer = approved_transfer(cls.env, cls.fx, cls.fx.officers[0])
         cls.order = cls.env['transfer.order']._draft_for_transfers(cls.transfer)
         cls.order.dig_range = cls.fx.src_central.name
@@ -121,6 +121,25 @@ class TestOrderLetterRecipients(TransactionCase):
         self.assertEqual(self.order.state, 'issued')
         self.assertFalse(self._notices().user_id & mine.user_id)
 
+    def test_a_dsp_of_another_unit_is_not_told(self):
+        other = self.post('DSP2', 'Deputy Superintendent of Police (Armed Reserve)')
+        self.assertNotIn(other.user_id, self.order._letter_recipients())
+        self.assertIn(self.dsp.user_id, self.order._letter_recipients())
+
+    def test_the_dig_is_matched_by_the_range_not_by_part_of_a_name(self):
+        north = self.env['prison.jail'].create({
+            'name': '%s North Central Prison' % self.fx.src_central.name, 'jail_type': 'central_jail'})
+        dig_north = self.post('DIG3', 'Deputy Inspector General of Prisons', north)
+        self.order.dig_range = '%s Range' % self.fx.src_central.name
+        recipients = self.order._letter_recipients()
+        self.assertIn(self.dig_here.user_id, recipients)        # 'Letter Source Range' is 'Letter Source Central Prison'
+        self.assertNotIn(dig_north.user_id, recipients)         # 'Letter Source North ...' is another place
+
+    def test_an_officer_on_the_order_who_is_also_an_admin_is_not_told_twice(self):
+        officer = self.fx.officers[0]
+        officer.user_id = self.ig.user_id
+        self.assertNotIn(self.ig.user_id, self.order._letter_recipients())
+
     def test_a_draft_tells_nobody(self):
         self.assertFalse(self._notices())
 
@@ -175,6 +194,38 @@ class TestAdminNotificationsHttp(HttpCase):
         self.order.action_issue()
         self._sign_in(self.stranger)
         self.assertEqual(self.url_open('/api/transfer/orders/%s/pdf' % self.order.id).status_code, 404)
+
+    def test_marking_somebody_elses_notice_read_is_a_404(self):
+        self.order.action_issue()
+        self._sign_in(self.ig)
+        mine = self.url_open('/api/admin/notifications').json()['notifications'][0]
+        self._sign_in(self.super_dst)
+        reply = self.url_open('/api/admin/notifications/%s/read' % mine['id'], data='{}',
+                              headers={'Content-Type': 'application/json'})
+        self.assertEqual(reply.status_code, 404)
+
+    def test_mark_all_read_clears_the_count(self):
+        self.order.action_issue()
+        self._sign_in(self.ig)
+        self.url_open('/api/admin/notifications/read-all', data='{}', headers={'Content-Type': 'application/json'})
+        self.assertEqual(self.url_open('/api/admin/notifications').json()['unread_count'], 0)
+
+    def test_a_regional_login_may_not_write_anywhere_else_under_the_notifications_path(self):
+        self._sign_in(self.super_dst)
+        for path in ('/api/admin/notifications/abc', '/api/admin/notifications/1/delete', '/api/admin/notifications'):
+            status = self.url_open(path, data='{}', headers={'Content-Type': 'application/json'}).status_code
+            self.assertIn(status, (403, 404, 405), path)  # refused, whether the route exists or not
+
+    def test_a_cancelled_order_pdf_is_a_404_for_the_recipient(self):
+        self.order.action_issue()
+        self.order.action_cancel()
+        self._sign_in(self.super_dst)
+        self.assertEqual(self.url_open('/api/transfer/orders/%s/pdf' % self.order.id).status_code, 404)
+
+    def test_the_recipient_exception_is_for_the_pdf_only(self):
+        self.order.action_issue()
+        self._sign_in(self.super_dst)
+        self.assertEqual(self.url_open('/api/transfer/orders/%s' % self.order.id).status_code, 404)
 
     def test_an_employee_login_cannot_use_the_bell(self):
         portal = self.env['res.users'].create({

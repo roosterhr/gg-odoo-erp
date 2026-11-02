@@ -2,6 +2,7 @@
 # License: LGPL-3
 
 import logging
+import re
 
 from odoo import api, fields, models
 from odoo.exceptions import UserError, ValidationError
@@ -254,6 +255,17 @@ class TransferOrder(models.Model):
     _POST_DIG = 'deputy inspector general'
     _POST_IG = 'inspector general'
     _POST_DSP = 'deputy superintendent of police'
+    # The letter copies the DSP of this wing only; DSP is a common rank, so the wing must be
+    # in the designation (e.g. "Deputy Superintendent of Police (i/c), Intelligence-cum-Vigilance Wing").
+    _DSP_WING_WORDS = ('vigilance', 'intelligence')
+    # Words that do not tell one range or prison from another when they are compared.
+    _PLACE_NOISE = {'range', 'central', 'prison', 'prisons', 'dig', 'of', 'the'}
+
+    @classmethod
+    def _place_key(cls, text):
+        """A place name without the filler words, lower case: 'Vellore Range' and 'Vellore Central Prison' agree."""
+        words = re.findall(r'[a-z0-9]+', (text or '').lower())
+        return ' '.join(w for w in words if w not in cls._PLACE_NOISE)
 
     def _letter_recipients(self):
         """
@@ -280,13 +292,16 @@ class TransferOrder(models.Model):
         found = {}  # employee -> role
         for emp in holders(self._POST_SUPERINTENDENT, [('x_central_jail_id', 'in', centrals.ids)]):
             found[emp] = 'to'
-        rng = (self.dig_range or '').strip().lower()
+        rng = self._place_key(self.dig_range)
         if rng:
             for emp in holders(self._POST_DIG):
-                place = (emp.x_central_jail_id.name or emp.x_central_prison or '').lower()
-                if place and (rng in place or place in rng):
+                if rng in (self._place_key(emp.x_central_jail_id.name), self._place_key(emp.x_central_prison)):
                     found.setdefault(emp, 'copy')
-        for emp in holders(self._POST_IG) | holders(self._POST_DSP):
+        for emp in holders(self._POST_IG):
+            found.setdefault(emp, 'copy')
+        for emp in holders(self._POST_DSP).filtered(
+            lambda e: any(w in (e.x_designation or '').lower() for w in self._DSP_WING_WORDS)
+        ):
             found.setdefault(emp, 'copy')
 
         recipients = {}
