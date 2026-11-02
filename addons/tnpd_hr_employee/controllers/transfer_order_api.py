@@ -103,6 +103,12 @@ class TransferOrderAPI(http.Controller):
     def _order(self, env, order_id):
         """(order, None), or (empty, 404 response) when there is no such order."""
         order = scoped(env, 'transfer.order').search([('id', '=', order_id)])  # search, not exists(): applies the area
+        if not order:
+            # the letter was sent to this user (Superintendent, DIG, IG, DSP): they may open it
+            # even when the order is outside their area
+            sent = scoped(env, 'transfer.order').browse(order_id).exists()
+            if sent and sent.state == 'issued' and request.session.uid in sent._letter_recipient_users().ids:
+                order = sent
         return order, (None if order else self._err('Transfer order not found.', status=404))
 
     @staticmethod

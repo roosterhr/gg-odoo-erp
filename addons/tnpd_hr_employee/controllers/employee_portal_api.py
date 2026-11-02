@@ -932,8 +932,7 @@ class EmployeePortalAPI(http.Controller):
     )
     def download_transfer_order(self, order_id, **_kw):
         """
-        The issued transfer order (PDF) of the logged-in officer, or of the person the
-        letter was addressed or copied to (Superintendent, DIG, IG, DSP).
+        The issued transfer order (PDF) of the logged-in officer.
 
         An order that is not issued, is not theirs, or does not exist all answer
         the same 404, so nobody can find out which orders exist.
@@ -942,9 +941,7 @@ class EmployeePortalAPI(http.Controller):
         if err:
             return err
         order = request.env['transfer.order'].sudo().browse(order_id).exists()
-        if not order or order.state != 'issued' or (
-            emp not in order.employee_ids and emp not in order._letter_recipient_ids()
-        ):
+        if not order or order.state != 'issued' or emp not in order.employee_ids:
             return self._err('Transfer order not found', status=404)
         from .transfer_order_api import render_order_pdf
         return render_order_pdf(request.env(user=request.session.uid), order)

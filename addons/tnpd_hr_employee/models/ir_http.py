@@ -8,6 +8,7 @@ from odoo.http import request
 
 _READ_ONLY_METHODS = ('GET', 'HEAD', 'OPTIONS')
 # What a Regional user may still change: their own password and profile.
+_REGIONAL_MAY_WRITE_PREFIX = ('/api/admin/notifications/',)  # marking their own notices read
 _REGIONAL_MAY_WRITE = ('/api/change-password', '/api/auth/change-password', '/api/profile')
 # Outside /api/, a Regional session may only use the session calls of the app's own
 # sign-in. Odoo's web client and RPC (/web/dataset/..., /odoo, ...) know nothing of the area.
@@ -47,5 +48,6 @@ class IrHttp(models.AbstractModel):
                 return
             raise Forbidden('Only Headquarters can do this.')
         if request.httprequest.method not in _READ_ONLY_METHODS \
-                and path.rstrip('/') not in _REGIONAL_MAY_WRITE:
+                and path.rstrip('/') not in _REGIONAL_MAY_WRITE \
+                and not path.startswith(_REGIONAL_MAY_WRITE_PREFIX):
             raise Forbidden('Only Headquarters can do this.')

@@ -133,6 +133,7 @@ class TestJurisdictionHardening(HttpCase):
         '/api/employees/import-template',              # a static file
         '/api/dashboard/jail-categories',              # a fixed list of category names
         '/api/transfer/fetch-approval-requests',       # the caller's own inbox (empty for both)
+        '/api/admin/notifications',                    # the caller's own notices (empty for both)
         '/api/auth/me',                                # answers 500 for both in the test cursor (CREATE TABLE)
     }
 

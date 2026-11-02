@@ -257,13 +257,14 @@ class TransferOrder(models.Model):
 
     def _letter_recipients(self):
         """
-        The employees the letter is addressed or copied to, as {employee: 'to' | 'copy'}.
+        The admin users the letter is addressed or copied to, as {user: 'to' | 'copy'}.
 
         To: the Superintendent of each central prison named on the order (the officer's
         present and new prison). Copy to: the DIG of the range typed on the order, the IG
-        at Headquarters and the DSP of the Intelligence-cum-Vigilance Wing. Found by their
-        post in the employee records; a post nobody holds is simply left out. The officers
-        themselves are told already, so they are not repeated.
+        at Headquarters and the DSP of the Intelligence-cum-Vigilance Wing. They are found by
+        their post in the employee records and told in the Admin login, so each needs an
+        internal (admin) user; a post nobody holds, or whose holder has no admin login, is
+        left out. The officers on the order are told in the Employee login, not here.
         """
         self.ensure_one()
         Employee = self.env['hr.employee'].sudo()
@@ -276,25 +277,27 @@ class TransferOrder(models.Model):
             )
 
         centrals = (self.transfer_ids.current_central_prison | self.transfer_ids.requested_central_prison)
-        recipients = {}
+        found = {}  # employee -> role
         for emp in holders(self._POST_SUPERINTENDENT, [('x_central_jail_id', 'in', centrals.ids)]):
-            recipients[emp] = 'to'
-
+            found[emp] = 'to'
         rng = (self.dig_range or '').strip().lower()
         if rng:
             for emp in holders(self._POST_DIG):
                 place = (emp.x_central_jail_id.name or emp.x_central_prison or '').lower()
                 if place and (rng in place or place in rng):
-                    recipients.setdefault(emp, 'copy')
+                    found.setdefault(emp, 'copy')
         for emp in holders(self._POST_IG) | holders(self._POST_DSP):
-            recipients.setdefault(emp, 'copy')
+            found.setdefault(emp, 'copy')
 
-        for emp in self.employee_ids:  # the officers have their own notice
-            recipients.pop(emp, None)
+        recipients = {}
+        for emp, role in found.items():
+            user = emp.user_id
+            if user and user.active and not user.share and user not in self.employee_ids.user_id:
+                recipients[user] = 'to' if recipients.get(user) == 'to' else role
         return recipients
 
     def _notify_letter_recipients(self, cancelled=False):
-        """Tell the people on the letter, the way the officers are told (an in-app notice)."""
+        """Tell the people on the letter, in the Admin login, that it was issued (or cancelled)."""
         Notification = self.env['tnpd.notification'].sudo()
         for order in self:
             names = order.employee_ids.mapped('name')
@@ -302,20 +305,18 @@ class TransferOrder(models.Model):
             on = order.order_date.strftime('%d.%m.%Y') if order.order_date else ''
             recipients = order._letter_recipients()
             _logger.info('Order %s: letter goes to %s', order.name or order.id,
-                         [(e.id, role) for e, role in recipients.items()] or 'nobody found')
-            for emp, role in recipients.items():
+                         [(u.login, role) for u, role in recipients.items()] or 'nobody found')
+            for user, role in recipients.items():
                 if cancelled:
                     message = 'Transfer order No. %s (%s) has been cancelled.' % (order.name, who)
                 else:
                     message = (
-                        'Transfer order No. %s dated %s for %s has been issued. This letter is %s. '
-                        'You can download it from your notifications.'
-                        % (order.name, on, who,
-                           'addressed to you' if role == 'to' else 'copied to you')
+                        'Transfer order No. %s dated %s for %s has been issued. This letter is %s.'
+                        % (order.name, on, who, 'addressed to you' if role == 'to' else 'copied to you')
                     )
                 try:
                     Notification.create({
-                        'employee_id': emp.id,
+                        'user_id': user.id,
                         'order_id': order.id,
                         'notification_type': 'transfer_order',
                         'action_type': 'transfer_order_copy',
@@ -323,14 +324,14 @@ class TransferOrder(models.Model):
                         'sent_by': self.env.user.id,
                     })
                 except Exception:  # a failed notice must never block the order
-                    _logger.exception('Could not notify employee %s about order %s', emp.id, order.id)
+                    _logger.exception('Could not notify user %s about order %s', user.id, order.id)
 
-    def _letter_recipient_ids(self):
-        """Employees who were sent this letter (allowed to download it)."""
+    def _letter_recipient_users(self):
+        """Admin users who were sent this letter (allowed to open its PDF)."""
         self.ensure_one()
         return self.env['tnpd.notification'].sudo().search([
             ('order_id', '=', self.id), ('action_type', '=', 'transfer_order_copy'),
-        ]).employee_id
+        ]).user_id
 
     # ── protection ────────────────────────────────────────────────────────────
 

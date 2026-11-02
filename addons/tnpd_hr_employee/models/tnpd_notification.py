@@ -20,9 +20,17 @@ class TnpdNotification(models.Model):
     employee_id   = fields.Many2one(
         'hr.employee',
         string='Employee',
-        required=True,
         ondelete='cascade',
         index=True,
+        help='The officer it is for, shown in the Employee login. Empty for an admin notice.',
+    )
+    user_id = fields.Many2one(
+        'res.users',
+        string='Admin user',
+        ondelete='cascade',
+        index=True,
+        help='The admin user it is for, shown in the Admin login (Superintendent, DIG, IG, DSP '
+             'on a transfer order letter). Empty for an officer notice.',
     )
     employee_code = fields.Char(
         related='employee_id.x_employee_code',
@@ -91,6 +99,11 @@ class TnpdNotification(models.Model):
     # ── Read status ─────────────────────────────────────────────────────────────
     is_read    = fields.Boolean(string='Read', default=False)
     read_date  = fields.Datetime(string='Read Date', readonly=True)
+
+    _recipient_check = models.Constraint(
+        'CHECK (employee_id IS NOT NULL OR user_id IS NOT NULL)',
+        'A notification needs an employee or an admin user.',
+    )
 
     def mark_as_read(self):
         self.write({'is_read': True, 'read_date': fields.Datetime.now()})

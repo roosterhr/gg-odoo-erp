@@ -11,3 +11,4 @@ from . import users_api
 from . import analytics_api
 from . import role_migration_api
 from . import transfer_order_api
+from . import admin_notification_api
