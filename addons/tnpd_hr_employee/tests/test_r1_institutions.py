@@ -192,6 +192,12 @@ class TestClosedJailsAndOverview(HttpCase):
         self.assertTrue(child['is_closed'])
         self.assertEqual((child['sanctioned_strength'], child['vacancy_count']), (10, 4))
 
+    def test_the_dashboard_and_prisons_info_count_institutions_the_same_way(self):
+        info = self._get('/api/jails/hierarchy-with-vacancy').json()['stats']['total']
+        summary = self._get('/api/dashboard/summary').json()
+        self.assertEqual(summary['total_institutions'], info)
+        self.assertGreaterEqual(summary['closed_institutions'], 1)  # the closed jail made for this test
+
     def test_a_closed_jail_is_left_out_of_the_destination_list(self):
         data = self._get('/api/jails/hierarchy-with-vacancy').json()  # destinations ask without include_closed
         parent = next(p for p in data['data'] if p['id'] == self.fx.src_central.id)
