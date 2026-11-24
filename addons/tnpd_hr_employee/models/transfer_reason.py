@@ -22,9 +22,8 @@ class TnpdTransferReason(models.Model):
     name = fields.Char(string='Reason', required=True)
     score = fields.Integer(
         string='Weight', default=0,
-        help='Priority weight of this reason. The highest weight counts in full; the other '
-             'reasons of the same request count for a share of theirs (see the system '
-             'parameter tnpd.transfer.score_secondary_weight).',
+        help='Priority weight of this reason. A request scores the sum of the weights of '
+             'all the reasons chosen.',
     )
     sequence = fields.Integer(default=10)
     selectable = fields.Boolean(

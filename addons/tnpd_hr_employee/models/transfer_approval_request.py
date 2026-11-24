@@ -3,7 +3,6 @@
 
 import logging
 import re
-import math
 from datetime import date, timedelta
 
 from odoo import api, fields, models
@@ -109,7 +108,7 @@ class TransferApprovalRequest(models.Model):
         compute='_compute_reason_score',
         store=True,
         index=True,
-        help='Weighted score of all the reasons (see _combine_scores). Used to rank requests '
+        help='Sum of the weights of all the reasons chosen. Used to rank requests '
              'and suggest applicants; it never approves or rejects anything.',
     )
 
@@ -150,24 +149,17 @@ class TransferApprovalRequest(models.Model):
         order = self.env['transfer.order'].sudo()._draft_for_transfers(self)
         return order.action_print()
 
-    SECONDARY_WEIGHT_PARAM = 'tnpd.transfer.score_secondary_weight'
     MIN_SERVICE_PARAM = 'tnpd.transfer.min_service_years'
     MIN_CURRENT_JAIL_PARAM = 'tnpd.transfer.min_current_jail_years'
 
     @api.model
     def _combine_scores(self, scores):
         """
-        One score from the weights of every reason chosen.
+        One score from the weights of every reason chosen: their sum.
 
-        The heaviest reason counts in full and each of the others for a share of its weight
-        (system parameter ``tnpd.transfer.score_secondary_weight``, 0.5 until the client
-        confirms the criteria). A single reason therefore scores exactly its weight, as before.
+        A single reason scores exactly its weight, as before.
         """
-        scores = sorted((s or 0 for s in scores), reverse=True)
-        if not scores:
-            return 0
-        share = float(self.env['ir.config_parameter'].sudo().get_param(self.SECONDARY_WEIGHT_PARAM, '0.5'))
-        return int(math.floor(scores[0] + share * sum(scores[1:]) + 0.5))
+        return int(sum(s or 0 for s in scores))
 
     def _reason_weights(self):
         """The weights behind this request: its reasons, else its old single reason."""

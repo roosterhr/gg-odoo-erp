@@ -42,15 +42,15 @@ class TestSeveralReasons(TransactionCase):
     def test_one_reason_scores_exactly_its_weight(self):
         self.assertEqual(_request(self.env, self.fx, self.fx.officers[0], ['single_parent']).reason_score, 5)
 
-    def test_several_reasons_combine_into_a_weighted_score(self):
-        # heaviest in full (8) + half of the rest ((6 + 5) / 2 = 5.5) = 13.5, rounded up
+    def test_several_reasons_score_the_sum_of_their_weights(self):
         req = _request(self.env, self.fx, self.fx.officers[0], ['illness_self', 'spouse_working', 'single_parent'])
-        self.assertEqual(req.reason_score, 14)
+        self.assertEqual(req.reason_score, 8 + 6 + 5)
 
-    def test_the_share_of_the_other_reasons_is_a_setting(self):
-        self.env['ir.config_parameter'].sudo().set_param('tnpd.transfer.score_secondary_weight', '0')
-        req = _request(self.env, self.fx, self.fx.officers[0], ['illness_self', 'spouse_working'])
+    def test_choosing_one_more_reason_adds_its_weight(self):
+        req = _request(self.env, self.fx, self.fx.officers[0], ['illness_self'])
         self.assertEqual(req.reason_score, 8)
+        req.reason_ids = [(4, self.env['tnpd.transfer.reason'].search([('code', '=', 'ex_serviceman')]).id)]
+        self.assertEqual(req.reason_score, 8 + 4)
 
     def test_a_weight_can_be_changed_without_code(self):
         self.env['tnpd.transfer.reason'].search([('code', '=', 'mutual_request')]).score = 4

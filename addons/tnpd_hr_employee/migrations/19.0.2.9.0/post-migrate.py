@@ -24,6 +24,7 @@ def migrate(cr, version):
             rec.with_context(skip_reason_sync=True).write({'reason_ids': [(6, 0, reason.ids)]})
             moved += 1
     _logger.info('transfer requests: %s single reasons moved into the reasons list', moved)
+    Request.search([])._compute_reason_score()  # the score is the sum of the weights of the reasons chosen
 
     # Institution master: the corrections the current data needs (Pudukkottai, Kodaikanal, Seyyur,
     # Active/Closed tags). Safe to run again.
