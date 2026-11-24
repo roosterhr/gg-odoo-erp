@@ -650,6 +650,24 @@ class PrisonJailApiController(http.Controller):
                 [('jail_type', '=', 'sub_jail'), ('is_closed', '=', True), ('active', '=', True)]
             )
 
+            # Institutions that are counted but sit under nothing the tree shows: no parent, or a
+            # parent that is switched off. Listed apart so none is hidden and the counts add up.
+            shown = set()
+            for section in general_data + women_data + district_parents:
+                shown.add(section['id'])
+                shown.update(child['id'] for child in section.get('children', []))
+            placed_domain = [('active', '=', True)] + ([] if include_closed else [('is_closed', '=', False)])
+            unplaced = []
+            for j in Jail.search(placed_domain, order='name'):
+                if j.id in shown:
+                    continue
+                item = self._format_jail(j)
+                item.update({
+                    'parent_name': j.parent_id.name if j.parent_id else '',
+                    'parent_inactive': bool(j.parent_id and not j.parent_id.active),
+                })
+                unplaced.append(item)
+
             return self._json_response({
                 'success': True,
                 'stats': {
@@ -664,6 +682,7 @@ class PrisonJailApiController(http.Controller):
                 'district_parents': district_parents,
                 'women_prisons':   women_data,
                 'special_women_prisons': women_data,
+                'unplaced': unplaced,
             })
 
         except Exception as exc:

@@ -198,6 +198,24 @@ class TestClosedJailsAndOverview(HttpCase):
         self.assertEqual(summary['total_institutions'], info)
         self.assertGreaterEqual(summary['closed_institutions'], 1)  # the closed jail made for this test
 
+    def test_a_jail_under_a_switched_off_district_is_listed_not_hidden(self):
+        off = self.env['prison.jail'].create({
+            'name': 'R1Over Off District', 'jail_type': 'district_jail',
+            'parent_id': self.fx.src_central.id, 'active': False})
+        lost = self.env['prison.jail'].create({
+            'name': 'R1Over Lost Sub', 'jail_type': 'sub_jail', 'parent_id': off.id})
+        data = self._get('/api/jails/hierarchy-with-vacancy?include_closed=true').json()
+        entry = next(u for u in data['unplaced'] if u['id'] == lost.id)
+        self.assertTrue(entry['parent_inactive'])
+        self.assertEqual(entry['parent_name'], 'R1Over Off District')
+        # and nothing is both in the tree and in the list
+        in_tree = {c['id'] for p in data['data'] for c in p['children']}
+        self.assertNotIn(lost.id, in_tree)
+
+    def test_a_placed_jail_is_not_in_the_unplaced_list(self):
+        data = self._get('/api/jails/hierarchy-with-vacancy?include_closed=true').json()
+        self.assertNotIn(self.closed.id, [u['id'] for u in data['unplaced']])
+
     def test_a_closed_jail_is_left_out_of_the_destination_list(self):
         data = self._get('/api/jails/hierarchy-with-vacancy').json()  # destinations ask without include_closed
         parent = next(p for p in data['data'] if p['id'] == self.fx.src_central.id)
