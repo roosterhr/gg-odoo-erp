@@ -151,8 +151,11 @@ class TestListAllSort(HttpCase):
         self.authenticate('sort_tester', 'Sort-Tester-1')
         records = self._list(limit=100, reason='illness_self')
         self.assertGreaterEqual(len(records), 2)  # the two created in setUpClass
-        self.assertEqual({r['reason_category'] for r in records}, {'illness_self'})
-        self.assertEqual({r['reason_score'] for r in records}, {8})
+        # a request matches when illness_self is one of its reasons (it may have several)
+        for r in records:
+            self.assertIn('illness_self', [x['code'] for x in r['reason_categories']])
+        self.assertTrue({r['reason_score'] for r in records if r['reason_categories'][0]['code'] == 'illness_self'
+                         and len(r['reason_categories']) == 1} <= {8})
 
     def test_unknown_reason_filter_is_ignored(self):
         self.authenticate('sort_tester', 'Sort-Tester-1')

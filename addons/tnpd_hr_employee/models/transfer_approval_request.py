@@ -216,7 +216,7 @@ class TransferApprovalRequest(models.Model):
         Reason = self.env['tnpd.transfer.reason'].sudo()
         found = Reason.search([('code', 'in', codes), ('selectable', '=', True)])
         if len(found) != len(codes):
-            return Reason, 'Invalid reason: choose from the reasons offered.'
+            return Reason, 'Invalid reason_category'
         if required and not found:
             return Reason, 'Please select at least one reason'
         return found, None
