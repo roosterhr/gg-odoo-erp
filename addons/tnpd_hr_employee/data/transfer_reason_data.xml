@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Reasons and weights of a transfer request. noupdate: once the client changes a weight
+         or a name, an upgrade must not put the old value back. -->
+    <data noupdate="1">
+        <record id="reason_illness_self" model="tnpd.transfer.reason">
+            <field name="code">illness_self</field><field name="name">Serious illness to self</field>
+            <field name="score">8</field><field name="sequence">10</field>
+        </record>
+        <record id="reason_retirement_one_year" model="tnpd.transfer.reason">
+            <field name="code">retirement_one_year</field><field name="name">Retirement within one year</field>
+            <field name="score">7</field><field name="sequence">20</field>
+        </record>
+        <record id="reason_spouse_working" model="tnpd.transfer.reason">
+            <field name="code">spouse_working</field><field name="name">Spouse employed</field>
+            <field name="score">6</field><field name="sequence">30</field>
+        </record>
+        <record id="reason_single_parent" model="tnpd.transfer.reason">
+            <field name="code">single_parent</field><field name="name">Single parent</field>
+            <field name="score">5</field><field name="sequence">40</field>
+        </record>
+        <record id="reason_ex_serviceman" model="tnpd.transfer.reason">
+            <field name="code">ex_serviceman</field><field name="name">Ex-serviceman</field>
+            <field name="score">4</field><field name="sequence">50</field>
+        </record>
+        <record id="reason_illness_family" model="tnpd.transfer.reason">
+            <field name="code">illness_family</field><field name="name">Illness to spouse / children</field>
+            <field name="score">3</field><field name="sequence">60</field>
+        </record>
+        <record id="reason_long_service_outside_range" model="tnpd.transfer.reason">
+            <field name="code">long_service_outside_range</field><field name="name">Long service in outside range</field>
+            <field name="score">2</field><field name="sequence">70</field>
+        </record>
+        <record id="reason_mutual_request" model="tnpd.transfer.reason">
+            <field name="code">mutual_request</field><field name="name">Mutual request</field>
+            <field name="score">1</field><field name="sequence">80</field>
+        </record>
+        <record id="reason_others" model="tnpd.transfer.reason">
+            <field name="code">others</field><field name="name">Others</field>
+            <field name="score">0</field><field name="sequence">90</field>
+        </record>
+        <!-- Retired: old requests still show it, new ones cannot choose it. -->
+        <record id="reason_medical_reasons" model="tnpd.transfer.reason">
+            <field name="code">medical_reasons</field><field name="name">Medical reasons (older requests)</field>
+            <field name="score">8</field><field name="sequence">100</field><field name="selectable" eval="False"/>
+        </record>
+    </data>
+</odoo>

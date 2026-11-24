@@ -3,6 +3,7 @@
 
 import logging
 import re
+import math
 from datetime import date, timedelta
 
 from odoo import api, fields, models
@@ -93,12 +94,23 @@ class TransferApprovalRequest(models.Model):
         index=True,
     )
 
+    reason_ids = fields.Many2many(
+        comodel_name='tnpd.transfer.reason',
+        relation='transfer_request_reason_rel',
+        column1='request_id',
+        column2='reason_id',
+        string='Reasons',
+        help='All the reasons the officer gave. ``reason_category`` keeps the main one '
+             '(the heaviest) so older screens and filters keep working.',
+    )
+
     reason_score = fields.Integer(
         string='Priority Score',
         compute='_compute_reason_score',
         store=True,
         index=True,
-        help='Score out of 10 for the reason category. Used only to sort requests.',
+        help='Weighted score of all the reasons (see _combine_scores). Used to rank requests '
+             'and suggest applicants; it never approves or rejects anything.',
     )
 
     ta_da_eligible = fields.Boolean(
@@ -138,10 +150,126 @@ class TransferApprovalRequest(models.Model):
         order = self.env['transfer.order'].sudo()._draft_for_transfers(self)
         return order.action_print()
 
-    @api.depends('reason_category')
+    SECONDARY_WEIGHT_PARAM = 'tnpd.transfer.score_secondary_weight'
+    MIN_SERVICE_PARAM = 'tnpd.transfer.min_service_years'
+    MIN_CURRENT_JAIL_PARAM = 'tnpd.transfer.min_current_jail_years'
+
+    @api.model
+    def _combine_scores(self, scores):
+        """
+        One score from the weights of every reason chosen.
+
+        The heaviest reason counts in full and each of the others for a share of its weight
+        (system parameter ``tnpd.transfer.score_secondary_weight``, 0.5 until the client
+        confirms the criteria). A single reason therefore scores exactly its weight, as before.
+        """
+        scores = sorted((s or 0 for s in scores), reverse=True)
+        if not scores:
+            return 0
+        share = float(self.env['ir.config_parameter'].sudo().get_param(self.SECONDARY_WEIGHT_PARAM, '0.5'))
+        return int(math.floor(scores[0] + share * sum(scores[1:]) + 0.5))
+
+    def _reason_weights(self):
+        """The weights behind this request: its reasons, else its old single reason."""
+        self.ensure_one()
+        if self.reason_ids:
+            return self.reason_ids.mapped('score')
+        if self.reason_category:
+            known = self.env['tnpd.transfer.reason'].sudo().search(
+                [('code', '=', self.reason_category)], limit=1)
+            return [known.score if known else self.REASON_SCORES.get(self.reason_category, 0)]
+        return []
+
+    @api.depends('reason_category', 'reason_ids', 'reason_ids.score')
     def _compute_reason_score(self):
         for rec in self:
-            rec.reason_score = self.REASON_SCORES.get(rec.reason_category, 0)
+            rec.reason_score = self._combine_scores(rec._reason_weights())
+
+    def _sync_main_reason(self):
+        """Keep ``reason_category`` the heaviest of ``reason_ids`` (for older screens and filters)."""
+        allowed = {key for key, _label in self._fields['reason_category'].selection}
+        for rec in self.filtered('reason_ids'):
+            main = rec.reason_ids.sorted(lambda r: (-r.score, r.sequence))[:1]
+            code = main.code if main.code in allowed else 'others'
+            if rec.reason_category != code:
+                rec.with_context(skip_reason_sync=True).write({'reason_category': code})
+
+    @api.model
+    def _reasons_from_payload(self, data, required=False):
+        """
+        (reasons, error) from a request body.
+
+        Accepts ``reason_categories`` (a list, or a comma separated string) and, as before,
+        a single ``reason_category``. Each must be a reason officers can still choose; a
+        retired or unknown one is refused. ``required`` asks for at least one.
+        """
+        raw = data.get('reason_categories')
+        if raw is None:
+            raw = data.get('reason_category')
+        if isinstance(raw, str):
+            raw = [part for part in raw.split(',')]
+        codes = []
+        for code in raw or []:
+            code = str(code or '').strip()
+            if code and code not in codes:
+                codes.append(code)
+        Reason = self.env['tnpd.transfer.reason'].sudo()
+        found = Reason.search([('code', 'in', codes), ('selectable', '=', True)])
+        if len(found) != len(codes):
+            return Reason, 'Invalid reason: choose from the reasons offered.'
+        if required and not found:
+            return Reason, 'Please select at least one reason'
+        return found, None
+
+    def _reasons_payload(self):
+        """The reasons of this request as the screens show them, heaviest first."""
+        self.ensure_one()
+        reasons = self.reason_ids
+        if not reasons and self.reason_category:
+            reasons = self.env['tnpd.transfer.reason'].sudo().search([('code', '=', self.reason_category)])
+        return [{'code': r.code, 'name': r.name, 'score': r.score}
+                for r in reasons.sorted(lambda r: (-r.score, r.sequence))]
+
+    # ── Service years (shown on the request and used by the eligibility check) ──
+
+    service_years_total = fields.Float(
+        string='Total Service (Years)', compute='_compute_service_years', digits=(6, 1),
+        help='Years since the officer\'s date of appointment.',
+    )
+    service_years_current = fields.Float(
+        string='Years at Current Jail', compute='_compute_service_years', digits=(6, 1),
+        help='Years since the officer was posted to the present station.',
+    )
+
+    @api.depends('employee_id.x_date_of_appointment', 'employee_id.x_date_present_station')
+    def _compute_service_years(self):
+        today = date.today()
+        for rec in self:
+            joined = rec.employee_id.x_date_of_appointment
+            posted = rec.employee_id.x_date_present_station
+            rec.service_years_total = round((today - joined).days / 365.25, 1) if joined else 0.0
+            rec.service_years_current = round((today - posted).days / 365.25, 1) if posted else 0.0
+
+    def _eligibility(self):
+        """
+        {'eligible': bool, 'checks': [{'name', 'required', 'actual', 'passed'}]} for this request.
+
+        Thresholds are system parameters (0 = not checked) until the client confirms them:
+        ``tnpd.transfer.min_service_years`` and ``tnpd.transfer.min_current_jail_years``.
+        This only recommends; approval stays with the admin.
+        """
+        self.ensure_one()
+        params = self.env['ir.config_parameter'].sudo()
+        checks = []
+        for name, param, actual in (
+            ('Total service (years)', self.MIN_SERVICE_PARAM, self.service_years_total),
+            ('Years at current jail', self.MIN_CURRENT_JAIL_PARAM, self.service_years_current),
+        ):
+            required = float(params.get_param(param, '0') or 0)
+            if required > 0:
+                checks.append({'name': name, 'required': required, 'actual': actual,
+                               'passed': actual >= required})
+        return {'eligible': all(c['passed'] for c in checks), 'checks': checks}
 
     transfer_reason = fields.Text(
         string='Transfer Reason',
@@ -511,6 +639,7 @@ class TransferApprovalRequest(models.Model):
         for vals in vals_list:
             self._check_reason_not_legacy(vals)
         records = super().create(vals_list)
+        records._sync_main_reason()
         records.filtered(lambda r: r.state == 'pending').prompt_tenure_candidates_if_no_vacancy()
         return records
 
@@ -527,6 +656,8 @@ class TransferApprovalRequest(models.Model):
         if vals.get('state') == 'pending':
             newly_pending = self.filtered(lambda r: r.state != 'pending')
         res = super().write(vals)
+        if 'reason_ids' in vals and not self.env.context.get('skip_reason_sync'):
+            self._sync_main_reason()
         newly_pending.prompt_tenure_candidates_if_no_vacancy()
         return res
 

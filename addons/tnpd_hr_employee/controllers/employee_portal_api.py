@@ -311,6 +311,7 @@ class EmployeePortalAPI(http.Controller):
             'request_id':       rec.id,
             'transfer_type':    rec.transfer_type or 'request',
             'reason_category':  rec.reason_category or '',
+            'reason_categories': rec._reasons_payload(),
             'transfer_reason':  rec.transfer_reason or '',
             'is_swap':          bool(rec.is_swap),
             'swap_partner_id':  rec.swap_partner_id.id if rec.swap_partner_id else None,
@@ -794,7 +795,6 @@ class EmployeePortalAPI(http.Controller):
             return err
 
         reason          = (data.get('transfer_reason') or '').strip()
-        reason_category = (data.get('reason_category') or '').strip()
 
         def _jail_id(key):
             v = data.get(key)
@@ -819,10 +819,10 @@ class EmployeePortalAPI(http.Controller):
         p3_sub      = _jail_id('p3_sub_jail_id')
 
         TransferRequest  = request.env['transfer.approval.request']
-        valid_categories = set(TransferRequest.REASON_SCORES) - set(TransferRequest.LEGACY_REASONS)
-        if not reason_category or reason_category not in valid_categories:
-            return self._err('Please select a reason category')
-        if reason_category == 'others' and not reason:
+        reasons, reason_err = TransferRequest._reasons_from_payload(data, required=True)
+        if reason_err:
+            return self._err(reason_err)
+        if 'others' in reasons.mapped('code') and not reason:
             return self._err('Please describe your reason when selecting "Others"')
 
         # All 3 preferences are mandatory
@@ -884,7 +884,7 @@ class EmployeePortalAPI(http.Controller):
         vals = {
             'employee_id':             emp.id,
             'transfer_type':           'request',
-            'reason_category':         reason_category,
+            'reason_ids':              [(6, 0, reasons.ids)],
             'transfer_reason':         reason,
             'priority':                data.get('priority') or 'medium',
             'state':                   'pending',

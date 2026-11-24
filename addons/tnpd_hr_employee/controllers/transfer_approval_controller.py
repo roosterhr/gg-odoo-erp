@@ -203,7 +203,11 @@ class TransferApprovalController(http.Controller):
             # Extended fields
             'transfer_type':    getattr(rec, 'transfer_type', '') or '',
             'reason_category':  getattr(rec, 'reason_category', '') or '',
+            'reason_categories': rec._reasons_payload(),
             'reason_score':     getattr(rec, 'reason_score', 0) or 0,
+            'service_years_total':   rec.service_years_total,
+            'service_years_current': rec.service_years_current,
+            'eligibility':      rec._eligibility(),
             'transfer_reason':  getattr(rec, 'transfer_reason', '') or '',
             'priority':         getattr(rec, 'priority', '') or '',
             'tenure_years':     tenure_years,
@@ -1117,9 +1121,12 @@ class TransferApprovalController(http.Controller):
                     domain.append(('priority', '=', kwargs['priority']))
 
             if kwargs.get('reason'):
-                valid_cats = set(env['transfer.approval.request'].REASON_SCORES)
-                if kwargs['reason'] in valid_cats:
-                    domain.append(('reason_category', '=', kwargs['reason']))
+                # one reason, or several separated by commas: a request matches if it has any of them
+                wanted = [c.strip() for c in kwargs['reason'].split(',') if c.strip()]
+                known = set(env['tnpd.transfer.reason'].sudo().search([]).mapped('code'))
+                wanted = [c for c in wanted if c in known]
+                if wanted:
+                    domain += ['|', ('reason_ids.code', 'in', wanted), ('reason_category', 'in', wanted)]
 
             TransferRequest = scoped(env, 'transfer.approval.request')
             total_count     = TransferRequest.search_count(domain)
@@ -1190,12 +1197,9 @@ class TransferApprovalController(http.Controller):
 
             # --- Validate reason (optional; retired and unknown values are refused) ---
             Transfer        = env['transfer.approval.request']
-            reason_category = (data.get('reason_category') or '').strip()
-            if reason_category and (
-                reason_category not in Transfer.REASON_SCORES
-                or reason_category in Transfer.LEGACY_REASONS
-            ):
-                return self._err('Invalid reason_category')
+            reasons, reason_err = Transfer._reasons_from_payload(data)
+            if reason_err:
+                return self._err(reason_err)
 
             # --- Validate priority (old field; optional, defaults to medium) ---
             priority = (data.get('priority') or 'medium').strip()
@@ -1253,7 +1257,7 @@ class TransferApprovalController(http.Controller):
                 'requested_by':            uid,
                 'state':                   'draft',
                 'transfer_type':           'request',
-                'reason_category':         reason_category or False,
+                'reason_ids':              [(6, 0, reasons.ids)],
                 'transfer_reason':         data.get('transfer_reason', ''),
                 'priority':                priority,
                 **current_vals,

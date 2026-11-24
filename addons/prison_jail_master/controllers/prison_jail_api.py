@@ -510,7 +510,9 @@ class PrisonJailApiController(http.Controller):
 
             # prison.vacancy — aggregate per prison (primary source)
             pv_map = {}
-            for v in Vacancy.search([('active', '=', True)]):
+            # a closed jail's row is archived: read it anyway, so its figures still show
+            for v in Vacancy.with_context(active_test=False).search([]).filtered(
+                    lambda r: r.active or r.prison_id.is_closed):
                 pv_map[v.prison_id.id] = {
                     'sanctioned_strength': v.sanctioned_strength,
                     'occupied_count':      v.occupied_count,
