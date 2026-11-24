@@ -47,7 +47,7 @@ class PrisonJail(models.Model):
         return re.sub(r'[^a-z0-9]+', ' ', text).strip()
 
     @api.model
-    def _find_master(self, name, jail_types=None, hierarchy_type=None):
+    def _find_master(self, name, jail_types=None, hierarchy_type=None, exact_first=False):
         """The one record to use for a name: active first, then the one with staff, then the oldest."""
         key = self._master_key(name)
         if not key:
@@ -62,8 +62,9 @@ class PrisonJail(models.Model):
         if not found:
             return found
         staff = self._staff_counts(found.ids)
-        exact = (name or '').strip().lower()
-        return found.sorted(lambda j: ((j.name or '').strip().lower() != exact, not j.active, -staff.get(j.id, 0), j.id))[:1]
+        exact = (name or '').strip().lower() if exact_first else None
+        return found.sorted(lambda j: (exact is not None and (j.name or '').strip().lower() != exact,
+                                       not j.active, -staff.get(j.id, 0), j.id))[:1]
 
     @api.model
     def _staff_counts(self, ids):
@@ -76,6 +77,8 @@ class PrisonJail(models.Model):
               FROM prison_jail j
               JOIN hr_employee e
                 ON e.x_sub_jail_id = j.id OR e.x_district_jail_id = j.id OR e.x_central_jail_id = j.id
+                OR lower(e.x_sub_jail) = lower(j.name) OR lower(e.x_district_jail) = lower(j.name)
+                OR lower(e.x_central_prison) = lower(j.name)
              WHERE j.id = ANY(%s) AND e.active
              GROUP BY j.id
         """, (list(ids),))
@@ -155,7 +158,7 @@ class PrisonJail(models.Model):
             vals = {'name': name, 'jail_type': jail_type, 'hierarchy_type': hierarchy,
                     'parent_id': parent.id or False, 'active': True, 'is_closed': status == 'closed',
                     'closed_remarks': (row.get('remarks') or '').strip() or False}
-            rec = Jail._find_master(name, jail_types=[jail_type], hierarchy_type=hierarchy)
+            rec = Jail._find_master(name, jail_types=[jail_type], hierarchy_type=hierarchy, exact_first=True)
             if not rec:
                 created = Jail.create(vals)
                 touched.add(created.id)
@@ -264,6 +267,99 @@ class PrisonJail(models.Model):
                          'parent_id': vellore.id, 'is_closed': False, 'active': True})
             changed.append('Seyyur sub-jail added under %s' % vellore.name)
 
+        changed += self._apply_client_list_page()
+
         for line in changed:
             _logger.info('institution master fix: %s', line)
+        return changed
+
+    # The client's list, districts 71 to 83 (Kanniyakumari to Thiruvarur): the district jails they
+    # sit under, the sub-jails of each, and the temporarily closed Kodaikanal under Madurai.
+    _CLIENT_DISTRICTS = ('Kanniyakumari', 'Pudukkottai', 'Thanjavur', 'Mayiladuthurai', 'Thiruvarur', 'Nagapattinam')
+    _CLIENT_SUB_JAILS = (  # (district jail, sub-jail)
+        ('Kanniyakumari', 'Kuzhithurai'), ('Pudukkottai', 'Thirumayam'), ('Pudukkottai', 'Aranthangi'),
+        ('Thanjavur', 'Papanasam'), ('Thanjavur', 'Thiruvidaimaruthur'), ('Thanjavur', 'Kumbakonam'),
+        ('Thanjavur', 'Thanjavur'), ('Mayiladuthurai', 'Sirkali'), ('Mayiladuthurai', 'Mayiladuthurai'),
+        ('Mayiladuthurai', 'Tharangambadi'), ('Thiruvarur', 'Thiruthuraipoondi'), ('Thiruvarur', 'Nannilam'),
+        ('Thiruvarur', 'Mannarkudi'),
+    )
+
+    @api.model
+    def _find_near(self, name, parent):
+        """
+        A sub-jail of ``parent`` whose name is a near spelling of ``name`` ('Mannargudi' for
+        'Mannarkudi'), else empty. Spelling differences are not new institutions.
+        """
+        import difflib
+        key = self._master_key(name)
+        best, best_ratio = self.browse(), 0.0
+        for child in self.with_context(active_test=False).search(
+                [('parent_id', '=', parent.id), ('jail_type', '=', 'sub_jail')]):
+            ratio = difflib.SequenceMatcher(None, key, self._master_key(child.name)).ratio()
+            if ratio > best_ratio:
+                best, best_ratio = child, ratio
+        return best if best_ratio >= 0.85 else self.browse()
+
+    @api.model
+    def _apply_client_list_page(self):
+        """
+        Make sure the district jails and sub-jails on that page of the client's list are in the
+        master and switched on: a district jail that is switched off hides every sub-jail under it
+        from the institution-wise view. Safe to run again.
+        """
+        Jail = self.with_context(active_test=False)
+        changed = []
+        districts = {}
+        for name in self._CLIENT_DISTRICTS:
+            district = Jail._find_master(name, jail_types=['district_jail'])
+            if not district:
+                continue
+            districts[name] = district
+            if not district.active:
+                district.write({'active': True})
+                changed.append('%s district jail switched on (it is on the client list)' % district.name)
+            # one record per district jail: another active record of the same place is a duplicate
+            for twin in Jail.search([('id', '!=', district.id), ('jail_type', '=', 'district_jail'), ('active', '=', True)]):
+                if self._master_key(twin.name) == self._master_key(name):
+                    twin.write({'active': False})
+                    changed.append('duplicate district jail %s (id %s) switched off' % (twin.name, twin.id))
+
+        for district_name, sub_name in self._CLIENT_SUB_JAILS:
+            district = districts.get(district_name)
+            if not district:
+                continue
+            sub = Jail._find_master(sub_name, jail_types=['sub_jail'])
+            if not sub:
+                near = Jail._find_near(sub_name, district)
+                if near:
+                    old = near.name
+                    near.write({'name': sub_name})
+                    changed.append('%s renamed to %s, as on the client list' % (old, sub_name))
+                    continue
+                Jail.create({'name': sub_name, 'jail_type': 'sub_jail', 'hierarchy_type': 'general',
+                             'parent_id': district.id, 'is_closed': False, 'active': True})
+                changed.append('%s sub-jail added under %s' % (sub_name, district.name))
+            else:
+                if sub.parent_id != district:
+                    old = sub.parent_id.name or 'no parent'
+                    sub.write({'parent_id': district.id})
+                    changed.append('%s moved from %s to %s, as on the client list' % (sub.name, old, district.name))
+                if not sub.active and not sub.is_closed:
+                    sub.write({'active': True})
+                    changed.append('%s sub-jail switched on' % sub.name)
+
+        # Kodaikanal: temporarily closed, under Madurai
+        madurai = Jail._find_master('Madurai', jail_types=['central_jail'])
+        kodai = Jail._find_master('Kodaikanal', jail_types=['sub_jail'])
+        if madurai and kodai:
+            vals = {}
+            if kodai.parent_id != madurai:
+                vals['parent_id'] = madurai.id
+            if not kodai.is_closed:
+                vals['is_closed'] = True
+            if not kodai.closed_remarks:
+                vals['closed_remarks'] = 'Temporarily closed'
+            if vals:
+                kodai.write(vals)
+                changed.append('Kodaikanal marked temporarily closed under Madurai')
         return changed

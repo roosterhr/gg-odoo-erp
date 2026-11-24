@@ -99,6 +99,45 @@ class TestKnownFixes(TransactionCase):
         Jail._apply_known_fixes()
         self.assertEqual(Jail._apply_known_fixes(), [])
 
+    def test_the_client_list_page_is_in_the_master_and_switched_on(self):
+        Jail = self.env['prison.jail'].with_context(active_test=False)
+        if not Jail._find_master('Thiruvarur', jail_types=['district_jail']):
+            self.skipTest('no Thiruvarur district jail in this database')
+        Jail._apply_known_fixes()
+        thiruvarur = Jail._find_master('Thiruvarur', jail_types=['district_jail'])
+        self.assertTrue(thiruvarur.active)
+        for name in ('Thiruthuraipoondi', 'Nannilam', 'Mannarkudi'):
+            sub = Jail._find_master(name, jail_types=['sub_jail'])
+            self.assertEqual((sub.parent_id, sub.active), (thiruvarur, True), name)
+
+    def test_a_near_spelling_is_the_same_place_not_a_new_one(self):
+        fx = make_fixtures(self.env, 'R1Near')
+        Jail = self.env['prison.jail']
+        sub = Jail.create({'name': 'S.J. R1Near Mannargudi', 'jail_type': 'sub_jail', 'parent_id': fx.src_central.id})
+        self.assertEqual(Jail._find_near('R1Near Mannarkudi', fx.src_central), sub)
+        self.assertFalse(Jail._find_near('R1Near Sirkali', fx.src_central))
+
+    def test_only_one_district_jail_stays_on_per_place(self):
+        Jail = self.env['prison.jail'].with_context(active_test=False)
+        main = Jail._find_master('Pudukkottai', jail_types=['district_jail'])
+        if not main:
+            self.skipTest('no Pudukkottai district jail in this database')
+        central = Jail.search([('jail_type', '=', 'central_jail')], limit=1)
+        Jail.create({'name': 'Pudukkottai District', 'jail_type': 'district_jail', 'parent_id': central.id})  # a duplicate of the place
+        Jail._apply_known_fixes()
+        live = Jail.search([('jail_type', '=', 'district_jail'), ('active', '=', True)]).filtered(
+            lambda j: Jail._master_key(j.name) == 'pudukkottai')
+        self.assertEqual(len(live), 1)
+
+    def test_kodaikanal_is_temporarily_closed_under_madurai(self):
+        Jail = self.env['prison.jail'].with_context(active_test=False)
+        if not Jail._find_master('Kodaikanal', jail_types=['sub_jail']):
+            self.skipTest('no Kodaikanal in this database')
+        Jail._apply_known_fixes()
+        kodai = Jail._find_master('Kodaikanal', jail_types=['sub_jail'])
+        self.assertEqual(kodai.parent_id.name, 'Madurai')
+        self.assertTrue(kodai.is_closed)
+
     def test_every_institution_is_tagged_active_or_closed(self):
         self.env.cr.execute("UPDATE prison_jail SET is_closed = NULL WHERE id = (SELECT MIN(id) FROM prison_jail)")
         self.env.invalidate_all()
