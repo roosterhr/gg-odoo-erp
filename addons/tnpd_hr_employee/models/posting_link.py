@@ -197,7 +197,8 @@ class HrEmployeePostingLink(models.Model):
         """
         Set the missing institution links of officers from their typed posting names (see the module
         docstring). Returns {'officers': n, 'links': {'central': a, 'district': b, 'sub': c},
-        'blocked_by_their_own_links': n, 'unplaced': [(typed name, officers), ...]}. With ``dry_run``
+        'blocked_by_their_own_links': n, 'unplaced': [(typed name, officers), ...],
+        'unplaced_officers': [(employee id, column, typed name), ...]}. With ``dry_run``
         nothing is written; ``unplaced_limit`` caps the list of names not placed; ``domain`` limits
         the officers looked at.
         """
@@ -209,7 +210,7 @@ class HrEmployeePostingLink(models.Model):
             ('active', '=', True), '|', '|',
             ('x_central_jail_id', '=', False), ('x_district_jail_id', '=', False), ('x_sub_jail_id', '=', False),
         ] + (domain or []))
-        counts, unplaced, changed, blocked = Counter(), Counter(), 0, 0
+        counts, unplaced, changed, blocked, detail = Counter(), Counter(), 0, 0, []
         for officer in officers:
             women_ok = '(men)' not in (officer.x_designation or '').lower()
             current = {'central': officer.x_central_jail_id, 'district': officer.x_district_jail_id,
@@ -231,6 +232,7 @@ class HrEmployeePostingLink(models.Model):
                         found[slot] = jail
                 elif text and text.lower() not in _BLANK and not text.lower().endswith('district') and not current[column]:
                     unplaced[(column, text)] += 1  # (a "... District" is a grouping, not an institution)
+                    detail.append((officer.x_employee_code, column, text))
             central = current['central'] or found.get('central')
             district = current['district'] or found.get('district')
             planned = {}
@@ -256,6 +258,6 @@ class HrEmployeePostingLink(models.Model):
                     blocked += 1
         top = [('%s: %s' % key, n) for key, n in unplaced.most_common(unplaced_limit)]
         result = {'officers': changed, 'links': {k: v for k, v in counts.items() if v > 0},
-                  'blocked_by_their_own_links': blocked, 'unplaced': top}
+                  'blocked_by_their_own_links': blocked, 'unplaced': top, 'unplaced_officers': detail}
         _logger.info('officer postings linked to institutions%s: %s', ' (dry run)' if dry_run else '', result)
         return result
