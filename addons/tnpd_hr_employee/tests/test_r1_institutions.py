@@ -85,6 +85,33 @@ class TestMasterReconcile(TransactionCase):
         self.Jail._reconcile_master(self._rows(), apply=True, deactivate_missing=True)
         self.assertFalse(extra.active)
 
+    def test_merge_from_moves_the_officers_and_switches_the_old_record_off(self):
+        old = self.fx.src_sub
+        officers = self.fx.officers
+        row = {'name': 'R1Master Keeper', 'jail_type': 'sub_jail', 'parent': self.parent,
+               'merge_from': [{'name': old.name, 'type': 'sub_jail'}]}
+        result = self.Jail._reconcile_master([row], apply=True)
+        keeper = self._find('R1Master Keeper')
+        self.assertEqual(result['summary'].get('merge'), 1)
+        self.assertFalse(old.active)
+        self.assertEqual([o.x_sub_jail_id for o in officers], [keeper] * len(officers))
+
+    def test_match_name_updates_the_record_kept_under_another_spelling(self):
+        sub = self.fx.src_sub
+        row = {'name': 'R1Master Newspelling', 'jail_type': 'sub_jail', 'parent': self.parent,
+               'match_name': sub.name, 'match_type': 'sub_jail'}
+        result = self.Jail._reconcile_master([row], apply=True)
+        self.assertNotIn('add', result['summary'])
+        self.assertEqual((sub.name, sub.active), ('R1Master Newspelling', True))
+
+    def test_a_parent_name_shared_by_a_central_prison_and_a_women_prison_takes_the_row_hierarchy(self):
+        self.Jail.create({'name': 'R1Master Twin', 'jail_type': 'central_jail'})
+        spw = self.Jail.create({'name': 'R1Master Twin', 'jail_type': 'spw', 'hierarchy_type': 'women'})
+        row = {'name': 'R1Master Womenpatti', 'jail_type': 'women_sub_jail', 'hierarchy_type': 'women',
+               'parent': 'R1Master Twin'}
+        self.Jail._reconcile_master([row], apply=True)
+        self.assertEqual(self._find('R1Master Womenpatti').parent_id, spw)
+
     def test_the_totals_split_by_type_and_closed(self):
         totals = self.Jail._master_totals()
         self.assertEqual(totals['active_total'], sum(totals['by_type'].values()))

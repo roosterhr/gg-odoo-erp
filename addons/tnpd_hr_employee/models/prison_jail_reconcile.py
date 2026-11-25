@@ -85,6 +85,50 @@ class PrisonJail(models.Model):
         counts.update({row[0]: row[1] for row in self.env.cr.fetchall()})
         return counts
 
+    # ── merging a record into another ─────────────────────────────────────────
+
+    # (table, column) pairs that hold a prison and can simply be pointed elsewhere
+    _LINKS = (
+        ('hr_employee', 'x_central_jail_id'), ('hr_employee', 'x_district_jail_id'), ('hr_employee', 'x_sub_jail_id'),
+        ('transfer_approval_request', 'current_central_prison'), ('transfer_approval_request', 'current_district_jail'),
+        ('transfer_approval_request', 'current_sub_jail'),
+        ('transfer_approval_request', 'preference_2_central_prison'), ('transfer_approval_request', 'preference_2_district_jail'),
+        ('transfer_approval_request', 'preference_2_sub_jail'),
+        ('transfer_approval_request', 'preference_3_central_prison'), ('transfer_approval_request', 'preference_3_district_jail'),
+        ('transfer_approval_request', 'preference_3_sub_jail'),
+        ('transfer_approval_request', 'requested_central_prison'), ('transfer_approval_request', 'requested_district_jail'),
+        ('transfer_approval_request', 'requested_sub_jail'),
+    )
+
+    @api.model
+    def _move_links(self, old, new):
+        """
+        Point everything that refers to ``old`` at ``new``: officers, transfer requests, the
+        institutions under it, the logins' jurisdictions and its vacancy figures. A vacancy row is
+        moved only if ``new`` has none of its own (they are unique per institution), so nothing is
+        lost or doubled. Returns how many rows moved.
+        """
+        cr, moved = self.env.cr, 0
+        for table, column in self._LINKS:
+            cr.execute('UPDATE %s SET %s = %%s WHERE %s = %%s' % (table, column, column), (new.id, old.id))
+            moved += cr.rowcount
+        cr.execute('UPDATE prison_jail SET parent_id = %s WHERE parent_id = %s AND id != %s', (new.id, old.id, new.id))
+        moved += cr.rowcount
+        cr.execute("""INSERT INTO res_users_jurisdiction_jail_rel (jail_id, user_id)
+                        SELECT %s, r.user_id FROM res_users_jurisdiction_jail_rel r WHERE r.jail_id = %s
+                        ON CONFLICT DO NOTHING""", (new.id, old.id))
+        cr.execute('DELETE FROM res_users_jurisdiction_jail_rel WHERE jail_id = %s', (old.id,))
+        cr.execute("""UPDATE prison_vacancy SET prison_id = %s WHERE prison_id = %s
+                          AND NOT EXISTS (SELECT 1 FROM prison_vacancy w WHERE w.prison_id = %s)""", (new.id, old.id, new.id))
+        moved += cr.rowcount
+        cr.execute("""UPDATE prison_designation_vacancy v SET prison_id = %s WHERE v.prison_id = %s
+                          AND NOT EXISTS (SELECT 1 FROM prison_designation_vacancy w
+                                           WHERE w.prison_id = %s AND w.role_id = v.role_id
+                                             AND w.hierarchy_type = v.hierarchy_type)""", (new.id, old.id, new.id))
+        moved += cr.rowcount
+        self.env.invalidate_all()
+        return moved
+
     # ── the client's list ─────────────────────────────────────────────────────
 
     @api.model
@@ -129,6 +173,22 @@ class PrisonJail(models.Model):
         return result
 
     @api.model
+    def _merge_from_row(self, Jail, row, rec, i, note):
+        """
+        ``merge_from`` on a row lists older records of the same place ({name, type, hierarchy}):
+        everything linked to them moves to this record and they are switched off. Officers posted
+        there keep their posting, now under the one record the list keeps.
+        """
+        for item in row.get('merge_from') or []:
+            old = Jail._find_master(item['name'], jail_types=[item['type']],
+                                    hierarchy_type=item.get('hierarchy'), exact_first=True)
+            if not old or old == rec:
+                continue
+            moved = self._move_links(old, rec)
+            old.write({'active': False})
+            note(i, 'merge', old.name, '%s rows moved to %s (id %s) and switched off' % (moved, rec.name, rec.id))
+
+    @api.model
     def _apply_rows(self, rows, deactivate_missing):
         Jail = self.with_context(active_test=False)
         valid_types = {key for key, _label in self._fields['jail_type'].selection}
@@ -150,7 +210,11 @@ class PrisonJail(models.Model):
                 return
             parent = Jail.browse()
             if (row.get('parent') or '').strip():
-                parent = Jail._find_master(row['parent'], jail_types=('central_jail', 'spw', 'district_jail'))
+                # a Central Prison and a Special Prison for Women can share a place name
+                # (Coimbatore): look in the row's own hierarchy first
+                parent_types = ('central_jail', 'spw', 'district_jail')
+                parent = (Jail._find_master(row['parent'], jail_types=parent_types, hierarchy_type=hierarchy)
+                          or Jail._find_master(row['parent'], jail_types=parent_types))
                 if not parent:
                     errors += 1
                     note(i, 'error', name, 'parent "%s" is not in the master' % row['parent'])
@@ -158,16 +222,23 @@ class PrisonJail(models.Model):
             vals = {'name': name, 'jail_type': jail_type, 'hierarchy_type': hierarchy,
                     'parent_id': parent.id or False, 'active': True, 'is_closed': status == 'closed',
                     'closed_remarks': (row.get('remarks') or '').strip() or False}
-            rec = Jail._find_master(name, jail_types=[jail_type], hierarchy_type=hierarchy, exact_first=True)
+            # optional match_name / match_type / match_hierarchy: the record is kept under another
+            # spelling (or type), so the row updates it instead of adding a second one
+            rec = Jail._find_master(row.get('match_name') or name,
+                                    jail_types=[row.get('match_type') or jail_type],
+                                    hierarchy_type=row.get('match_hierarchy') or hierarchy,
+                                    exact_first=True)
             if not rec:
                 created = Jail.create(vals)
                 touched.add(created.id)
+                self._merge_from_row(Jail, row, created, i, note)
                 note(i, 'add', name, 'new %s%s' % (jail_type, ' under ' + parent.name if parent else ''))
                 return
             touched.add(rec.id)
-            changes = []
-            for field, label in (('name', 'renamed'), ('jail_type', 'type'), ('parent_id', 'moved'),
-                                 ('active', 'reactivated'), ('is_closed', 'status'),
+            self._merge_from_row(Jail, row, rec, i, note)
+            changes, to_write = [], {}
+            for field, label in (('name', 'renamed'), ('jail_type', 'type'), ('hierarchy_type', 'hierarchy'),
+                                 ('parent_id', 'moved'), ('active', 'reactivated'), ('is_closed', 'status'),
                                  ('closed_remarks', 'remarks')):
                 new = vals[field]
                 old = rec[field].id if field == 'parent_id' else rec[field]
@@ -179,7 +250,9 @@ class PrisonJail(models.Model):
                     changes.append('%s: %s -> %s' % (
                         label, rec.parent_id.name if field == 'parent_id' else old,
                         parent.name if field == 'parent_id' else new))
-                    rec.write({field: new})
+                    to_write[field] = new
+            if to_write:
+                rec.write(to_write)  # one write, so the type / hierarchy / parent rules see the final state
             if changes:
                 note(i, 'update', name, '; '.join(changes))
             else:
