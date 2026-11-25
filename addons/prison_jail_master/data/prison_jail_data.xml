@@ -12,7 +12,7 @@
     parent_path and central_jail_id are computed — Odoo fills them automatically.
 -->
 <odoo>
-<data noupdate="0">
+<data noupdate="1">
 
 <!-- ══════════════════════════════════════════════════════════════════════
      TIER 1 — CENTRAL PRISONS  (8 records)
