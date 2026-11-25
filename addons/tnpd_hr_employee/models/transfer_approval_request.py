@@ -10,9 +10,8 @@ from odoo.exceptions import UserError, ValidationError
 
 _logger = logging.getLogger(__name__)
 
-# Tenure thresholds (days) used when prompting destination occupants to vacate.
+# Tenure threshold (days) used when prompting destination occupants to vacate: 3 years.
 _TENURE_DAYS_STANDARD = 1095  # 36 months
-_TENURE_DAYS_HILL     = 547   # 18 months
 
 
 class TransferApprovalRequest(models.Model):
@@ -690,7 +689,7 @@ class TransferApprovalRequest(models.Model):
         """
         When this request targets a prison with NO vacancy for the requester's
         position, find officers at that prison holding the same position who
-        have completed their tenure (3 years standard / 18 months hill station)
+        have completed their tenure (3 years)
         and have no open transfer request of their own, and notify each of them
         to apply for their tenure transfer — so a post can be vacated.
 
@@ -750,8 +749,7 @@ class TransferApprovalRequest(models.Model):
         if not desig_vac or desig_vac.vacancy_count > 0:
             return
 
-        threshold = _TENURE_DAYS_HILL if dest.is_hill_station else _TENURE_DAYS_STANDARD
-        cutoff = date.today() - timedelta(days=threshold)
+        cutoff = date.today() - timedelta(days=_TENURE_DAYS_STANDARD)
 
         occupants = self.env['hr.employee'].sudo().search([
             ('active', '=', True),
@@ -786,7 +784,7 @@ class TransferApprovalRequest(models.Model):
             return
 
         Notification = self.env['tnpd.notification'].sudo()
-        years_label = '18 months' if dest.is_hill_station else '3 years'
+        years_label = '3 years'
         for emp in occupants:
             # One live prompt per officer — do not spam on every new request
             existing = Notification.search([

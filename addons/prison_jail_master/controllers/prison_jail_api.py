@@ -127,7 +127,6 @@ class PrisonJailApiController(http.Controller):
             'central_jail_name': rec.central_jail_id.name if rec.central_jail_id else '',
             'district':         rec.district or '',
             'state':            rec.state_id.name if rec.state_id else '',
-            'is_hill_station':  rec.is_hill_station,
             'external_ref':     rec.external_ref or '',
             'child_count':      rec.child_count,
         }
