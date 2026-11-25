@@ -54,6 +54,32 @@
   "status": "active"
  },
  {
+  "name": "Pudukkottai",
+  "jail_type": "central_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "match_name": "D.J. Pudukkottai",
+  "match_type": "district_jail",
+  "match_hierarchy": "general",
+  "merge_from": [
+   {
+    "name": "Thanjavur District",
+    "type": "district_jail",
+    "hierarchy": "general"
+   },
+   {
+    "name": "Mayiladuthurai District",
+    "type": "district_jail",
+    "hierarchy": "general"
+   },
+   {
+    "name": "Thiruvarur District",
+    "type": "district_jail",
+    "hierarchy": "general"
+   }
+  ]
+ },
+ {
   "name": "Chennai",
   "jail_type": "spw",
   "hierarchy_type": "women",
@@ -82,32 +108,6 @@
   "jail_type": "spw",
   "hierarchy_type": "women",
   "status": "active"
- },
- {
-  "name": "Pudukkottai",
-  "jail_type": "district_jail",
-  "hierarchy_type": "general",
-  "status": "active",
-  "match_name": "D.J. Pudukkottai",
-  "match_type": "district_jail",
-  "match_hierarchy": "general",
-  "merge_from": [
-   {
-    "name": "Thanjavur District",
-    "type": "district_jail",
-    "hierarchy": "general"
-   },
-   {
-    "name": "Mayiladuthurai District",
-    "type": "district_jail",
-    "hierarchy": "general"
-   },
-   {
-    "name": "Thiruvarur District",
-    "type": "district_jail",
-    "hierarchy": "general"
-   }
-  ]
  },
  {
   "name": "Chengalpattu",
