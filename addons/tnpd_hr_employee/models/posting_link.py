@@ -106,6 +106,23 @@ class HrEmployeePostingLink(models.Model):
         return done
 
     @api.model
+    def _save_planned(self, officer, planned, dry_run):
+        """
+        Save the planned links ({slot: jail}) of one officer; returns the slots saved, or none.
+
+        A district jail has no sub-jails under it in the current hierarchy, so a district link next
+        to a sub-jail link can never satisfy the rule that the sub-jail belongs to the district. If
+        saving all of them fails, the district link is left out and the rest is tried again.
+        """
+        attempts = [dict(planned)]
+        if 'district' in planned and len(planned) > 1:
+            attempts.append({s: j for s, j in planned.items() if s != 'district'})
+        for slots in attempts:
+            if dry_run or self._write_posting(officer, {_FIELD_OF[s]: j.id for s, j in slots.items()}):
+                return list(slots)
+        return []
+
+    @api.model
     def _write_posting(self, officer, vals):
         """
         Save the links of one officer. An officer whose existing links already contradict each other
@@ -176,12 +193,12 @@ class HrEmployeePostingLink(models.Model):
         return None
 
     @api.model
-    def _link_postings_to_institutions(self, dry_run=False, domain=None):
+    def _link_postings_to_institutions(self, dry_run=False, domain=None, unplaced_limit=15):
         """
         Set the missing institution links of officers from their typed posting names (see the module
         docstring). Returns {'officers': n, 'links': {'central': a, 'district': b, 'sub': c},
         'blocked_by_their_own_links': n, 'unplaced': [(typed name, officers), ...]}. With ``dry_run``
-        nothing is written; ``domain`` limits
+        nothing is written; ``unplaced_limit`` caps the list of names not placed; ``domain`` limits
         the officers looked at.
         """
         if not dry_run:
@@ -216,25 +233,28 @@ class HrEmployeePostingLink(models.Model):
                     unplaced[(column, text)] += 1  # (a "... District" is a grouping, not an institution)
             central = current['central'] or found.get('central')
             district = current['district'] or found.get('district')
-            vals = {}
+            planned = {}
             for slot, jail in found.items():
-                if slot == 'district' and central and jail.parent_id != central:
-                    continue
+                if slot == 'district':
+                    if central and jail.parent_id != central:
+                        continue
+                    sub_final = current['sub'] or found.get('sub')
+                    if sub_final and sub_final.parent_id != jail:
+                        continue  # a sub-jail is not under a district jail any more: no district link beside it
                 if slot == 'sub':
                     if district and jail.parent_id != district:
                         continue
                     if not district and central and jail.parent_id and central not in (jail.parent_id, jail.parent_id.parent_id):
                         continue
-                vals[_FIELD_OF[slot]] = jail.id
-                counts[slot] += 1
-            if vals:
-                if dry_run or self._write_posting(officer, vals):
+                planned[slot] = jail
+            if planned:
+                done = self._save_planned(officer, planned, dry_run)
+                if done:
                     changed += 1
+                    counts.update(done)
                 else:
                     blocked += 1
-                    for slot in found:
-                        counts[slot] -= 1
-        top = [('%s: %s' % key, n) for key, n in unplaced.most_common(15)]
+        top = [('%s: %s' % key, n) for key, n in unplaced.most_common(unplaced_limit)]
         result = {'officers': changed, 'links': {k: v for k, v in counts.items() if v > 0},
                   'blocked_by_their_own_links': blocked, 'unplaced': top}
         _logger.info('officer postings linked to institutions%s: %s', ' (dry run)' if dry_run else '', result)
