@@ -83,31 +83,36 @@
   "name": "Chennai",
   "jail_type": "spw",
   "hierarchy_type": "women",
-  "status": "active"
+  "status": "active",
+  "district": "Chennai"
  },
  {
   "name": "Vellore",
   "jail_type": "spw",
   "hierarchy_type": "women",
-  "status": "active"
+  "status": "active",
+  "district": "Vellore"
  },
  {
   "name": "Coimbatore",
   "jail_type": "spw",
   "hierarchy_type": "women",
-  "status": "active"
+  "status": "active",
+  "district": "Coimbatore"
  },
  {
   "name": "Tiruchirappalli",
   "jail_type": "spw",
   "hierarchy_type": "women",
-  "status": "active"
+  "status": "active",
+  "district": "Tiruchirappalli"
  },
  {
   "name": "Madurai",
   "jail_type": "spw",
   "hierarchy_type": "women",
-  "status": "active"
+  "status": "active",
+  "district": "Madurai"
  },
  {
   "name": "Chengalpattu",
@@ -237,28 +242,32 @@
   "jail_type": "special_sub_jail",
   "hierarchy_type": "general",
   "status": "active",
-  "parent": "Chennai - I"
+  "parent": "Chennai - I",
+  "district": "Chennai"
  },
  {
   "name": "Nanguneri (Men)",
   "jail_type": "special_sub_jail",
   "hierarchy_type": "general",
   "status": "active",
-  "parent": "Palayamkottai"
+  "parent": "Palayamkottai",
+  "district": "Tirunelveli"
  },
  {
   "name": "Salem (Women)",
   "jail_type": "special_sub_jail",
   "hierarchy_type": "women",
   "status": "active",
-  "parent": "Coimbatore"
+  "parent": "Coimbatore",
+  "district": "Salem"
  },
  {
   "name": "Kokkirakulam (Women)",
   "jail_type": "special_sub_jail",
   "hierarchy_type": "women",
   "status": "active",
-  "parent": "Madurai"
+  "parent": "Madurai",
+  "district": "Tirunelveli"
  },
  {
   "name": "Singanallur",
@@ -292,7 +301,8 @@
   "jail_type": "women_sub_jail",
   "hierarchy_type": "women",
   "status": "active",
-  "parent": "Vellore"
+  "parent": "Vellore",
+  "district": "Cuddalore"
  },
  {
   "name": "Viluppuram",
@@ -302,7 +312,8 @@
   "parent": "Vellore",
   "match_name": "Villupuram",
   "match_type": "women_sub_jail",
-  "match_hierarchy": "women"
+  "match_hierarchy": "women",
+  "district": "Viluppuram"
  },
  {
   "name": "Dharamapuri",
@@ -319,7 +330,8 @@
     "type": "sub_jail",
     "hierarchy": "general"
    }
-  ]
+  ],
+  "district": "Dharmapuri"
  },
  {
   "name": "Tiruppur Annex",
@@ -333,28 +345,32 @@
     "type": "sub_jail",
     "hierarchy": "general"
    }
-  ]
+  ],
+  "district": "Tiruppur"
  },
  {
   "name": "Nilakottai",
   "jail_type": "women_sub_jail",
   "hierarchy_type": "women",
   "status": "active",
-  "parent": "Madurai"
+  "parent": "Madurai",
+  "district": "Madurai"
  },
  {
   "name": "Paramakudi",
   "jail_type": "women_sub_jail",
   "hierarchy_type": "women",
   "status": "active",
-  "parent": "Madurai"
+  "parent": "Madurai",
+  "district": "Madurai"
  },
  {
   "name": "Thuckalay",
   "jail_type": "women_sub_jail",
   "hierarchy_type": "women",
   "status": "active",
-  "parent": "Madurai"
+  "parent": "Madurai",
+  "district": "Kanniyakumari"
  },
  {
   "name": "Tiruvarur",
@@ -371,7 +387,8 @@
     "type": "sub_jail",
     "hierarchy": "general"
    }
-  ]
+  ],
+  "district": "Thiruvarur"
  },
  {
   "name": "Saidapet",
@@ -1190,7 +1207,8 @@
   "parent": "Madurai",
   "match_name": "Sattur",
   "match_type": "sub_jail",
-  "match_hierarchy": "general"
+  "match_hierarchy": "general",
+  "district": "Virudhunagar"
  },
  {
   "name": "Tiruchendur",
