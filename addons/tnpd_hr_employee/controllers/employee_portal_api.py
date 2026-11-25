@@ -783,7 +783,7 @@ class EmployeePortalAPI(http.Controller):
 
     @http.route(
         '/api/employee-portal/transfers',
-        auth='none', type='http', methods=['POST'], csrf=False,
+        auth='none', type='http', methods=['POST'], csrf=False, readonly=False,
     )
     def create_transfer(self, **_kw):
         emp, err = self._require_employee_session()
