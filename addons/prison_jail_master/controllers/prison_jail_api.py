@@ -373,7 +373,7 @@ class PrisonJailApiController(http.Controller):
         Query params: page, limit
         """
         try:
-            domain = [('is_closed', '=', True), ('active', '=', True), ('jail_type', '=', 'sub_jail')]
+            domain = [('is_closed', '=', True), ('active', '=', True)]  # every closed institution, whatever its type
             data, total, page, limit = self._fetch_list(domain, kwargs)
             return self._ok(data, total, page, limit)
         except ValueError as exc:
@@ -646,9 +646,8 @@ class PrisonJailApiController(http.Controller):
             total_children = Jail.search_count(
                 [('jail_type', 'not in', list(_PARENT_TYPES)), ('active', '=', True), ('is_closed', '=', False)]
             )
-            closed_subjails = Jail.search_count(
-                [('jail_type', '=', 'sub_jail'), ('is_closed', '=', True), ('active', '=', True)]
-            )
+            # every closed institution (the Closed tab lists the same set)
+            closed_subjails = Jail.search_count([('is_closed', '=', True), ('active', '=', True)])
 
             # Institutions that are counted but sit under nothing the tree shows: no parent, or a
             # parent that is switched off. Listed apart so none is hidden and the counts add up.
