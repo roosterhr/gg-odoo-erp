@@ -105,10 +105,10 @@ class DashboardApiController(http.Controller):
             central_jails  = Jail.search([('jail_type', '=', 'central_jail'), ('active', '=', True)])
             district_jails = Jail.search([('jail_type', '=', 'district_jail'),  ('active', '=', True)])
             sub_jails      = Jail.search([('jail_type', '=', 'sub_jail'),        ('active', '=', True)])
-            # The same total as Prisons Info: every open institution of every type. Closed ones are
-            # counted apart, so the two screens always agree.
+            # The same total as Prisons Info: every institution of every type, closed ones included
+            # (they are also counted apart, so the card can say how many of them are closed).
             live = Jail.search([('active', '=', True)])
-            total_institutions = len(live.filtered(lambda j: not j.is_closed))
+            total_institutions = len(live)
             closed_institutions = len(live.filtered('is_closed'))
             prison_categories  = len({j.jail_type for j in live})
             institution_list   = [{'id': j.id, 'name': j.name} for j in (central_jails | district_jails)]

@@ -269,10 +269,11 @@ class TestClosedJailsAndOverview(HttpCase):
         self.assertEqual((child['sanctioned_strength'], child['vacancy_count']), (10, 4))
 
     def test_the_dashboard_and_prisons_info_count_institutions_the_same_way(self):
-        info = self._get('/api/jails/hierarchy-with-vacancy').json()['stats']['total']
+        open_ones = self._get('/api/jails/hierarchy-with-vacancy').json()['stats']['total']
         summary = self._get('/api/dashboard/summary').json()
-        self.assertEqual(summary['total_institutions'], info)
         self.assertGreaterEqual(summary['closed_institutions'], 1)  # the closed jail made for this test
+        # every institution, closed ones included: Prisons Info's Total Institutions card
+        self.assertEqual(summary['total_institutions'], open_ones + summary['closed_institutions'])
 
     def test_a_jail_under_a_switched_off_district_is_listed_not_hidden(self):
         off = self.env['prison.jail'].create({
