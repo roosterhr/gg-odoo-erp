@@ -1,0 +1,1129 @@
+[
+ {
+  "name": "Chennai - I",
+  "jail_type": "central_jail",
+  "hierarchy_type": "general",
+  "status": "active"
+ },
+ {
+  "name": "Chennai - II",
+  "jail_type": "central_jail",
+  "hierarchy_type": "general",
+  "status": "active"
+ },
+ {
+  "name": "Vellore",
+  "jail_type": "central_jail",
+  "hierarchy_type": "general",
+  "status": "active"
+ },
+ {
+  "name": "Cuddalore",
+  "jail_type": "central_jail",
+  "hierarchy_type": "general",
+  "status": "active"
+ },
+ {
+  "name": "Tiruchirappalli",
+  "jail_type": "central_jail",
+  "hierarchy_type": "general",
+  "status": "active"
+ },
+ {
+  "name": "Salem",
+  "jail_type": "central_jail",
+  "hierarchy_type": "general",
+  "status": "active"
+ },
+ {
+  "name": "Coimbatore",
+  "jail_type": "central_jail",
+  "hierarchy_type": "general",
+  "status": "active"
+ },
+ {
+  "name": "Madurai",
+  "jail_type": "central_jail",
+  "hierarchy_type": "general",
+  "status": "active"
+ },
+ {
+  "name": "Palayamkottai",
+  "jail_type": "central_jail",
+  "hierarchy_type": "general",
+  "status": "active"
+ },
+ {
+  "name": "Chennai",
+  "jail_type": "spw",
+  "hierarchy_type": "women",
+  "status": "active"
+ },
+ {
+  "name": "Vellore",
+  "jail_type": "spw",
+  "hierarchy_type": "women",
+  "status": "active"
+ },
+ {
+  "name": "Coimbatore",
+  "jail_type": "spw",
+  "hierarchy_type": "women",
+  "status": "active"
+ },
+ {
+  "name": "Tiruchirappalli",
+  "jail_type": "spw",
+  "hierarchy_type": "women",
+  "status": "active"
+ },
+ {
+  "name": "Madurai",
+  "jail_type": "spw",
+  "hierarchy_type": "women",
+  "status": "active"
+ },
+ {
+  "name": "Pudukkottai",
+  "jail_type": "district_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "match_name": "D.J. Pudukkottai",
+  "match_type": "district_jail",
+  "match_hierarchy": "general",
+  "merge_from": [
+   {
+    "name": "Thanjavur District",
+    "type": "district_jail",
+    "hierarchy": "general"
+   },
+   {
+    "name": "Mayiladuthurai District",
+    "type": "district_jail",
+    "hierarchy": "general"
+   },
+   {
+    "name": "Thiruvarur District",
+    "type": "district_jail",
+    "hierarchy": "general"
+   }
+  ]
+ },
+ {
+  "name": "Chengalpattu",
+  "jail_type": "district_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "parent": "Chennai - I"
+ },
+ {
+  "name": "Villuppuram",
+  "jail_type": "district_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "parent": "Cuddalore",
+  "match_name": "Villupuram",
+  "match_type": "district_jail",
+  "match_hierarchy": "general"
+ },
+ {
+  "name": "Dharmapuri",
+  "jail_type": "district_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "parent": "Salem",
+  "match_name": "D.J. Dharmapuri",
+  "match_type": "district_jail",
+  "match_hierarchy": "general"
+ },
+ {
+  "name": "Erode @ Gobichettipalayam",
+  "jail_type": "district_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "parent": "Coimbatore"
+ },
+ {
+  "name": "Tiruppur",
+  "jail_type": "district_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "parent": "Coimbatore",
+  "match_name": "D.J. Tiruppur",
+  "match_type": "district_jail",
+  "match_hierarchy": "general"
+ },
+ {
+  "name": "Dindigul",
+  "jail_type": "district_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "parent": "Madurai",
+  "match_name": "D.J. Dindigul",
+  "match_type": "district_jail",
+  "match_hierarchy": "general"
+ },
+ {
+  "name": "Theni",
+  "jail_type": "district_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "parent": "Madurai",
+  "match_name": "D.J. Theni",
+  "match_type": "district_jail",
+  "match_hierarchy": "general"
+ },
+ {
+  "name": "Ramanathapuram",
+  "jail_type": "district_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "parent": "Madurai",
+  "match_name": "D.J. Ramanathapuram",
+  "match_type": "district_jail",
+  "match_hierarchy": "general"
+ },
+ {
+  "name": "Virudhunagar",
+  "jail_type": "district_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "parent": "Madurai",
+  "match_name": "D.J. Virudhunagar",
+  "match_type": "district_jail",
+  "match_hierarchy": "general"
+ },
+ {
+  "name": "Thoothukudi @ Perurani",
+  "jail_type": "district_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "parent": "Palayamkottai"
+ },
+ {
+  "name": "Kanniyakumari @ Nagarcoil",
+  "jail_type": "district_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "parent": "Palayamkottai",
+  "match_name": "Kanniyakumari @ Nagercoil",
+  "match_type": "district_jail",
+  "match_hierarchy": "general",
+  "merge_from": [
+   {
+    "name": "Kanniyakumari District",
+    "type": "district_jail",
+    "hierarchy": "general"
+   }
+  ]
+ },
+ {
+  "name": "Nagapattinam",
+  "jail_type": "district_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "parent": "Pudukkottai"
+ },
+ {
+  "name": "Attur",
+  "jail_type": "district_jail",
+  "hierarchy_type": "general",
+  "status": "closed",
+  "parent": "Salem"
+ },
+ {
+  "name": "Poonamallee (Men)",
+  "jail_type": "special_sub_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "parent": "Chennai - I"
+ },
+ {
+  "name": "Nanguneri (Men)",
+  "jail_type": "special_sub_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "parent": "Palayamkottai"
+ },
+ {
+  "name": "Salem (Women)",
+  "jail_type": "special_sub_jail",
+  "hierarchy_type": "women",
+  "status": "active",
+  "parent": "Coimbatore"
+ },
+ {
+  "name": "Kokkirakulam (Women)",
+  "jail_type": "special_sub_jail",
+  "hierarchy_type": "women",
+  "status": "active",
+  "parent": "Madurai"
+ },
+ {
+  "name": "Singanallur",
+  "jail_type": "open_air_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "parent": "Coimbatore"
+ },
+ {
+  "name": "Purasadaiudaippu",
+  "jail_type": "open_air_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "parent": "Madurai",
+  "match_name": "Purasaraidaiudaippu",
+  "match_type": "open_air_jail",
+  "match_hierarchy": "general"
+ },
+ {
+  "name": "Salem",
+  "jail_type": "farm_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "parent": "Salem"
+ },
+ {
+  "name": "Cuddalore",
+  "jail_type": "women_sub_jail",
+  "hierarchy_type": "women",
+  "status": "active",
+  "parent": "Vellore"
+ },
+ {
+  "name": "Viluppuram",
+  "jail_type": "women_sub_jail",
+  "hierarchy_type": "women",
+  "status": "active",
+  "parent": "Vellore",
+  "match_name": "Villupuram",
+  "match_type": "women_sub_jail",
+  "match_hierarchy": "women"
+ },
+ {
+  "name": "Dharamapuri",
+  "jail_type": "women_sub_jail",
+  "hierarchy_type": "women",
+  "status": "active",
+  "parent": "Coimbatore",
+  "match_name": "Dharmapuri",
+  "match_type": "women_sub_jail",
+  "match_hierarchy": "women",
+  "merge_from": [
+   {
+    "name": "S.J. Women Dharmapuri",
+    "type": "sub_jail",
+    "hierarchy": "general"
+   }
+  ]
+ },
+ {
+  "name": "Tiruppur Annex",
+  "jail_type": "women_sub_jail",
+  "hierarchy_type": "women",
+  "status": "active",
+  "parent": "Coimbatore",
+  "merge_from": [
+   {
+    "name": "Female Annex, Tiruppur",
+    "type": "sub_jail",
+    "hierarchy": "general"
+   }
+  ]
+ },
+ {
+  "name": "Nilakottai",
+  "jail_type": "women_sub_jail",
+  "hierarchy_type": "women",
+  "status": "active",
+  "parent": "Madurai"
+ },
+ {
+  "name": "Paramakudi",
+  "jail_type": "women_sub_jail",
+  "hierarchy_type": "women",
+  "status": "active",
+  "parent": "Madurai"
+ },
+ {
+  "name": "Thuckalay",
+  "jail_type": "women_sub_jail",
+  "hierarchy_type": "women",
+  "status": "active",
+  "parent": "Madurai"
+ },
+ {
+  "name": "Tiruvarur",
+  "jail_type": "women_sub_jail",
+  "hierarchy_type": "women",
+  "status": "active",
+  "parent": "Tiruchirappalli",
+  "match_name": "Thiruvarur",
+  "match_type": "women_sub_jail",
+  "match_hierarchy": "women",
+  "merge_from": [
+   {
+    "name": "WSJ, Thiruvarur",
+    "type": "sub_jail",
+    "hierarchy": "general"
+   }
+  ]
+ },
+ {
+  "name": "Saidapet",
+  "jail_type": "sub_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "parent": "Chennai - I"
+ },
+ {
+  "name": "Young Offenders Correctional Facility (YOCF)",
+  "jail_type": "transit_yard",
+  "hierarchy_type": "general",
+  "status": "active",
+  "parent": "Chennai - I",
+  "match_name": "Puzhal (Young Offenders Correctional Facility)",
+  "match_type": "transit_yard",
+  "match_hierarchy": "general"
+ },
+ {
+  "name": "Kacheepuram",
+  "jail_type": "sub_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "parent": "Chennai - I",
+  "match_name": "Kancheepuram",
+  "match_type": "sub_jail",
+  "match_hierarchy": "general"
+ },
+ {
+  "name": "Thiruthani",
+  "jail_type": "sub_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "parent": "Chennai - I",
+  "match_name": "Tiruthani",
+  "match_type": "sub_jail",
+  "match_hierarchy": "general"
+ },
+ {
+  "name": "Thiruvallur",
+  "jail_type": "sub_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "parent": "Chennai - I",
+  "match_name": "Tiruvallur",
+  "match_type": "sub_jail",
+  "match_hierarchy": "general"
+ },
+ {
+  "name": "Ponneri",
+  "jail_type": "sub_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "parent": "Chennai - I"
+ },
+ {
+  "name": "Ambur",
+  "jail_type": "sub_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "parent": "Vellore"
+ },
+ {
+  "name": "Gudiyatham",
+  "jail_type": "sub_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "parent": "Vellore"
+ },
+ {
+  "name": "Tirupathur",
+  "jail_type": "sub_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "parent": "Vellore"
+ },
+ {
+  "name": "Vaniyambadi",
+  "jail_type": "sub_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "parent": "Vellore"
+ },
+ {
+  "name": "Walaja",
+  "jail_type": "sub_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "parent": "Vellore",
+  "match_name": "Walajah",
+  "match_type": "sub_jail",
+  "match_hierarchy": "general"
+ },
+ {
+  "name": "Arakkonam",
+  "jail_type": "sub_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "parent": "Vellore"
+ },
+ {
+  "name": "Chengam",
+  "jail_type": "sub_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "parent": "Vellore"
+ },
+ {
+  "name": "Polur",
+  "jail_type": "sub_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "parent": "Vellore"
+ },
+ {
+  "name": "Tiruvannamalai",
+  "jail_type": "sub_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "parent": "Vellore"
+ },
+ {
+  "name": "Vandavasi",
+  "jail_type": "sub_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "parent": "Vellore"
+ },
+ {
+  "name": "Chidambaram",
+  "jail_type": "sub_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "parent": "Cuddalore"
+ },
+ {
+  "name": "Virudhachalam",
+  "jail_type": "sub_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "parent": "Cuddalore"
+ },
+ {
+  "name": "Panruti",
+  "jail_type": "sub_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "parent": "Cuddalore"
+ },
+ {
+  "name": "Tindivanam",
+  "jail_type": "sub_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "parent": "Cuddalore",
+  "match_name": "Thindivanam",
+  "match_type": "sub_jail",
+  "match_hierarchy": "general"
+ },
+ {
+  "name": "Gingee",
+  "jail_type": "sub_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "parent": "Cuddalore"
+ },
+ {
+  "name": "Kallakurichi",
+  "jail_type": "sub_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "parent": "Cuddalore"
+ },
+ {
+  "name": "Ulundurpet",
+  "jail_type": "sub_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "parent": "Cuddalore"
+ },
+ {
+  "name": "Thirukovilur",
+  "jail_type": "sub_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "parent": "Cuddalore"
+ },
+ {
+  "name": "Lalgudi",
+  "jail_type": "sub_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "parent": "Tiruchirappalli"
+ },
+ {
+  "name": "Thuraiyur",
+  "jail_type": "sub_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "parent": "Tiruchirappalli"
+ },
+ {
+  "name": "Perambalur",
+  "jail_type": "sub_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "parent": "Tiruchirappalli"
+ },
+ {
+  "name": "Karur",
+  "jail_type": "sub_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "parent": "Tiruchirappalli"
+ },
+ {
+  "name": "Kulithalai",
+  "jail_type": "sub_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "parent": "Tiruchirappalli"
+ },
+ {
+  "name": "Ariyalur",
+  "jail_type": "sub_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "parent": "Tiruchirappalli"
+ },
+ {
+  "name": "Jayamkondam",
+  "jail_type": "sub_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "parent": "Tiruchirappalli",
+  "match_name": "Jeyankondam",
+  "match_type": "sub_jail",
+  "match_hierarchy": "general"
+ },
+ {
+  "name": "Omalur",
+  "jail_type": "sub_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "parent": "Salem"
+ },
+ {
+  "name": "Sankagiri",
+  "jail_type": "sub_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "parent": "Salem"
+ },
+ {
+  "name": "Namakkal",
+  "jail_type": "sub_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "parent": "Salem"
+ },
+ {
+  "name": "Thiruchengode",
+  "jail_type": "sub_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "parent": "Salem",
+  "match_name": "Thiruchengodu",
+  "match_type": "sub_jail",
+  "match_hierarchy": "general"
+ },
+ {
+  "name": "Harur",
+  "jail_type": "sub_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "parent": "Salem"
+ },
+ {
+  "name": "Hosur",
+  "jail_type": "sub_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "parent": "Salem"
+ },
+ {
+  "name": "Krishnagiri",
+  "jail_type": "sub_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "parent": "Salem"
+ },
+ {
+  "name": "Uthangarai",
+  "jail_type": "sub_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "parent": "Salem"
+ },
+ {
+  "name": "Erode",
+  "jail_type": "sub_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "parent": "Coimbatore"
+ },
+ {
+  "name": "Perundurai",
+  "jail_type": "sub_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "parent": "Coimbatore",
+  "match_name": "Perundhurai",
+  "match_type": "sub_jail",
+  "match_hierarchy": "general"
+ },
+ {
+  "name": "Bhavani",
+  "jail_type": "sub_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "parent": "Coimbatore"
+ },
+ {
+  "name": "Sathyamangalam",
+  "jail_type": "sub_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "parent": "Coimbatore",
+  "match_name": "Sathiamangalam",
+  "match_type": "sub_jail",
+  "match_hierarchy": "general"
+ },
+ {
+  "name": "Avinashi",
+  "jail_type": "sub_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "parent": "Coimbatore"
+ },
+ {
+  "name": "Udumalaipet",
+  "jail_type": "sub_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "parent": "Coimbatore",
+  "match_name": "Udumalaipettai",
+  "match_type": "sub_jail",
+  "match_hierarchy": "general"
+ },
+ {
+  "name": "Dharapuram",
+  "jail_type": "sub_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "parent": "Coimbatore"
+ },
+ {
+  "name": "Palladam",
+  "jail_type": "sub_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "parent": "Coimbatore"
+ },
+ {
+  "name": "Ooty",
+  "jail_type": "sub_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "parent": "Coimbatore"
+ },
+ {
+  "name": "Coonoor",
+  "jail_type": "sub_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "parent": "Coimbatore"
+ },
+ {
+  "name": "Gudalur",
+  "jail_type": "sub_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "parent": "Coimbatore"
+ },
+ {
+  "name": "Pollachi",
+  "jail_type": "sub_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "parent": "Coimbatore"
+ },
+ {
+  "name": "Vedasandur",
+  "jail_type": "sub_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "parent": "Madurai"
+ },
+ {
+  "name": "Palani",
+  "jail_type": "sub_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "parent": "Madurai"
+ },
+ {
+  "name": "Kodaikkanal",
+  "jail_type": "sub_jail",
+  "hierarchy_type": "general",
+  "status": "closed",
+  "parent": "Madurai",
+  "remarks": "Temporarily closed",
+  "match_name": "Kodaikanal",
+  "match_type": "sub_jail",
+  "match_hierarchy": "general"
+ },
+ {
+  "name": "Uthamapalayam",
+  "jail_type": "sub_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "parent": "Madurai"
+ },
+ {
+  "name": "Periyakulam",
+  "jail_type": "sub_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "parent": "Madurai",
+  "match_name": "Periakulam",
+  "match_type": "sub_jail",
+  "match_hierarchy": "general"
+ },
+ {
+  "name": "Usilampatti",
+  "jail_type": "sub_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "parent": "Madurai"
+ },
+ {
+  "name": "Melur",
+  "jail_type": "sub_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "parent": "Madurai"
+ },
+ {
+  "name": "Thirumangalam",
+  "jail_type": "sub_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "parent": "Madurai"
+ },
+ {
+  "name": "Sivagangai",
+  "jail_type": "sub_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "parent": "Madurai"
+ },
+ {
+  "name": "Tiruppattur",
+  "jail_type": "sub_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "parent": "Madurai",
+  "match_name": "Tiruppathur",
+  "match_type": "sub_jail",
+  "match_hierarchy": "general"
+ },
+ {
+  "name": "Mudukulathur",
+  "jail_type": "sub_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "parent": "Madurai"
+ },
+ {
+  "name": "Aruppukottai",
+  "jail_type": "sub_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "parent": "Madurai"
+ },
+ {
+  "name": "Srivilliputhur",
+  "jail_type": "sub_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "parent": "Madurai"
+ },
+ {
+  "name": "Ambasamudram",
+  "jail_type": "sub_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "parent": "Palayamkottai",
+  "match_name": "Ambasamuthiram",
+  "match_type": "sub_jail",
+  "match_hierarchy": "general"
+ },
+ {
+  "name": "Tenkasi",
+  "jail_type": "sub_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "parent": "Palayamkottai"
+ },
+ {
+  "name": "Sankarankoil",
+  "jail_type": "sub_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "parent": "Palayamkottai"
+ },
+ {
+  "name": "Kovilpatti",
+  "jail_type": "sub_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "parent": "Palayamkottai"
+ },
+ {
+  "name": "Srivaikundam",
+  "jail_type": "sub_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "parent": "Palayamkottai"
+ },
+ {
+  "name": "Kuzhithurai",
+  "jail_type": "sub_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "parent": "Palayamkottai"
+ },
+ {
+  "name": "Thirumayam",
+  "jail_type": "sub_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "parent": "Pudukkottai"
+ },
+ {
+  "name": "Aranthangi",
+  "jail_type": "sub_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "parent": "Pudukkottai"
+ },
+ {
+  "name": "Papanasam",
+  "jail_type": "sub_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "parent": "Pudukkottai"
+ },
+ {
+  "name": "Thiruvidaimaruthur",
+  "jail_type": "sub_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "parent": "Pudukkottai"
+ },
+ {
+  "name": "Kumbakonam",
+  "jail_type": "sub_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "parent": "Pudukkottai"
+ },
+ {
+  "name": "Thanjavur",
+  "jail_type": "sub_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "parent": "Pudukkottai"
+ },
+ {
+  "name": "Sirkali",
+  "jail_type": "sub_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "parent": "Pudukkottai"
+ },
+ {
+  "name": "Mayiladuthurai",
+  "jail_type": "sub_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "parent": "Pudukkottai"
+ },
+ {
+  "name": "Tharangambadi",
+  "jail_type": "sub_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "parent": "Pudukkottai"
+ },
+ {
+  "name": "Thiruthuraipoondi",
+  "jail_type": "sub_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "parent": "Pudukkottai"
+ },
+ {
+  "name": "Nannilam",
+  "jail_type": "sub_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "parent": "Pudukkottai"
+ },
+ {
+  "name": "Mannarkudi",
+  "jail_type": "sub_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "parent": "Pudukkottai"
+ },
+ {
+  "name": "Vellore (Annexe)",
+  "jail_type": "sub_jail",
+  "hierarchy_type": "general",
+  "status": "active",
+  "parent": "Vellore",
+  "match_name": "Vellore (Annex)",
+  "match_type": "sub_jail",
+  "match_hierarchy": "general"
+ },
+ {
+  "name": "Maduranthagam",
+  "jail_type": "sub_jail",
+  "hierarchy_type": "general",
+  "status": "closed",
+  "parent": "Chennai - I"
+ },
+ {
+  "name": "Arani",
+  "jail_type": "sub_jail",
+  "hierarchy_type": "general",
+  "status": "closed",
+  "parent": "Vellore"
+ },
+ {
+  "name": "Cuddalore",
+  "jail_type": "sub_jail",
+  "hierarchy_type": "general",
+  "status": "closed",
+  "parent": "Cuddalore"
+ },
+ {
+  "name": "Parangipet",
+  "jail_type": "sub_jail",
+  "hierarchy_type": "general",
+  "status": "closed",
+  "parent": "Cuddalore",
+  "merge_from": [
+   {
+    "name": "S.J. Portonova",
+    "type": "sub_jail",
+    "hierarchy": "general"
+   }
+  ]
+ },
+ {
+  "name": "Paramathay Vellore",
+  "jail_type": "sub_jail",
+  "hierarchy_type": "general",
+  "status": "closed",
+  "parent": "Salem",
+  "match_name": "S.J. Paramathy",
+  "match_type": "sub_jail",
+  "match_hierarchy": "general"
+ },
+ {
+  "name": "Rasipuram",
+  "jail_type": "sub_jail",
+  "hierarchy_type": "general",
+  "status": "closed",
+  "parent": "Salem"
+ },
+ {
+  "name": "Mettupalayam",
+  "jail_type": "sub_jail",
+  "hierarchy_type": "general",
+  "status": "closed",
+  "parent": "Coimbatore"
+ },
+ {
+  "name": "Manapparai",
+  "jail_type": "sub_jail",
+  "hierarchy_type": "general",
+  "status": "closed",
+  "parent": "Tiruchirappalli"
+ },
+ {
+  "name": "Musiri",
+  "jail_type": "sub_jail",
+  "hierarchy_type": "general",
+  "status": "closed",
+  "parent": "Tiruchirappalli",
+  "match_name": "S.J. Musiri",
+  "match_type": "sub_jail",
+  "match_hierarchy": "general"
+ },
+ {
+  "name": "Thiruvadanal",
+  "jail_type": "sub_jail",
+  "hierarchy_type": "general",
+  "status": "closed",
+  "parent": "Madurai",
+  "match_name": "Thiruvadanai",
+  "match_type": "sub_jail",
+  "match_hierarchy": "general"
+ },
+ {
+  "name": "Satur",
+  "jail_type": "women_sub_jail",
+  "hierarchy_type": "women",
+  "status": "closed",
+  "parent": "Madurai",
+  "match_name": "Sattur",
+  "match_type": "sub_jail",
+  "match_hierarchy": "general"
+ },
+ {
+  "name": "Tiruchendur",
+  "jail_type": "sub_jail",
+  "hierarchy_type": "general",
+  "status": "closed",
+  "parent": "Palayamkottai"
+ },
+ {
+  "name": "Keeranur",
+  "jail_type": "sub_jail",
+  "hierarchy_type": "general",
+  "status": "closed",
+  "parent": "Pudukkottai"
+ },
+ {
+  "name": "Pattukottai",
+  "jail_type": "sub_jail",
+  "hierarchy_type": "general",
+  "status": "closed",
+  "parent": "Pudukkottai",
+  "match_name": "S.J. Pattukottai",
+  "match_type": "sub_jail",
+  "match_hierarchy": "general"
+ },
+ {
+  "name": "Cheyyar",
+  "jail_type": "sub_jail",
+  "hierarchy_type": "general",
+  "status": "closed",
+  "parent": "Vellore"
+ }
+]
