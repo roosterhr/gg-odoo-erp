@@ -13,5 +13,4 @@ from . import role_migration_api
 from . import transfer_order_api
 from . import admin_notification_api
 from . import transfer_suggestion_api
-from . import transfer_document_api
 from . import jail_master_api

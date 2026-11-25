@@ -1,17 +1,13 @@
 # Part of TNPD Prison HR Employee Extension.
 # License: LGPL-3
 
-"""Client round 1: several reasons, the weighted score, service years, suggestions and documents."""
+"""Client round 1: several reasons, the weighted score, service years and suggestions."""
 
 from datetime import date, timedelta
 
 from odoo.tests import HttpCase, TransactionCase, tagged
 
 from .common import http_login, make_fixtures
-
-PDF = b'%PDF-1.4\n1 0 obj<<>>endobj\ntrailer<<>>\n%%EOF\n'
-PNG = b'\x89PNG\r\n\x1a\n' + b'\x00' * 20
-
 
 def _request(env, fx, officer, codes=(), state='pending', score_codes=None):
     reasons = env['tnpd.transfer.reason'].search([('code', 'in', list(codes))])
@@ -126,7 +122,7 @@ class TestServiceYearsAndEligibility(TransactionCase):
 
 
 @tagged('post_install', '-at_install')
-class TestSuggestionsAndDocuments(HttpCase):
+class TestSuggestions(HttpCase):
 
     @classmethod
     def setUpClass(cls):
@@ -183,70 +179,3 @@ class TestSuggestionsAndDocuments(HttpCase):
     def test_a_posting_with_no_vacancy_suggests_nobody(self):
         self.env['prison.vacancy'].search([('prison_id', '=', self.fx.dst_sub.id)]).write({'occupied_count': 3, 'vacancy_count': 0})
         self.assertFalse(any(a['suggested'] for a in self._suggestions(self.low)['applicants']))
-
-    # ── documents ─────────────────────────────────────────────────────────────
-
-    def _upload(self, request, name='cert.pdf', content=PDF):
-        http_login(self, request.employee_id.x_employee_code)
-        return self.url_open('/api/employee-portal/transfer/%s/documents' % request.id,
-                             files={'file': (name, content)})
-
-    def test_an_officer_can_attach_a_pdf_and_a_picture(self):
-        self.assertTrue(self._upload(self.low).json()['success'])
-        self.assertTrue(self._upload(self.low, 'proof.png', PNG).json()['success'])
-        listing = self.url_open('/api/employee-portal/transfer/%s/documents' % self.low.id).json()
-        self.assertEqual([d['name'] for d in listing['documents']], ['cert.pdf', 'proof.png'])
-
-    def test_other_types_are_refused(self):
-        reply = self._upload(self.low, 'run.exe', b'MZ\x90\x00').json()
-        self.assertFalse(reply['success'])
-        self.assertIn('PDF', reply['message'])
-
-    def test_a_file_that_is_not_what_it_says_is_refused(self):
-        self.assertFalse(self._upload(self.low, 'fake.pdf', b'<html>not a pdf</html>').json()['success'])
-
-    def test_an_empty_file_is_refused(self):
-        self.assertFalse(self._upload(self.low, 'empty.pdf', b'').json()['success'])
-
-    def test_a_file_over_the_size_limit_is_refused(self):
-        self.env['ir.config_parameter'].sudo().set_param('tnpd.transfer.doc_max_mb', '0.00001')
-        self.assertIn('too large', self._upload(self.low).json()['message'])
-
-    def test_at_most_the_limit_of_documents_per_request(self):
-        self.env['ir.config_parameter'].sudo().set_param('tnpd.transfer.doc_max_files', '2')
-        self._upload(self.low)
-        self._upload(self.low)
-        self.assertIn('At most 2', self._upload(self.low).json()['message'])
-
-    def test_nobody_can_attach_to_somebody_elses_request(self):
-        http_login(self, self.fx.officers[1].x_employee_code)
-        reply = self.url_open('/api/employee-portal/transfer/%s/documents' % self.low.id,
-                              files={'file': ('cert.pdf', PDF)})
-        self.assertEqual(reply.status_code, 404)
-
-    def test_documents_cannot_be_added_once_the_request_is_decided(self):
-        self.low.state = 'approved'
-        self.assertFalse(self._upload(self.low).json()['success'])
-
-    def test_the_officer_can_remove_a_document(self):
-        doc = self._upload(self.low).json()['document']
-        reply = self.url_open('/api/employee-portal/transfer/%s/documents/%s' % (self.low.id, doc['id']), method='DELETE')
-        self.assertTrue(reply.json()['success'])
-        self.assertEqual(self.url_open('/api/employee-portal/transfer/%s/documents' % self.low.id).json()['documents'], [])
-
-    def test_the_admin_sees_and_downloads_the_documents(self):
-        self._upload(self.low)
-        http_login(self, 'r1_admin@test.local')
-        listing = self.url_open('/api/transfer/%s/documents' % self.low.id).json()
-        self.assertEqual(len(listing['documents']), 1)
-        download = self.url_open('/api/transfer/documents/%s' % listing['documents'][0]['id'])
-        self.assertEqual(download.status_code, 200)
-        self.assertEqual(download.content, PDF)
-        self.assertEqual(download.headers['X-Content-Type-Options'], 'nosniff')
-        self.assertIn('attachment', download.headers['Content-Disposition'])
-
-    def test_an_officer_cannot_use_the_admin_download(self):
-        self._upload(self.low)
-        doc = self.env['ir.attachment'].search([('res_model', '=', 'transfer.approval.request'), ('res_id', '=', self.low.id)])
-        http_login(self, self.fx.officers[0].x_employee_code)
-        self.assertEqual(self.url_open('/api/transfer/documents/%s' % doc.id).status_code, 403)
