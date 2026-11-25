@@ -67,6 +67,35 @@ class PrisonJail(models.Model):
                                        not j.active, -staff.get(j.id, 0), j.id))[:1]
 
     @api.model
+    def _heal_tree(self):
+        """
+        Rebuild every institution's tree path from its parent, then the stored central-prison links.
+
+        Odoo's tree-path update matches EVERY row when the record being moved has an empty path
+        (it builds its filter from that path), so one institution with an empty path turns a
+        simple re-parenting into a table-wide rewrite. Some institutions here have an empty path,
+        so this runs before any institution is moved, and again at the end. Returns how many
+        central-prison links were repaired.
+        """
+        self.env.flush_all()
+        self._parent_store_compute()
+        self.invalidate_model(['parent_path'])
+        return self._heal_central_links()
+
+    @api.model
+    def _heal_central_links(self):
+        """
+        Make the stored central-prison link of every institution equal to its parent again.
+        It is a stored computed field that only follows ``parent_id`` when that is written through
+        the ORM; records reactivated or edited another way can be left pointing at an old parent.
+        Returns how many were repaired.
+        """
+        stale = self.with_context(active_test=False).search(
+            [('jail_type', 'not in', list(self.PARENT_TYPES))]).filtered(lambda j: j.central_jail_id != j.parent_id)
+        stale._compute_central_jail_id()
+        return len(stale)
+
+    @api.model
     def _find_among(self, names, jail_types, hierarchies):
         """The one record for a place known under several names: the one with staff first, then active, then the oldest."""
         keys = {self._master_key(n) for n in names if n}
@@ -124,8 +153,13 @@ class PrisonJail(models.Model):
         for table, column in self._LINKS:
             cr.execute('UPDATE %s SET %s = %%s WHERE %s = %%s' % (table, column, column), (new.id, old.id))
             moved += cr.rowcount
-        cr.execute('UPDATE prison_jail SET parent_id = %s WHERE parent_id = %s AND id != %s', (new.id, old.id, new.id))
-        moved += cr.rowcount
+        # through the ORM, so the tree path and the stored central-prison link follow the new parent;
+        # the cache is cleared first: ``new`` may have been created a moment ago, and its tree path
+        # is only read correctly from the database
+        self.env.invalidate_all()
+        children = self.with_context(active_test=False).search([('parent_id', '=', old.id), ('id', '!=', new.id)])
+        children.write({'parent_id': new.id})
+        moved += len(children)
         cr.execute("""INSERT INTO res_users_jurisdiction_jail_rel (jail_id, user_id)
                         SELECT %s, r.user_id FROM res_users_jurisdiction_jail_rel r WHERE r.jail_id = %s
                         ON CONFLICT DO NOTHING""", (new.id, old.id))
@@ -205,6 +239,7 @@ class PrisonJail(models.Model):
     @api.model
     def _apply_rows(self, rows, deactivate_missing):
         Jail = self.with_context(active_test=False)
+        self._heal_tree()  # before anything is moved: see _heal_tree
         valid_types = {key for key, _label in self._fields['jail_type'].selection}
         actions, touched, errors = [], set(), 0
 
@@ -300,6 +335,10 @@ class PrisonJail(models.Model):
                 jail.write({'active': False})
                 note(0, 'deactivate', jail.name, 'not in the client list')
 
+        healed = self._heal_tree()
+        if healed:
+            note(0, 'heal', 'central-prison links', '%s repaired to follow their parent' % healed)
+
         counts = {}
         for item in actions:
             counts[item['action']] = counts.get(item['action'], 0) + 1
@@ -320,6 +359,7 @@ class PrisonJail(models.Model):
         """
         Jail = self.with_context(active_test=False)
         changed = []
+        self._heal_tree()  # before anything is moved: see _heal_tree
 
         self.env.cr.execute("UPDATE prison_jail SET is_closed = FALSE WHERE is_closed IS NULL")
         if self.env.cr.rowcount:

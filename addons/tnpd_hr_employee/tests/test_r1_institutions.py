@@ -5,6 +5,7 @@
 
 import json
 
+from odoo.exceptions import UserError
 from odoo.tests import HttpCase, TransactionCase, tagged
 
 from .common import http_login, make_fixtures
@@ -95,6 +96,44 @@ class TestMasterReconcile(TransactionCase):
         self.assertEqual(result['summary'].get('merge'), 1)
         self.assertFalse(old.active)
         self.assertEqual([o.x_sub_jail_id for o in officers], [keeper] * len(officers))
+
+    def test_the_children_of_a_folded_record_follow_it_to_the_kept_one(self):
+        old = self.Jail.create({'name': 'R1Master OldDJ', 'jail_type': 'district_jail', 'parent_id': self.fx.src_central.id})
+        child = self.Jail.create({'name': 'R1Master Underpatti', 'jail_type': 'sub_jail', 'parent_id': old.id})
+        self.assertEqual(child.central_jail_id, old)
+        row = {'name': 'R1Master KeeperDJ', 'jail_type': 'district_jail', 'parent': self.parent,
+               'merge_from': [{'name': old.name, 'type': 'district_jail'}]}
+        self.Jail._reconcile_master([row], apply=True)
+        keeper = self._find('R1Master KeeperDJ')
+        self.assertEqual(child.parent_id, keeper)
+        self.assertEqual(child.central_jail_id, keeper)  # the stored link followed, not left on the old record
+        self.assertFalse(old.active)
+
+    def test_a_transfer_to_a_switched_off_institution_cannot_be_approved(self):
+        from .common import approved_transfer
+        transfer = approved_transfer(self.env, self.fx, self.fx.officers[0])
+        transfer.write({'state': 'pending'})
+        self.fx.dst_sub.active = False
+        with self.assertRaises(UserError):
+            transfer._validate_vacancy_and_gender()
+
+    def test_an_institution_with_an_empty_tree_path_does_not_corrupt_the_others(self):
+        mover, bystander = self.fx.src_sub, self.fx.dst_sub
+        self.env.cr.execute('UPDATE prison_jail SET parent_path = NULL WHERE id = %s', (mover.id,))
+        mover.invalidate_recordset()
+        row = {'name': mover.name, 'jail_type': 'sub_jail', 'parent': self.fx.dst_central.name}
+        self.Jail._reconcile_master([row], apply=True)
+        for jail in (mover, bystander):
+            self.assertTrue(jail.parent_path.endswith('/%s/' % jail.id), jail.parent_path)
+        self.assertEqual(mover.parent_id, self.fx.dst_central)
+
+    def test_a_central_prison_link_left_behind_is_repaired(self):
+        sub = self.fx.src_sub
+        self.env.cr.execute('UPDATE prison_jail SET central_jail_id = NULL WHERE id = %s', (sub.id,))
+        sub.invalidate_recordset()
+        self.assertFalse(sub.central_jail_id)
+        self.assertGreaterEqual(self.Jail._heal_central_links(), 1)
+        self.assertEqual(sub.central_jail_id, self.fx.src_central)
 
     def test_match_name_updates_the_record_kept_under_another_spelling(self):
         sub = self.fx.src_sub

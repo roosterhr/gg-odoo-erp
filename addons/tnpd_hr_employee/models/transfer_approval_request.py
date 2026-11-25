@@ -882,6 +882,11 @@ class TransferApprovalRequest(models.Model):
         if not dest:
             raise UserError('No destination prison selected.')
 
+        if not dest.active:
+            raise UserError(
+                f'"{dest.name}" is no longer an active institution and cannot be a transfer destination.'
+            )
+
         if dest.is_closed:
             raise UserError(
                 f'"{dest.name}" is marked as Closed and cannot be a transfer destination.'
