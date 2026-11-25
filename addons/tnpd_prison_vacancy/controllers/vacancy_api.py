@@ -158,8 +158,11 @@ class VacancyApiController(http.Controller):
         # "Total Strength" row indistinguishable from real designation data).
         is_fallback = False
         if not records:
-            pv = request.env['prison.vacancy'].sudo().search(
+            # a closed jail's row is archived: read it anyway, so its figures still show
+            pv = request.env['prison.vacancy'].sudo().with_context(active_test=False).search(
                 [('prison_id', '=', prison_id)], limit=1)
+            if pv and not pv.active and not pv.prison_id.is_closed:
+                pv = pv.browse()
             if pv and pv.sanctioned_strength:
                 jail = request.env['prison.jail'].sudo().browse(prison_id)
                 is_fallback = True

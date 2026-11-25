@@ -16,9 +16,8 @@ _logger = logging.getLogger(__name__)
 # Hard cap on records returned per page.
 _MAX_LIMIT = 100
 
-# Tenure thresholds in days.
-_TENURE_DAYS_STANDARD    = 1095  # 36 months — standard posting
-_TENURE_DAYS_HILL        = 547   # 18 months — hill station posting
+# Tenure threshold in days: every posting is 3 years.
+_TENURE_DAYS_STANDARD    = 1095  # 36 months
 _TENURE_DAYS = _TENURE_DAYS_STANDARD  # legacy alias
 
 
@@ -203,7 +202,11 @@ class TransferApprovalController(http.Controller):
             # Extended fields
             'transfer_type':    getattr(rec, 'transfer_type', '') or '',
             'reason_category':  getattr(rec, 'reason_category', '') or '',
+            'reason_categories': rec._reasons_payload(),
             'reason_score':     getattr(rec, 'reason_score', 0) or 0,
+            'service_years_total':   rec.service_years_total,
+            'service_years_current': rec.service_years_current,
+            'eligibility':      rec._eligibility(),
             'transfer_reason':  getattr(rec, 'transfer_reason', '') or '',
             'priority':         getattr(rec, 'priority', '') or '',
             'tenure_years':     tenure_years,
@@ -1117,9 +1120,12 @@ class TransferApprovalController(http.Controller):
                     domain.append(('priority', '=', kwargs['priority']))
 
             if kwargs.get('reason'):
-                valid_cats = set(env['transfer.approval.request'].REASON_SCORES)
-                if kwargs['reason'] in valid_cats:
-                    domain.append(('reason_category', '=', kwargs['reason']))
+                # one reason, or several separated by commas: a request matches if it has any of them
+                wanted = [c.strip() for c in kwargs['reason'].split(',') if c.strip()]
+                known = set(env['tnpd.transfer.reason'].sudo().search([]).mapped('code'))
+                wanted = [c for c in wanted if c in known]
+                if wanted:
+                    domain += ['|', ('reason_ids.code', 'in', wanted), ('reason_category', 'in', wanted)]
 
             TransferRequest = scoped(env, 'transfer.approval.request')
             total_count     = TransferRequest.search_count(domain)
@@ -1190,12 +1196,9 @@ class TransferApprovalController(http.Controller):
 
             # --- Validate reason (optional; retired and unknown values are refused) ---
             Transfer        = env['transfer.approval.request']
-            reason_category = (data.get('reason_category') or '').strip()
-            if reason_category and (
-                reason_category not in Transfer.REASON_SCORES
-                or reason_category in Transfer.LEGACY_REASONS
-            ):
-                return self._err('Invalid reason_category')
+            reasons, reason_err = Transfer._reasons_from_payload(data)
+            if reason_err:
+                return self._err(reason_err)
 
             # --- Validate priority (old field; optional, defaults to medium) ---
             priority = (data.get('priority') or 'medium').strip()
@@ -1253,7 +1256,7 @@ class TransferApprovalController(http.Controller):
                 'requested_by':            uid,
                 'state':                   'draft',
                 'transfer_type':           'request',
-                'reason_category':         reason_category or False,
+                'reason_ids':              [(6, 0, reasons.ids)],
                 'transfer_reason':         data.get('transfer_reason', ''),
                 'priority':                priority,
                 **current_vals,
@@ -1435,13 +1438,6 @@ class TransferApprovalController(http.Controller):
             except (TypeError, ValueError) as exc:
                 return self._err(f'Invalid pagination parameter: {exc}')
 
-            hill_param = kwargs.get('is_hill_station', None)
-            is_hill_filter = None
-            if hill_param == 'true':
-                is_hill_filter = True
-            elif hill_param == 'false':
-                is_hill_filter = False
-
             return self._json_response(
                 self._get_eligible_employees(
                     uid=uid,
@@ -1449,7 +1445,6 @@ class TransferApprovalController(http.Controller):
                     limit=limit,
                     search=kwargs.get('search', ''),
                     exclude_applied=False,
-                    is_hill_filter=is_hill_filter,
                     prompted_only=kwargs.get('vacancy_prompted') == 'true',
                 )
             )
@@ -1492,13 +1487,6 @@ class TransferApprovalController(http.Controller):
             except (TypeError, ValueError) as exc:
                 return self._err(f'Invalid pagination parameter: {exc}')
 
-            hill_param = kwargs.get('is_hill_station', None)
-            is_hill_filter = None
-            if hill_param == 'true':
-                is_hill_filter = True
-            elif hill_param == 'false':
-                is_hill_filter = False
-
             return self._json_response(
                 self._get_eligible_employees(
                     uid=uid,
@@ -1506,7 +1494,6 @@ class TransferApprovalController(http.Controller):
                     limit=limit,
                     search=kwargs.get('search', ''),
                     exclude_applied=True,
-                    is_hill_filter=is_hill_filter,
                     prompted_only=kwargs.get('vacancy_prompted') == 'true',
                 )
             )
@@ -1515,7 +1502,7 @@ class TransferApprovalController(http.Controller):
             _logger.exception('GET /api/transfer/eligible-admin failed: %s', exc)
             return self._err('Internal server error', status=500)
 
-    def _get_eligible_employees(self, uid, page, limit, search, exclude_applied, is_hill_filter=None, prompted_only=False):
+    def _get_eligible_employees(self, uid, page, limit, search, exclude_applied, prompted_only=False):
         """
         Shared logic for eligible-tenure and eligible-admin endpoints.
 
@@ -1532,27 +1519,15 @@ class TransferApprovalController(http.Controller):
 
         all_employees = scoped(env, 'hr.employee').search(emp_domain)
 
-        # Filter by tenure threshold (hill stations: 18 months, standard: 36 months)
+        # Filter by the tenure threshold: 3 years at the present station
         eligible = []
         for emp in all_employees:
             if not emp.x_date_present_station:
                 continue
-            is_hill = (
-                (emp.x_sub_jail_id and emp.x_sub_jail_id.is_hill_station) or
-                (emp.x_district_jail_id and emp.x_district_jail_id.is_hill_station) or
-                (emp.x_central_jail_id and emp.x_central_jail_id.is_hill_station)
-            )
-            threshold = _TENURE_DAYS_HILL if is_hill else _TENURE_DAYS_STANDARD
             delta = today - emp.x_date_present_station
-            if delta.days < threshold:
+            if delta.days < _TENURE_DAYS_STANDARD:
                 continue
-            eligible.append((emp, delta.days, bool(is_hill)))
-
-        # Filter by hill station if requested
-        if is_hill_filter is True:
-            eligible = [(emp, days, hill) for emp, days, hill in eligible if hill]
-        elif is_hill_filter is False:
-            eligible = [(emp, days, hill) for emp, days, hill in eligible if not hill]
+            eligible.append((emp, delta.days))
 
         # Find employees with existing tenure transfers to exclude
         if exclude_applied:
@@ -1571,7 +1546,7 @@ class TransferApprovalController(http.Controller):
         blocked_emp_ids  = set(blocked_requests.mapped('employee_id').ids)
 
         # Filter out blocked employees
-        eligible = [(emp, days, hill) for emp, days, hill in eligible if emp.id not in blocked_emp_ids]
+        eligible = [(emp, days) for emp, days in eligible if emp.id not in blocked_emp_ids]
 
         # Determine if any other prison has vacancy
         has_any_vacancy = False
@@ -1585,7 +1560,7 @@ class TransferApprovalController(http.Controller):
         # transfer request found no vacancy for their position at their prison)
         prompted_ids = set()
         try:
-            all_ids = [emp.id for emp, _d, _h in eligible]
+            all_ids = [emp.id for emp, _d in eligible]
             if all_ids:
                 notes = env['tnpd.notification'].sudo().search_read([
                     ('employee_id', 'in', all_ids),
@@ -1595,7 +1570,7 @@ class TransferApprovalController(http.Controller):
                 prompted_ids = {n['employee_id'][0] for n in notes}
         except Exception:
             pass
-        prompted_count = sum(1 for emp, _d, _h in eligible if emp.id in prompted_ids)
+        prompted_count = sum(1 for emp, _d in eligible if emp.id in prompted_ids)
 
         if prompted_only:
             eligible = [t for t in eligible if t[0].id in prompted_ids]
@@ -1606,7 +1581,7 @@ class TransferApprovalController(http.Controller):
         page_slice = eligible[offset: offset + limit]
 
         data = []
-        for emp, days, _ in page_slice:
+        for emp, days in page_slice:
             tenure_years = round(days / 365.25, 1)
 
             # Check vacancy at OTHER prisons (not current sub jail) and collect details
@@ -1650,14 +1625,8 @@ class TransferApprovalController(http.Controller):
             else:
                 current_jail_level = 'central'
 
-            is_hill = (
-                (emp.x_sub_jail_id and emp.x_sub_jail_id.is_hill_station) or
-                (emp.x_district_jail_id and emp.x_district_jail_id.is_hill_station) or
-                (emp.x_central_jail_id and emp.x_central_jail_id.is_hill_station)
-            )
-            threshold_days = _TENURE_DAYS_HILL if is_hill else _TENURE_DAYS_STANDARD
             from datetime import timedelta
-            eligible_since_date = emp.x_date_present_station + timedelta(days=threshold_days)
+            eligible_since_date = emp.x_date_present_station + timedelta(days=_TENURE_DAYS_STANDARD)
 
             # Resolve role_id by matching designation name to prison.role
             # Designations may have a gender suffix like " (Men)" or " (Women)" —
@@ -1697,7 +1666,6 @@ class TransferApprovalController(http.Controller):
                     'name': sub_name,
                 },
                 'current_jail_level':      current_jail_level,
-                'is_hill_station':         bool(is_hill),
                 'date_present_station':   str(emp.x_date_present_station),
                 'eligible_since':         str(eligible_since_date),
                 'tenure_years':           tenure_years,
@@ -2074,7 +2042,7 @@ class TransferApprovalController(http.Controller):
     def overstay_occupants(self, **kwargs):
         """
         List employees posted at a prison who have completed their tenure
-        transfer period there (3 years standard / 18 months hill station).
+        transfer period there (3 years).
 
         Used by the approval UI to show, for a no-vacancy preference, which
         occupants could vacate a post via tenure transfer.
@@ -2100,8 +2068,7 @@ class TransferApprovalController(http.Controller):
             if not jail.exists():
                 return self._err('Prison not found', status=404)
 
-            threshold_days = _TENURE_DAYS_HILL if jail.is_hill_station else _TENURE_DAYS_STANDARD
-            cutoff = date.today() - timedelta(days=threshold_days)
+            cutoff = date.today() - timedelta(days=_TENURE_DAYS_STANDARD)
 
             # Match by M2O jail ids AND legacy text fields — long-tenured
             # officers are the most likely cohort still linked via the
@@ -2151,8 +2118,7 @@ class TransferApprovalController(http.Controller):
                 'success':         True,
                 'prison_id':       jail.id,
                 'prison_name':     jail.name or '',
-                'is_hill_station': bool(jail.is_hill_station),
-                'threshold_label': '18 months' if jail.is_hill_station else '3 years',
+                'threshold_label': '3 years',
                 'count':           len(records),
                 'records':         records,
             })
@@ -2210,9 +2176,8 @@ class TransferApprovalController(http.Controller):
             if not jail.exists():
                 return self._err('Prison not found', status=404)
 
-            threshold_days = _TENURE_DAYS_HILL if jail.is_hill_station else _TENURE_DAYS_STANDARD
-            cutoff = date.today() - timedelta(days=threshold_days)
-            years_label = '18 months' if jail.is_hill_station else '3 years'
+            cutoff = date.today() - timedelta(days=_TENURE_DAYS_STANDARD)
+            years_label = '3 years'
 
             # Same six-branch M2O + legacy-text domain as overstay_occupants
             occupants = scoped(env, 'hr.employee').search([

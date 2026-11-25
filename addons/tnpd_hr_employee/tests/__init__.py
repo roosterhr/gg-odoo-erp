@@ -1,10 +1,16 @@
 # Part of TNPD Prison HR Employee Extension.
 # License: LGPL-3
 
+from . import test_dashboard_women_prisons
 from . import test_distance
 from . import test_jurisdiction
 from . import test_jurisdiction_hardening
+from . import test_institution_list
+from . import test_one_tenure_threshold
 from . import test_order_letter_recipients
+from . import test_r1_institutions
+from . import test_r1_requests
 from . import test_reason_score
 from . import test_transfer_offer_letter
+from . import test_transfer_preferences
 from . import test_transfer_order

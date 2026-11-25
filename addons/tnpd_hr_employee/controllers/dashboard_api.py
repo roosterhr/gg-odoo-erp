@@ -105,14 +105,19 @@ class DashboardApiController(http.Controller):
             central_jails  = Jail.search([('jail_type', '=', 'central_jail'), ('active', '=', True)])
             district_jails = Jail.search([('jail_type', '=', 'district_jail'),  ('active', '=', True)])
             sub_jails      = Jail.search([('jail_type', '=', 'sub_jail'),        ('active', '=', True)])
-            total_institutions = len(central_jails) + len(district_jails) + len(sub_jails)
-            prison_categories  = len({j.jail_type for j in (central_jails | district_jails | sub_jails)})
+            # The same total as Prisons Info: every institution of every type, closed ones included
+            # (they are also counted apart, so the card can say how many of them are closed).
+            live = Jail.search([('active', '=', True)])
+            total_institutions = len(live)
+            closed_institutions = len(live.filtered('is_closed'))
+            prison_categories  = len({j.jail_type for j in live})
             institution_list   = [{'id': j.id, 'name': j.name} for j in (central_jails | district_jails)]
             env.cr.execute('RELEASE SAVEPOINT dashboard_jail')
         except Exception:
             env.cr.execute('ROLLBACK TO SAVEPOINT dashboard_jail')
             central_jails = district_jails = sub_jails = env['res.users'].sudo().browse([])
             total_institutions = 0
+            closed_institutions = 0
             prison_categories  = 0
             institution_list   = []
 
@@ -247,6 +252,7 @@ class DashboardApiController(http.Controller):
             'total_employees':    total_emp,
             'active_employees':   active_emp,
             'total_institutions': total_institutions,
+            'closed_institutions': closed_institutions,
             'prison_categories':  prison_categories,
             'admin_users':        len(admin_users_all),
             'admin_user_list':    admin_user_list,
@@ -409,17 +415,12 @@ class DashboardApiController(http.Controller):
             Jail = scoped_jails(env)
             domain = [('active', '=', True)]
             if category_id == 'women_prison':
-                # Women's prisons are central_jail with 'special' in name
-                domain.append(('jail_type', '=', 'central_jail'))
-                jails = Jail.search(domain, order='name').filtered(
-                    lambda j: 'special' in (j.name or '').lower()
-                )
+                # Women's prisons are the Special Prisons for Women (jail_type 'spw')
+                domain.append(('jail_type', '=', 'spw'))
+                jails = Jail.search(domain, order='name')
             elif category_id == 'central_prison':
-                # Regular central prisons — exclude women's prisons
                 domain.append(('jail_type', '=', 'central_jail'))
-                jails = Jail.search(domain, order='name').filtered(
-                    lambda j: 'special' not in (j.name or '').lower()
-                )
+                jails = Jail.search(domain, order='name')
             elif category_id:
                 domain.append(('jail_type', '=', category_id))
                 jails = Jail.search(domain, order='name')
@@ -470,9 +471,8 @@ class DashboardApiController(http.Controller):
 
         all_employees = Employee.search(emp_domain)
 
-        # Infer category from which jail field is populated.
-        # Women's Prisons share jail_type='central_jail' but have 'special' in name —
-        # split them out as a distinct category.
+        # Infer category from which jail field is populated. An officer posted at a Special
+        # Prison for Women (jail_type 'spw') counts under Women's Prisons.
         counters = {'central_prison': 0, 'women_prison': 0, 'district_jail': 0, 'sub_jail': 0}
         inst_id = None
         if inst_filter:
@@ -491,8 +491,7 @@ class DashboardApiController(http.Controller):
                 jail_id = emp.x_district_jail_id.id
             elif emp.x_central_jail_id:
                 jail_id = emp.x_central_jail_id.id
-                jail_name = (emp.x_central_jail_id.name or '').lower()
-                jtype = 'women_prison' if 'special' in jail_name else 'central_prison'
+                jtype = 'women_prison' if emp.x_central_jail_id.jail_type == 'spw' else 'central_prison'
             # Fall back to text fields when ID fields are not populated
             elif emp.x_sub_jail and emp.x_sub_jail.strip() and emp.x_sub_jail.strip().lower() != 'nil':
                 jtype = 'sub_jail'
@@ -516,14 +515,12 @@ class DashboardApiController(http.Controller):
 
         total = sum(counters.values())
 
-        # Prison counts per category — women's prisons are central_jail with 'special' in name
+        # Prison counts per category: women's prisons are the Special Prisons for Women (jail_type 'spw')
         prison_counts = {'central_prison': 6, 'women_prison': 2, 'district_jail': 49, 'sub_jail': 119}
         try:
             Jail = scoped_jails(env)
-            all_central = Jail.search([('jail_type', '=', 'central_jail'), ('active', '=', True)])
-            women = all_central.filtered(lambda j: 'special' in (j.name or '').lower())
-            prison_counts['central_prison'] = len(all_central) - len(women)
-            prison_counts['women_prison']   = len(women)
+            prison_counts['central_prison'] = Jail.search_count([('jail_type', '=', 'central_jail'), ('active', '=', True)])
+            prison_counts['women_prison']   = Jail.search_count([('jail_type', '=', 'spw'), ('active', '=', True)])
             prison_counts['district_jail']  = Jail.search_count([('jail_type', '=', 'district_jail'), ('active', '=', True)])
             prison_counts['sub_jail']       = Jail.search_count([('jail_type', '=', 'sub_jail'),      ('active', '=', True)])
         except Exception:

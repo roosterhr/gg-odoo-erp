@@ -151,14 +151,6 @@ class PrisonJail(models.Model):
         help='The position is borrowed from a parent, or is marked approximate.',
     )
 
-    # ── Hill Station ──────────────────────────────────────────────────────────
-
-    is_hill_station = fields.Boolean(
-        string='Hill Station',
-        default=False,
-        help='Officers posted here are eligible for transfer after 18 months.',
-    )
-
     # ── Administration ────────────────────────────────────────────────────────
 
     superintendent_email = fields.Char(string='Superintendent Email')

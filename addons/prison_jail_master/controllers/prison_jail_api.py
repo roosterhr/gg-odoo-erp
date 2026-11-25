@@ -127,7 +127,6 @@ class PrisonJailApiController(http.Controller):
             'central_jail_name': rec.central_jail_id.name if rec.central_jail_id else '',
             'district':         rec.district or '',
             'state':            rec.state_id.name if rec.state_id else '',
-            'is_hill_station':  rec.is_hill_station,
             'external_ref':     rec.external_ref or '',
             'child_count':      rec.child_count,
         }
@@ -373,7 +372,7 @@ class PrisonJailApiController(http.Controller):
         Query params: page, limit
         """
         try:
-            domain = [('is_closed', '=', True), ('active', '=', True), ('jail_type', '=', 'sub_jail')]
+            domain = [('is_closed', '=', True), ('active', '=', True)]  # every closed institution, whatever its type
             data, total, page, limit = self._fetch_list(domain, kwargs)
             return self._ok(data, total, page, limit)
         except ValueError as exc:
@@ -510,7 +509,9 @@ class PrisonJailApiController(http.Controller):
 
             # prison.vacancy — aggregate per prison (primary source)
             pv_map = {}
-            for v in Vacancy.search([('active', '=', True)]):
+            # a closed jail's row is archived: read it anyway, so its figures still show
+            for v in Vacancy.with_context(active_test=False).search([]).filtered(
+                    lambda r: r.active or r.prison_id.is_closed):
                 pv_map[v.prison_id.id] = {
                     'sanctioned_strength': v.sanctioned_strength,
                     'occupied_count':      v.occupied_count,
@@ -644,9 +645,26 @@ class PrisonJailApiController(http.Controller):
             total_children = Jail.search_count(
                 [('jail_type', 'not in', list(_PARENT_TYPES)), ('active', '=', True), ('is_closed', '=', False)]
             )
-            closed_subjails = Jail.search_count(
-                [('jail_type', '=', 'sub_jail'), ('is_closed', '=', True), ('active', '=', True)]
-            )
+            # every closed institution (the Closed tab lists the same set)
+            closed_subjails = Jail.search_count([('is_closed', '=', True), ('active', '=', True)])
+
+            # Institutions that are counted but sit under nothing the tree shows: no parent, or a
+            # parent that is switched off. Listed apart so none is hidden and the counts add up.
+            shown = set()
+            for section in general_data + women_data + district_parents:
+                shown.add(section['id'])
+                shown.update(child['id'] for child in section.get('children', []))
+            placed_domain = [('active', '=', True)] + ([] if include_closed else [('is_closed', '=', False)])
+            unplaced = []
+            for j in Jail.search(placed_domain, order='name'):
+                if j.id in shown:
+                    continue
+                item = self._format_jail(j)
+                item.update({
+                    'parent_name': j.parent_id.name if j.parent_id else '',
+                    'parent_inactive': bool(j.parent_id and not j.parent_id.active),
+                })
+                unplaced.append(item)
 
             return self._json_response({
                 'success': True,
@@ -662,6 +680,7 @@ class PrisonJailApiController(http.Controller):
                 'district_parents': district_parents,
                 'women_prisons':   women_data,
                 'special_women_prisons': women_data,
+                'unplaced': unplaced,
             })
 
         except Exception as exc:

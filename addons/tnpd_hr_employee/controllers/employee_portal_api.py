@@ -311,6 +311,7 @@ class EmployeePortalAPI(http.Controller):
             'request_id':       rec.id,
             'transfer_type':    rec.transfer_type or 'request',
             'reason_category':  rec.reason_category or '',
+            'reason_categories': rec._reasons_payload(),
             'transfer_reason':  rec.transfer_reason or '',
             'is_swap':          bool(rec.is_swap),
             'swap_partner_id':  rec.swap_partner_id.id if rec.swap_partner_id else None,
@@ -782,7 +783,7 @@ class EmployeePortalAPI(http.Controller):
 
     @http.route(
         '/api/employee-portal/transfers',
-        auth='none', type='http', methods=['POST'], csrf=False,
+        auth='none', type='http', methods=['POST'], csrf=False, readonly=False,
     )
     def create_transfer(self, **_kw):
         emp, err = self._require_employee_session()
@@ -794,7 +795,6 @@ class EmployeePortalAPI(http.Controller):
             return err
 
         reason          = (data.get('transfer_reason') or '').strip()
-        reason_category = (data.get('reason_category') or '').strip()
 
         def _jail_id(key):
             v = data.get(key)
@@ -819,33 +819,33 @@ class EmployeePortalAPI(http.Controller):
         p3_sub      = _jail_id('p3_sub_jail_id')
 
         TransferRequest  = request.env['transfer.approval.request']
-        valid_categories = set(TransferRequest.REASON_SCORES) - set(TransferRequest.LEGACY_REASONS)
-        if not reason_category or reason_category not in valid_categories:
-            return self._err('Please select a reason category')
-        if reason_category == 'others' and not reason:
+        reasons, reason_err = TransferRequest._reasons_from_payload(data, required=True)
+        if reason_err:
+            return self._err(reason_err)
+        if 'others' in reasons.mapped('code') and not reason:
             return self._err('Please describe your reason when selecting "Others"')
 
         # All 3 preferences are mandatory
         if not p1_central:
             return self._err('Preference 1 — Parent Institution is required')
-        if not p1_sub:
-            return self._err('Preference 1 — Prison Location is required')
         if not p2_central:
             return self._err('Preference 2 — Parent Institution is required')
-        if not p2_sub:
-            return self._err('Preference 2 — Prison Location is required')
         if not p3_central:
             return self._err('Preference 3 — Parent Institution is required')
-        if not p3_sub:
-            return self._err('Preference 3 — Prison Location is required')
 
-        # No duplicate prisons across preferences (compare at sub-jail level)
-        selected = [p1_sub, p2_sub, p3_sub]
+        # A preference is either a sub jail under a parent institution or the
+        # parent institution itself (a Central Prison / SPW posting).
+        p1_dest = p1_sub or p1_central
+        p2_dest = p2_sub or p2_central
+        p3_dest = p3_sub or p3_central
+
+        # No duplicate prisons across preferences
+        selected = [p1_dest, p2_dest, p3_dest]
         if len(set(selected)) != 3:
             return self._err('Each preference must select a different prison location')
 
         Jail = request.env['prison.jail'].sudo()
-        for jid, label in [(p1_sub, 'Preference 1'), (p2_sub, 'Preference 2'), (p3_sub, 'Preference 3')]:
+        for jid, label in [(p1_dest, 'Preference 1'), (p2_dest, 'Preference 2'), (p3_dest, 'Preference 3')]:
             if not Jail.browse(jid).exists():
                 return self._err(f'{label} — Prison Location not found')
 
@@ -854,7 +854,7 @@ class EmployeePortalAPI(http.Controller):
         emp_hierarchy = self._employee_hierarchy_type(emp)
         if emp_hierarchy in ('general', 'women'):
             side_label = 'General' if emp_hierarchy == 'general' else 'Special Prison for Women'
-            for jid, label in [(p1_sub, 'Preference 1'), (p2_sub, 'Preference 2'), (p3_sub, 'Preference 3')]:
+            for jid, label in [(p1_dest, 'Preference 1'), (p2_dest, 'Preference 2'), (p3_dest, 'Preference 3')]:
                 dest = Jail.browse(jid)
                 if (dest.hierarchy_type or 'general') != emp_hierarchy:
                     return self._err(
@@ -884,7 +884,7 @@ class EmployeePortalAPI(http.Controller):
         vals = {
             'employee_id':             emp.id,
             'transfer_type':           'request',
-            'reason_category':         reason_category,
+            'reason_ids':              [(6, 0, reasons.ids)],
             'transfer_reason':         reason,
             'priority':                data.get('priority') or 'medium',
             'state':                   'pending',
