@@ -828,24 +828,24 @@ class EmployeePortalAPI(http.Controller):
         # All 3 preferences are mandatory
         if not p1_central:
             return self._err('Preference 1 — Parent Institution is required')
-        if not p1_sub:
-            return self._err('Preference 1 — Prison Location is required')
         if not p2_central:
             return self._err('Preference 2 — Parent Institution is required')
-        if not p2_sub:
-            return self._err('Preference 2 — Prison Location is required')
         if not p3_central:
             return self._err('Preference 3 — Parent Institution is required')
-        if not p3_sub:
-            return self._err('Preference 3 — Prison Location is required')
 
-        # No duplicate prisons across preferences (compare at sub-jail level)
-        selected = [p1_sub, p2_sub, p3_sub]
+        # A preference is either a sub jail under a parent institution or the
+        # parent institution itself (a Central Prison / SPW posting).
+        p1_dest = p1_sub or p1_central
+        p2_dest = p2_sub or p2_central
+        p3_dest = p3_sub or p3_central
+
+        # No duplicate prisons across preferences
+        selected = [p1_dest, p2_dest, p3_dest]
         if len(set(selected)) != 3:
             return self._err('Each preference must select a different prison location')
 
         Jail = request.env['prison.jail'].sudo()
-        for jid, label in [(p1_sub, 'Preference 1'), (p2_sub, 'Preference 2'), (p3_sub, 'Preference 3')]:
+        for jid, label in [(p1_dest, 'Preference 1'), (p2_dest, 'Preference 2'), (p3_dest, 'Preference 3')]:
             if not Jail.browse(jid).exists():
                 return self._err(f'{label} — Prison Location not found')
 
@@ -854,7 +854,7 @@ class EmployeePortalAPI(http.Controller):
         emp_hierarchy = self._employee_hierarchy_type(emp)
         if emp_hierarchy in ('general', 'women'):
             side_label = 'General' if emp_hierarchy == 'general' else 'Special Prison for Women'
-            for jid, label in [(p1_sub, 'Preference 1'), (p2_sub, 'Preference 2'), (p3_sub, 'Preference 3')]:
+            for jid, label in [(p1_dest, 'Preference 1'), (p2_dest, 'Preference 2'), (p3_dest, 'Preference 3')]:
                 dest = Jail.browse(jid)
                 if (dest.hierarchy_type or 'general') != emp_hierarchy:
                     return self._err(
