@@ -8,6 +8,7 @@ from . import test_jurisdiction_hardening
 from . import test_institution_list
 from . import test_one_tenure_threshold
 from . import test_order_letter_recipients
+from . import test_posting_link
 from . import test_r1_institutions
 from . import test_r1_requests
 from . import test_reason_score

@@ -35,3 +35,10 @@ def migrate(cr, version):
     result = Jail._reconcile_master(rows, apply=True, deactivate_missing=True)
     _logger.info('institution master set to the approved list: %s', result['summary'])
     _logger.info('institution master totals: %s', result['after'])
+
+    # Officers loaded with only a typed prison name get linked to the institution it stands for, so
+    # the institution panels, vacancy figures and filters see them. Existing links are never changed;
+    # anything ambiguous is left alone and listed in the log.
+    linked = env['hr.employee']._link_postings_to_institutions()
+    _logger.info('officers linked to their institution: %s', {k: linked[k] for k in ('officers', 'links', 'blocked_by_their_own_links')})
+    _logger.info('typed postings left unplaced (top): %s', linked['unplaced'])

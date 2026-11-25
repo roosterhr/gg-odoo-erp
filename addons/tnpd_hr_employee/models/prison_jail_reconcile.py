@@ -338,6 +338,9 @@ class PrisonJail(models.Model):
         healed = self._heal_tree()
         if healed:
             note(0, 'heal', 'central-prison links', '%s repaired to follow their parent' % healed)
+        moved_up = self.env['hr.employee']._heal_posting_levels()
+        if moved_up:
+            note(0, 'heal', 'officers', '%s officers: district link moved to the central prison it now points at' % moved_up)
 
         counts = {}
         for item in actions:
