@@ -18,6 +18,7 @@ import re
 
 from odoo import api, models
 from odoo.exceptions import ValidationError
+from odoo.tools import SQL
 
 _logger = logging.getLogger(__name__)
 
@@ -176,7 +177,9 @@ class PrisonJail(models.Model):
         """
         cr, moved = self.env.cr, 0
         for table, column in self._LINKS:
-            cr.execute('UPDATE %s SET %s = %%s WHERE %s = %%s' % (table, column, column), (new.id, old.id))
+            # the names are quoted as identifiers and the ids are passed as values, never joined into the text
+            cr.execute(SQL('UPDATE %s SET %s = %s WHERE %s = %s',
+                           SQL.identifier(table), SQL.identifier(column), new.id, SQL.identifier(column), old.id))
             moved += cr.rowcount
         # through the ORM, so the tree path and the stored central-prison link follow the new parent;
         # the cache is cleared first: ``new`` may have been created a moment ago, and its tree path
