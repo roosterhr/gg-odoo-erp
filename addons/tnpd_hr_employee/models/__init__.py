@@ -12,7 +12,6 @@ from . import tnpd_notification
 from . import prison_district_geo
 from . import prison_jail
 from . import prison_jail_reconcile
-from . import posting_link
 from . import ir_http
 from . import transfer_offer_letter_report
 from . import transfer_order

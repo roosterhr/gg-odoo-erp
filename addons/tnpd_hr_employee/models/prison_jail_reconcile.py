@@ -17,6 +17,7 @@ import logging
 import re
 
 from odoo import api, models
+from odoo.exceptions import ValidationError
 
 _logger = logging.getLogger(__name__)
 
@@ -81,6 +82,30 @@ class PrisonJail(models.Model):
         self._parent_store_compute()
         self.invalidate_model(['parent_path'])
         return self._heal_central_links()
+
+    @api.model
+    def _heal_officer_district_links(self):
+        """
+        Move an officer's district link that points at a Central Prison or a Special Prison for Women
+        into the central prison link. An institution folded into a central prison (the Delta district
+        records into Pudukkottai) takes its officers' district link with it, and a district link may
+        only hold a District Jail: left alone, those officers' records can no longer be saved.
+        Returns how many officers were repaired.
+        """
+        Employee = self.env['hr.employee'].sudo().with_context(active_test=False, tracking_disable=True, mail_notrack=True)
+        wrong = Employee.search([('x_district_jail_id.jail_type', 'in', ['central_jail', 'spw'])])
+        done = 0
+        for officer in wrong:
+            vals = {'x_district_jail_id': False}
+            if not officer.x_central_jail_id:
+                vals['x_central_jail_id'] = officer.x_district_jail_id.id
+            try:
+                with self.env.cr.savepoint():
+                    officer.write(vals)
+                done += 1
+            except ValidationError as exc:  # an officer whose own links already contradict each other
+                _logger.info('officer %s left as it is: %s', officer.x_employee_code, str(exc).splitlines()[0])
+        return done
 
     @api.model
     def _heal_central_links(self):
@@ -338,7 +363,7 @@ class PrisonJail(models.Model):
         healed = self._heal_tree()
         if healed:
             note(0, 'heal', 'central-prison links', '%s repaired to follow their parent' % healed)
-        moved_up = self.env['hr.employee']._heal_posting_levels()
+        moved_up = self._heal_officer_district_links()
         if moved_up:
             note(0, 'heal', 'officers', '%s officers: district link moved to the central prison it now points at' % moved_up)
 

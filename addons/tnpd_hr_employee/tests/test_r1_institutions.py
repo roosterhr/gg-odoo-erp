@@ -126,6 +126,13 @@ class TestMasterReconcile(TransactionCase):
             self.assertTrue(jail.parent_path.endswith('/%s/' % jail.id), jail.parent_path)
         self.assertEqual(mover.parent_id, self.fx.dst_central)
 
+    def test_an_officers_district_link_that_points_at_a_central_prison_moves_to_the_central_link(self):
+        officer = self.env['hr.employee'].create({
+            'name': 'R1Master Moved', 'x_employee_code': 'R1MASTER-9001', 'x_district_jail_id': self.fx.src_central.id})
+        self.assertGreaterEqual(self.Jail._heal_officer_district_links(), 1)
+        self.assertEqual(officer.x_central_jail_id, self.fx.src_central)
+        self.assertFalse(officer.x_district_jail_id)
+
     def test_a_central_prison_link_left_behind_is_repaired(self):
         sub = self.fx.src_sub
         self.env.cr.execute('UPDATE prison_jail SET central_jail_id = NULL WHERE id = %s', (sub.id,))
