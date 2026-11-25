@@ -104,6 +104,17 @@ class TestMasterReconcile(TransactionCase):
         self.assertNotIn('add', result['summary'])
         self.assertEqual((sub.name, sub.active), ('R1Master Newspelling', True))
 
+    def test_running_a_list_with_old_spellings_twice_adds_nothing_the_second_time(self):
+        sub = self.fx.src_sub
+        row = {'name': 'R1Master Newspelling', 'jail_type': 'sub_jail', 'parent': self.parent,
+               'match_name': sub.name, 'match_type': 'sub_jail', 'district': 'R1Master District'}
+        self.Jail._reconcile_master([row], apply=True)
+        again = self.Jail._reconcile_master([row], apply=True)
+        self.assertNotIn('add', again['summary'])
+        self.assertEqual(self.Jail.with_context(active_test=False).search_count(
+            [('name', '=', 'R1Master Newspelling')]), 1)
+        self.assertEqual((sub.name, sub.district), ('R1Master Newspelling', 'R1Master District'))
+
     def test_a_parent_name_shared_by_a_central_prison_and_a_women_prison_takes_the_row_hierarchy(self):
         self.Jail.create({'name': 'R1Master Twin', 'jail_type': 'central_jail'})
         spw = self.Jail.create({'name': 'R1Master Twin', 'jail_type': 'spw', 'hierarchy_type': 'women'})

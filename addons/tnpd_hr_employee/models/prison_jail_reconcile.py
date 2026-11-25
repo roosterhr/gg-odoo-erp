@@ -67,6 +67,18 @@ class PrisonJail(models.Model):
                                        not j.active, -staff.get(j.id, 0), j.id))[:1]
 
     @api.model
+    def _find_among(self, names, jail_types, hierarchies):
+        """The one record for a place known under several names: the one with staff first, then active, then the oldest."""
+        keys = {self._master_key(n) for n in names if n}
+        found = self.with_context(active_test=False).search(
+            [('jail_type', 'in', list(jail_types)), ('hierarchy_type', 'in', list(hierarchies))]
+        ).filtered(lambda j: self._master_key(j.name) in keys)
+        if not found:
+            return found
+        staff = self._staff_counts(found.ids)
+        return found.sorted(lambda j: (-staff.get(j.id, 0), not j.active, j.id))[:1]
+
+    @api.model
     def _staff_counts(self, ids):
         """{jail id: officers posted there (by link or by the old typed name)}."""
         counts = {}
@@ -185,6 +197,8 @@ class PrisonJail(models.Model):
             if not old or old == rec:
                 continue
             moved = self._move_links(old, rec)
+            if not moved and not old.active:
+                continue  # folded in on an earlier run: nothing to do
             old.write({'active': False})
             note(i, 'merge', old.name, '%s rows moved to %s (id %s) and switched off' % (moved, rec.name, rec.id))
 
@@ -222,12 +236,18 @@ class PrisonJail(models.Model):
             vals = {'name': name, 'jail_type': jail_type, 'hierarchy_type': hierarchy,
                     'parent_id': parent.id or False, 'active': True, 'is_closed': status == 'closed',
                     'closed_remarks': (row.get('remarks') or '').strip() or False}
+            if 'district' in row:  # the district a sub-jail is listed under (blank: none)
+                vals['district'] = (row.get('district') or '').strip() or False
             # optional match_name / match_type / match_hierarchy: the record is kept under another
             # spelling (or type), so the row updates it instead of adding a second one
-            rec = Jail._find_master(row.get('match_name') or name,
-                                    jail_types=[row.get('match_type') or jail_type],
-                                    hierarchy_type=row.get('match_hierarchy') or hierarchy,
-                                    exact_first=True)
+            if row.get('match_name'):
+                # under the old spelling or, if the list was applied before, under the new one:
+                # take the record officers are posted at, never add a second record for the place
+                rec = Jail._find_among(
+                    [row['match_name'], name], {row.get('match_type') or jail_type, jail_type},
+                    {row.get('match_hierarchy') or hierarchy, hierarchy})
+            else:
+                rec = Jail._find_master(name, jail_types=[jail_type], hierarchy_type=hierarchy, exact_first=True)
             if not rec:
                 created = Jail.create(vals)
                 touched.add(created.id)
@@ -239,7 +259,9 @@ class PrisonJail(models.Model):
             changes, to_write = [], {}
             for field, label in (('name', 'renamed'), ('jail_type', 'type'), ('hierarchy_type', 'hierarchy'),
                                  ('parent_id', 'moved'), ('active', 'reactivated'), ('is_closed', 'status'),
-                                 ('closed_remarks', 'remarks')):
+                                 ('closed_remarks', 'remarks'), ('district', 'district')):
+                if field not in vals:
+                    continue
                 new = vals[field]
                 old = rec[field].id if field == 'parent_id' else rec[field]
                 if field == 'parent_id' and not row.get('parent'):
