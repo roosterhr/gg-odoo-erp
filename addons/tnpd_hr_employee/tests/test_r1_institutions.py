@@ -3,7 +3,6 @@
 
 """Client round 1: the institution master (match the client's list, fixes), closed jails, prison overview."""
 
-import json
 
 from odoo.exceptions import UserError
 from odoo.tests import HttpCase, TransactionCase, tagged
@@ -324,25 +323,3 @@ class TestClosedJailsAndOverview(HttpCase):
     def test_the_employee_list_can_be_filtered_to_a_closed_jail(self):
         data = self._get('/api/employees?jail_id=%s' % self.closed.id).json()
         self.assertEqual([e['name'] for e in data.get('employees', data.get('data', []))], [self.fx.officers[0].name])
-
-    # ── the client's list ─────────────────────────────────────────────────────
-
-    def _reconcile(self, body, login='r1_over@test.local'):
-        http_login(self, login)
-        return self.url_open('/api/jails/reconcile', data=json.dumps(body), headers={'Content-Type': 'application/json'})
-
-    def test_the_csv_is_read_with_type_labels(self):
-        csv_text = 'name,type,parent,status\nR1Over Csvpatti,Sub-Jail,%s,closed\n' % self.fx.src_central.name
-        data = self._reconcile({'csv': csv_text}).json()
-        self.assertEqual(data['summary']['add'], 1)
-        self.assertFalse(data['applied'])
-        self.assertFalse(self.env['prison.jail'].search([('name', '=', 'R1Over Csvpatti')]))
-        applied = self._reconcile({'csv': csv_text, 'apply': True}).json()
-        self.assertTrue(applied['applied'])
-        self.assertTrue(self.env['prison.jail'].search([('name', '=', 'R1Over Csvpatti'), ('is_closed', '=', True)]))
-
-    def test_a_regional_login_cannot_change_the_master(self):
-        self.assertEqual(self._reconcile({'csv': 'name,type\nX,Sub-Jail'}, 'r1_reg@test.local').status_code, 403)
-
-    def test_nothing_to_compare_is_an_error(self):
-        self.assertEqual(self._reconcile({}).status_code, 400)

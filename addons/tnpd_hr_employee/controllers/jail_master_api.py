@@ -2,31 +2,15 @@
 # License: LGPL-3
 
 """
-Institution master: match it to the client's list (Headquarters only)
-=====================================================================
+Institution master: one institution with everything linked to it
+================================================================
 
 GET /api/jails/<id>/overview
     One institution with its staff, vacancy, requests and transfers (and the jails under it).
     Optional: ?staff_limit=50&q=<name or code>. Officers, requests and transfers follow the
     caller's area, as everywhere else. Closed institutions are included and say so.
-
-POST /api/jails/reconcile
-    {"csv": "<text>" | "rows": [..], "apply": false, "deactivate_missing": false}
-
-Without ``apply`` it is a dry run: nothing changes, and the answer says what would be added,
-renamed, moved, re-tagged or switched off, with the totals before and after (total, by type,
-open, closed) so they can be confirmed with the client. With ``apply`` the same plan is done.
-
-CSV columns (first line is the header; order does not matter, extra columns are ignored):
-    name, type, parent, hierarchy, status, remarks
-type      Central Prison | District Jail | Sub-Jail | Women Sub-Jail | Special Prison for Women | ...
-parent    the name of the central prison / district jail above it (blank for a central prison)
-hierarchy general (default) | women
-status    active (default) | closed
 """
 
-import csv
-import io
 import json
 import logging
 
@@ -36,8 +20,6 @@ from odoo.http import request
 from ..scope import scoped
 
 _logger = logging.getLogger(__name__)
-
-_MAX_ROWS = 1000
 
 
 class JailMasterApiController(http.Controller):
@@ -59,57 +41,6 @@ class JailMasterApiController(http.Controller):
         if user.share or not (user.has_group('base.group_system') or user.has_group('base.group_erp_manager')):
             return None, self._err('Admin privileges required', 403)
         return uid, None
-
-    @staticmethod
-    def _type_code(Jail, text):
-        """A type given as its code or as its label ('Sub-Jail') is the code."""
-        text = (text or '').strip()
-        norm = text.lower().replace('-', ' ').replace('_', ' ')
-        for code, label in Jail._fields['jail_type'].selection:
-            if norm in (code.replace('_', ' '), label.lower().replace('-', ' ')):
-                return code
-        return text
-
-    def _rows_from_csv(self, Jail, text):
-        reader = csv.DictReader(io.StringIO(text.strip().lstrip('﻿')))
-        rows = []
-        for line in reader:
-            line = {(k or '').strip().lower(): (v or '').strip() for k, v in line.items()}
-            if not any(line.values()):
-                continue
-            rows.append({
-                'name': line.get('name', ''),
-                'jail_type': self._type_code(Jail, line.get('type') or line.get('jail_type')),
-                'parent': line.get('parent', ''),
-                'hierarchy_type': (line.get('hierarchy') or line.get('hierarchy_type') or 'general').lower(),
-                'status': (line.get('status') or 'active').lower(),
-                'remarks': line.get('remarks', ''),
-            })
-        return rows
-
-    @http.route('/api/jails/reconcile', auth='none', type='http', methods=['POST'], csrf=False, readonly=False)
-    def reconcile(self, **_kw):
-        uid, err = self._admin()
-        if err:
-            return err
-        try:
-            body = json.loads(request.httprequest.get_data(as_text=True) or '{}')
-        except ValueError:
-            return self._err('Invalid JSON body')
-        Jail = request.env['prison.jail'].sudo()
-        try:
-            rows = body.get('rows') if body.get('rows') is not None else self._rows_from_csv(Jail, body.get('csv') or '')
-        except csv.Error:
-            return self._err('The CSV could not be read.')
-        if not rows:
-            return self._err('No institutions to compare: send "csv" or "rows".')
-        if len(rows) > _MAX_ROWS:
-            return self._err('At most %d institutions at a time.' % _MAX_ROWS)
-        result = Jail._reconcile_master(
-            rows, apply=bool(body.get('apply')), deactivate_missing=bool(body.get('deactivate_missing')))
-        if result['applied']:
-            _logger.info('Institution master reconciled by user %s: %s', uid, result['summary'])
-        return self._json({'success': True, **result})
 
     # ── one institution, with everything linked to it ─────────────────────────
 
