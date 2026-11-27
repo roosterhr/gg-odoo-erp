@@ -30,7 +30,8 @@ class TestCentralPrisonPreference(HttpCase):
         """Each preference is (central id, sub-jail id or None)."""
         http_login(self, self.officer.x_employee_code)
         body = {
-            'reason_categories': ['mutual_request'],
+            # Single parent needs no supporting document, so these tests stay about the preferences.
+            'reason_categories': ['single_parent'],
             'to_central_jail_id': p1[0], 'to_sub_jail_id': p1[1],
             'p2_central_jail_id': p2[0], 'p2_sub_jail_id': p2[1],
             'p3_central_jail_id': p3[0], 'p3_sub_jail_id': p3[1],

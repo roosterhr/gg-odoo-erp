@@ -5,11 +5,13 @@ import json
 import logging
 import re
 from datetime import date, timedelta
+from urllib.parse import quote
 
 from odoo import fields, http
 from odoo.http import request
 
 from ..scope import require_hq, scoped
+from ..transfer_documents import ALLOWED_MIMETYPES
 
 _logger = logging.getLogger(__name__)
 
@@ -153,6 +155,8 @@ class TransferApprovalController(http.Controller):
         to_central  = rec.requested_central_prison.name if rec.requested_central_prison else ''
         to_prison_name = to_sub or to_district or to_central or ''
 
+        docs = rec._documents()
+
         return {
             'request_id':               rec.id,
             'employee_id':              rec.employee_id.id,
@@ -212,7 +216,59 @@ class TransferApprovalController(http.Controller):
             'tenure_years':     tenure_years,
             'is_swap':          bool(getattr(rec, 'is_swap', False)),
             'swap_partner_id':  rec.swap_partner_id.id if getattr(rec, 'swap_partner_id', False) else None,
+            # Supporting documents sent by the officer
+            'documents_required': rec._needs_documents(),
+            'documents_count':    len(docs),
+            'documents': [{
+                'id': a.id,
+                'name': a.name,
+                'size': a.file_size or 0,
+                'mimetype': a.mimetype or '',
+                'uploaded': str(a.create_date) if a.create_date else '',
+            } for a in docs],
         }
+
+    # ==================================================================
+    # Supporting documents (admin side)
+    # GET /api/transfer/<request_id>/documents/<doc_id>[?download=1]
+    #
+    # Only staff can open a file. Officers (portal users) also hold a session,
+    # so they are refused here. Regional logins can read what is in their area,
+    # like the requests themselves. The file is never a public link.
+    # ==================================================================
+
+    @http.route(
+        '/api/transfer/<int:request_id>/documents/<int:doc_id>',
+        auth='none',
+        type='http',
+        methods=['GET'],
+        csrf=False,
+    )
+    def get_transfer_document(self, request_id, doc_id, download='', **_kwargs):
+        uid, err = self._require_auth()
+        if err:
+            return err
+        if request.env['res.users'].sudo().browse(uid).share:
+            return self._err('Not allowed.', status=403)
+
+        tar = scoped(request.env(user=uid), 'transfer.approval.request').search(
+            [('id', '=', request_id)], limit=1)
+        if not tar:
+            return self._err('Transfer request not found', status=404)
+        doc = tar._documents().filtered(lambda a: a.id == doc_id)
+        if not doc:
+            return self._err('Document not found', status=404)
+
+        data = doc.raw or b''
+        mimetype = doc.mimetype if doc.mimetype in ALLOWED_MIMETYPES else 'application/octet-stream'
+        disposition = 'attachment' if download else 'inline'
+        return request.make_response(data, headers=[
+            ('Content-Type', mimetype),
+            ('Content-Length', str(len(data))),
+            ('Content-Disposition', "%s; filename*=UTF-8''%s" % (disposition, quote(doc.name or 'document'))),
+            ('X-Content-Type-Options', 'nosniff'),
+            ('Cache-Control', 'private, no-store'),
+        ])
 
     # ==================================================================
     # INTERNAL: Update employee jail posting (shared by approve + admin)

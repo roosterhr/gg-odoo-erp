@@ -22,6 +22,8 @@ class EmployeePortalCORS(http.Controller):
             '/api/employee-portal/logout',
             '/api/employee-portal/profile',
             '/api/employee-portal/transfers',
+            '/api/employee-portal/transfers/<int:request_id>/documents',
+            '/api/employee-portal/transfers/<int:request_id>/documents/<int:doc_id>',
             '/api/employee-portal/notifications',
             '/api/employee-portal/notifications/mark-read',
             '/api/employee-portal/change-password',
@@ -46,7 +48,7 @@ class EmployeePortalCORS(http.Controller):
         headers = [
             ('Access-Control-Allow-Origin',      origin),
             ('Access-Control-Allow-Credentials', 'true'),
-            ('Access-Control-Allow-Methods',     'GET, POST, PUT, OPTIONS'),
+            ('Access-Control-Allow-Methods',     'GET, POST, PUT, DELETE, OPTIONS'),
             ('Access-Control-Allow-Headers',     'Content-Type, Authorization'),
             ('Access-Control-Max-Age',           '86400'),
             ('Content-Length',                   '0'),
