@@ -20,6 +20,7 @@ from odoo import http, SUPERUSER_ID
 from odoo.http import request
 
 from ..scope import require_hq
+from ..transfer_documents import MAX_BYTES, MAX_FILES, UploadError, reasons_need_documents, validate_files
 
 _logger = logging.getLogger(__name__)
 
@@ -38,7 +39,7 @@ class EmployeePortalAPI(http.Controller):
                 ('Access-Control-Allow-Credentials',  'true'),
                 ('Access-Control-Allow-Headers',
                  'Content-Type, Authorization'),
-                ('Access-Control-Allow-Methods',      'GET, POST, PUT, OPTIONS'),
+                ('Access-Control-Allow-Methods',      'GET, POST, PUT, DELETE, OPTIONS'),
             ],
             status=status,
         )
@@ -59,6 +60,47 @@ class EmployeePortalAPI(http.Controller):
             return data, None
         except (json.JSONDecodeError, ValueError) as exc:
             return None, self._err(f'Invalid JSON: {exc}')
+
+    def _uploaded_files(self):
+        """
+        The files of a multipart request, as (filename, bytes) pairs.
+
+        Reads one byte past the size limit and one file past the count limit, so an
+        oversize upload is refused by the checks without being held in memory.
+        """
+        files = []
+        for f in request.httprequest.files.getlist('files')[:MAX_FILES + 1]:
+            if f and (f.filename or ''):
+                files.append((f.filename, f.read(MAX_BYTES + 1)))
+        return files
+
+    def _read_submission(self):
+        """
+        The body of a transfer request: plain JSON, or multipart with the JSON in a
+        "payload" field and the documents in "files".
+        Returns (data, files, error_response).
+        """
+        form = request.httprequest.form
+        if (request.httprequest.mimetype or '').startswith('multipart/') or 'payload' in form:
+            try:
+                data = json.loads(form.get('payload') or '{}')
+                if not isinstance(data, dict):
+                    raise ValueError('Expected JSON object')
+            except (json.JSONDecodeError, ValueError) as exc:
+                return None, [], self._err(f'Invalid JSON: {exc}')
+            return data, self._uploaded_files(), None
+        data, err = self._parse_json_body()
+        return data, [], err
+
+    @staticmethod
+    def _format_documents(attachments):
+        """File names and sizes only. The officer cannot open the files; the admin can."""
+        return [{
+            'id': a.id,
+            'name': a.name,
+            'size': a.file_size or 0,
+            'uploaded': str(a.create_date) if a.create_date else '',
+        } for a in attachments]
 
     # ── Auth helpers ──────────────────────────────────────────────────────────
 
@@ -279,8 +321,9 @@ class EmployeePortalAPI(http.Controller):
             'remarks':                       _s(emp.x_remarks),
         }
 
-    def _format_transfer(self, rec, emp):
-        from_sub      = rec.current_sub_jail.name       if rec.current_sub_jail       else ''
+    def _format_transfer(self, rec, emp, documents=None):
+        docs = rec._documents() if documents is None else documents
+        from_sub     = rec.current_sub_jail.name       if rec.current_sub_jail       else ''
         from_district = rec.current_district_jail.name  if rec.current_district_jail  else ''
         from_central  = rec.current_central_prison.name if rec.current_central_prison else ''
         from_prison   = from_sub or from_district or from_central
@@ -331,6 +374,10 @@ class EmployeePortalAPI(http.Controller):
             'approved_date':    str(rec.approved_date) if rec.approved_date else '',
             'order_id':         issued_order.id if issued_order else None,
             'order_number':     issued_order.name if issued_order else '',
+            'documents_required': rec._needs_documents(),
+            'documents_count':    len(docs),
+            'documents':          self._format_documents(docs),
+            'documents_editable': rec.state in ('draft', 'pending'),
         }
 
     # ── POST /api/employee-portal/auth ────────────────────────────────────────
@@ -770,10 +817,11 @@ class EmployeePortalAPI(http.Controller):
         domain  = [('employee_id', '=', emp.id)]
         total   = TAR.search_count(domain)
         records = TAR.search(domain, limit=limit, offset=offset, order='create_date desc')
+        docs    = records._documents_by_request()
 
         return self._json_response({
             'success':   True,
-            'transfers': [self._format_transfer(r, emp) for r in records],
+            'transfers': [self._format_transfer(r, emp, docs.get(r.id)) for r in records],
             'total':     total,
             'page':      page,
             'limit':     limit,
@@ -790,7 +838,7 @@ class EmployeePortalAPI(http.Controller):
         if err:
             return err
 
-        data, err = self._parse_json_body()
+        data, files, err = self._read_submission()
         if err:
             return err
 
@@ -824,6 +872,16 @@ class EmployeePortalAPI(http.Controller):
             return self._err(reason_err)
         if 'others' in reasons.mapped('code') and not reason:
             return self._err('Please describe your reason when selecting "Others"')
+
+        # Supporting documents: required unless every reason chosen is Single parent.
+        # Checked here, before anything is saved, so a request is never created
+        # without the files it needs.
+        try:
+            uploads = validate_files(files)
+        except UploadError as exc:
+            return self._err(str(exc))
+        if not uploads and reasons_need_documents(reasons.mapped('code')):
+            return self._err('Please attach at least one supporting document for this reason.')
 
         # All 3 preferences are mandatory
         if not p1_central:
@@ -907,8 +965,16 @@ class EmployeePortalAPI(http.Controller):
             TAR = request.env['transfer.approval.request'].sudo()
             # create() triggers prompt_tenure_candidates_if_no_vacancy() automatically
             # (see the model's create()/write() hooks) since vals has state='pending'.
-            rec = TAR.with_context(mail_notrack=True).create(vals)
+            # The request and its files are saved together: if a file cannot be
+            # stored, the request is not left behind without it.
+            with request.env.cr.savepoint():
+                rec = TAR.with_context(mail_notrack=True).create(vals)
+                rec._attach_documents(uploads)
 
+            attached = (
+                f' {len(uploads)} supporting document{"" if len(uploads) == 1 else "s"} attached.'
+                if uploads else ''
+            )
             request.env['tnpd.notification'].sudo().create({
                 'employee_id':         emp.id,
                 'transfer_request_id': rec.id,
@@ -916,13 +982,93 @@ class EmployeePortalAPI(http.Controller):
                 'action_type':         'transfer_submitted',
                 'message': (
                     f'Your transfer request (Ref: TRF/{rec.id}) has been submitted '
-                    f'successfully and is pending review.'
+                    f'successfully and is pending review.{attached}'
                 ),
             })
-            return self._ok('Transfer request submitted successfully', request_id=rec.id)
+            return self._ok('Transfer request submitted successfully', request_id=rec.id,
+                            documents_count=len(uploads))
         except Exception as exc:
             _logger.exception('Error creating employee transfer request')
             return self._err(str(exc))
+
+    # ── Supporting documents of the officer's own request ────────────────────
+    # The officer can send, list and remove files while the request is pending.
+    # There is no route to open a file here: only the admin side can read them.
+
+    def _own_request(self, emp, request_id):
+        return request.env['transfer.approval.request'].sudo().with_context(active_test=False).search([
+            ('id', '=', request_id), ('employee_id', '=', emp.id),
+        ], limit=1)
+
+    def _documents_payload(self, rec):
+        return {
+            'documents':          self._format_documents(rec._documents()),
+            'documents_required': rec._needs_documents(),
+            'documents_editable': rec.state in ('draft', 'pending'),
+        }
+
+    @http.route(
+        '/api/employee-portal/transfers/<int:request_id>/documents',
+        auth='none', type='http', methods=['GET'], csrf=False,
+    )
+    def list_transfer_documents(self, request_id, **_kw):
+        emp, err = self._require_employee_session()
+        if err:
+            return err
+        rec = self._own_request(emp, request_id)
+        if not rec:
+            return self._err('Transfer request not found', status=404)
+        return self._json_response(dict(success=True, **self._documents_payload(rec)))
+
+    @http.route(
+        '/api/employee-portal/transfers/<int:request_id>/documents',
+        auth='none', type='http', methods=['POST'], csrf=False,
+        readonly=False,
+    )
+    def add_transfer_documents(self, request_id, **_kw):
+        emp, err = self._require_employee_session()
+        if err:
+            return err
+        rec = self._own_request(emp, request_id)
+        if not rec:
+            return self._err('Transfer request not found', status=404)
+        if rec.state not in ('draft', 'pending'):
+            return self._err('Documents can no longer be changed: this request has been decided.')
+        files = self._uploaded_files()
+        if not files:
+            return self._err('Choose at least one file.')
+        try:
+            with request.env.cr.savepoint():
+                rec._add_documents(files)
+        except UploadError as exc:
+            return self._err(str(exc))
+        return self._json_response(dict(success=True, message='Documents added', **self._documents_payload(rec)))
+
+    @http.route(
+        '/api/employee-portal/transfers/<int:request_id>/documents/<int:doc_id>',
+        auth='none', type='http', methods=['DELETE'], csrf=False,
+        readonly=False,
+    )
+    def remove_transfer_document(self, request_id, doc_id, **_kw):
+        emp, err = self._require_employee_session()
+        if err:
+            return err
+        rec = self._own_request(emp, request_id)
+        if not rec:
+            return self._err('Transfer request not found', status=404)
+        if rec.state not in ('draft', 'pending'):
+            return self._err('Documents can no longer be changed: this request has been decided.')
+        docs = rec._documents()
+        doc = docs.filtered(lambda a: a.id == doc_id)
+        if not doc:
+            return self._err('Document not found', status=404)
+        if rec._needs_documents() and len(docs) <= 1:
+            return self._err(
+                'A supporting document is required for this reason. '
+                'Add another file before removing this one.'
+            )
+        doc.unlink()
+        return self._json_response(dict(success=True, message='Document removed', **self._documents_payload(rec)))
 
     # ── GET /api/employee-portal/orders/<id>/pdf ─────────────────────────────
 

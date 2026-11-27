@@ -11,6 +11,7 @@ from . import test_order_letter_recipients
 from . import test_r1_institutions
 from . import test_r1_requests
 from . import test_reason_score
+from . import test_transfer_documents
 from . import test_transfer_offer_letter
 from . import test_transfer_preferences
 from . import test_transfer_order

@@ -8,6 +8,8 @@ from datetime import date, timedelta
 from odoo import api, fields, models
 from odoo.exceptions import UserError, ValidationError
 
+from ..transfer_documents import reasons_need_documents, validate_files
+
 _logger = logging.getLogger(__name__)
 
 # Tenure threshold (days) used when prompting destination occupants to vacate: 3 years.
@@ -261,6 +263,58 @@ class TransferApprovalRequest(models.Model):
                 checks.append({'name': name, 'required': required, 'actual': actual,
                                'passed': actual >= required})
         return {'eligible': all(c['passed'] for c in checks), 'checks': checks}
+
+    # ── Supporting documents ──────────────────────────────────────────────────
+    # Stored as ordinary Odoo attachments on the request, so no table or column
+    # is added. Which reasons need a document is decided in transfer_documents.py.
+
+    def _needs_documents(self):
+        """
+        True when this request needs at least one supporting document: unless every
+        reason chosen is exempt (see transfer_documents.py). Older requests that only
+        have the single ``reason_category`` are judged by that.
+        """
+        self.ensure_one()
+        codes = self.reason_ids.mapped('code') or ([self.reason_category] if self.reason_category else [])
+        return reasons_need_documents(codes)
+
+    def _documents(self):
+        """The attachments of this request, oldest first."""
+        self.ensure_one()
+        return self.env['ir.attachment'].sudo().search([
+            ('res_model', '=', self._name), ('res_id', '=', self.id),
+        ], order='id')
+
+    def _documents_by_request(self):
+        """{request id: its attachments} for these requests, in one query."""
+        found = {rid: self.env['ir.attachment'] for rid in self.ids}
+        if self.ids:
+            for att in self.env['ir.attachment'].sudo().search([
+                ('res_model', '=', self._name), ('res_id', 'in', self.ids),
+            ], order='id'):
+                found[att.res_id] |= att
+        return found
+
+    def _add_documents(self, files):
+        """
+        Attach ``files`` to this request.
+
+        ``files`` are (filename, bytes) pairs. They are checked first, and the
+        total may not go over the limit. Raises ``UploadError`` for a bad file;
+        nothing is saved then.
+        """
+        self.ensure_one()
+        return self._attach_documents(validate_files(files, already=len(self._documents())))
+
+    def _attach_documents(self, clean):
+        """Save files that ``validate_files`` has already accepted: (name, mimetype, bytes)."""
+        self.ensure_one()
+        if not clean:
+            return self.env['ir.attachment']
+        return self.env['ir.attachment'].sudo().create([{
+            'name': name, 'raw': data, 'mimetype': mimetype,
+            'res_model': self._name, 'res_id': self.id, 'public': False,
+        } for name, mimetype, data in clean])
 
     transfer_reason = fields.Text(
         string='Transfer Reason',
